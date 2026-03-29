@@ -66,7 +66,7 @@
         
         #btn-admin-access { display: none; background: rgba(139, 92, 246, 0.2); color: var(--admin); border: 1px solid var(--admin); padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         
-        /* AVISO GLOBAL (Usuarios) */
+        /* AVISO GLOBAL */
         .global-alert { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; border-left: 4px solid var(--accent); }
         .global-alert h4 { margin: 0 0 5px 0; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         .global-alert p { margin: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.4; }
@@ -89,6 +89,10 @@
         .btn-whatsapp { width: 100%; background: var(--whatsapp); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; }
 
         .glass-form { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px; }
+        
+        .btn-config-main { width: 100%; background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-config-main:hover { background: rgba(56, 189, 248, 0.2); }
+
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-dim); margin-bottom: 4px; }
         input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text-main); font-size: 0.95rem; box-sizing: border-box; }
@@ -110,7 +114,6 @@
         .admin-header { background: linear-gradient(135deg, #4c1d95, #7c3aed); padding: 15px; border-radius: 16px; margin-bottom: 20px; text-align: center; color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }
         .admin-header h2 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
         
-        /* Caja de Mensajes Admin */
         .admin-msg-box { background: var(--card-bg); padding: 15px; border-radius: 14px; border: 1px solid var(--admin); margin-bottom: 20px; }
         .admin-msg-box textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text-main); font-family: inherit; font-size: 0.9rem; resize: vertical; min-height: 80px; box-sizing: border-box; margin-bottom: 10px; outline: none; }
         .btn-msg { background: var(--admin); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
@@ -120,8 +123,11 @@
         .user-info b { color: var(--text-main); font-size: 1.05rem; }
         
         /* Modales */
-        #custom-modal, #modal-recuperar { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; }
-        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; }
+        #custom-modal, #modal-recuperar, #modal-config { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; margin: auto; }
+        
+        #modal-config .modal-content { max-width: 380px; padding: 25px 20px; }
+        
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
         .modal-btns button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
         .btn-cancel { background: #334155; color: white; }
@@ -157,6 +163,34 @@
                 <span style="font-size: 0.85rem; color: var(--text-dim);">Por favor, revisá tu bandeja principal y también la carpeta de <b>SPAM (Correo no deseado)</b>.</span>
             </div>
             <button class="auth-btn" style="margin-bottom: 0;" onclick="cerrarModalRecuperar()">Entendido</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-config">
+    <div class="modal-content">
+        <h3 style="color: var(--accent); margin-top:0; margin-bottom: 20px;">Valores de Cobro</h3>
+        
+        <div class="form-row" style="text-align: left; margin-bottom: 10px;">
+            <div><label>Sueldo Básico ($)</label><input type="text" inputmode="decimal" id="valBasico" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Valor Hora Extra ($)</label><input type="text" inputmode="decimal" id="valHora" placeholder="Auto o Fijo" oninput="formatearMiles(this)"></div>
+        </div>
+        <div class="form-row" style="text-align: left; margin-bottom: 10px;">
+            <div><label>Plus Nocturno ($)</label><input type="text" inputmode="decimal" id="valNoct" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Viático Fijo ($)</label><input type="text" inputmode="decimal" id="valViatico" placeholder="0" oninput="formatearMiles(this)"></div>
+        </div>
+        <div class="form-row" style="text-align: left; margin-bottom: 10px;">
+            <div><label>Presentismo ($)</label><input type="text" inputmode="decimal" id="valPresentismo" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Desc. por Ley (%)</label><input type="number" id="valDescuentos" placeholder="Defecto: 17"></div>
+        </div>
+        <div class="form-row" style="text-align: left; margin-bottom: 15px;">
+            <div><label>Horas Base Mes</label><input type="number" id="valHorasBase" placeholder="Defecto: 200"></div>
+            <div><label>Feriados al (%)</label><input type="number" id="valFeriadoPct" placeholder="Defecto: 100"></div>
+        </div>
+
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="cerrarModalConfig()">Cancelar</button>
+            <button class="btn-send" onclick="guardarConfig()">Guardar</button>
         </div>
     </div>
 </div>
@@ -255,28 +289,14 @@
     </button>
 
     <div class="glass-form">
-        <details style="margin-bottom: 15px;">
-            <summary style="font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-bottom: 15px; color: var(--accent);">⚙️ CONFIGURAR VALORES DE COBRO (Tocar aquí)</summary>
-            <div class="form-row">
-                <div><label>Sueldo Básico ($)</label><input type="text" inputmode="numeric" id="valBasico" placeholder="0" oninput="formatearMiles(this)" onchange="guardarConfig()"></div>
-                <div><label>Valor Hora Extra ($)</label><input type="text" inputmode="numeric" id="valHora" placeholder="Auto o Fijo" oninput="formatearMiles(this)" onchange="guardarConfig()"></div>
-            </div>
-            <div class="form-row">
-                <div><label>Plus Nocturno ($)</label><input type="text" inputmode="numeric" id="valNoct" placeholder="0" oninput="formatearMiles(this)" onchange="guardarConfig()"></div>
-                <div><label>Viático Fijo ($)</label><input type="text" inputmode="numeric" id="valViatico" placeholder="0" oninput="formatearMiles(this)" onchange="guardarConfig()"></div>
-            </div>
-            <div class="form-row">
-                <div><label>Presentismo ($)</label><input type="text" inputmode="numeric" id="valPresentismo" placeholder="0" oninput="formatearMiles(this)" onchange="guardarConfig()"></div>
-                <div><label>Descuento por Ley (%)</label><input type="number" id="valDescuentos" placeholder="Defecto: 17" onchange="guardarConfig()"></div>
-            </div>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-        </details>
+        
+        <button class="btn-config-main" onclick="abrirModalConfig()">⚙️ Configurar Valores de Cobro</button>
 
         <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
             <label>👤 MIS DATOS (Para el reporte)</label>
             <div class="form-row">
-                <input type="text" id="vigiNombre" placeholder="Nombre" onchange="guardarConfig()">
-                <input type="text" id="vigiApellido" placeholder="Apellido" onchange="guardarConfig()">
+                <input type="text" id="vigiNombre" placeholder="Nombre" onchange="guardarPerfil()">
+                <input type="text" id="vigiApellido" placeholder="Apellido" onchange="guardarPerfil()">
             </div>
         </div>
         
@@ -355,39 +375,53 @@
 
     window.currentUser = null;
     window.turnos = [];
+    window.preciosGuardados = {}; 
     let esModoRegistro = false;
     const INICIO_NOCHE = 21, FIN_NOCHE = 6;
     window.fechaFiltro = new Date();
     window.meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     window.totalStats = { t: 0, n: 0, f: 0, extra: 0, bruto: 0, neto: 0 };
 
-    // --- UI HELPERS ---
     window.showToast = function(msg, type = 'success') {
         const t = document.getElementById('toast');
         t.innerText = msg; 
         t.style.borderLeft = `5px solid ${type === 'success' ? 'var(--success)' : 'var(--danger)'}`;
-        t.classList.add('show'); 
-        setTimeout(() => t.classList.remove('show'), 4000);
+        t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 4000);
     }
 
     function actualizarConexion() {
         const badge = document.getElementById('status-badge');
         const text = document.getElementById('status-text');
-        if (navigator.onLine) {
-            badge.className = 'status-badge online';
-            text.innerText = 'En Línea';
-        } else {
-            badge.className = 'status-badge offline';
-            text.innerText = 'Sin Señal';
-        }
+        if (navigator.onLine) { badge.className = 'status-badge online'; text.innerText = 'En Línea'; } 
+        else { badge.className = 'status-badge offline'; text.innerText = 'Sin Señal'; }
     }
-    window.addEventListener('online', actualizarConexion);
-    window.addEventListener('offline', actualizarConexion);
+    window.addEventListener('online', actualizarConexion); window.addEventListener('offline', actualizarConexion);
 
     window.toggleTheme = function() {
         document.body.classList.toggle('light-mode');
         localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         document.getElementById('theme-icon').innerText = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+    }
+
+    // --- MODAL DE CONFIGURACIÓN ---
+    window.abrirModalConfig = function() {
+        const p = window.preciosGuardados;
+        const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
+        
+        document.getElementById('valBasico').value = formatearAUI(p.basico);
+        document.getElementById('valHora').value = formatearAUI(p.hora);
+        document.getElementById('valNoct').value = formatearAUI(p.noct);
+        document.getElementById('valViatico').value = formatearAUI(p.viatico);
+        document.getElementById('valPresentismo').value = formatearAUI(p.presentismo);
+        document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
+        document.getElementById('valFeriadoPct').value = p.feriadoPct !== undefined ? p.feriadoPct : "100";
+        document.getElementById('valHorasBase').value = p.horasBase !== undefined ? p.horasBase : "200";
+        
+        document.getElementById('modal-config').style.display = 'flex';
+    }
+    
+    window.cerrarModalConfig = function() {
+        document.getElementById('modal-config').style.display = 'none';
     }
 
     // --- RECUPERAR CONTRASEÑA ---
@@ -452,7 +486,6 @@
             document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
         }
     }
-
     window.cerrarSesion = async function() { await signOut(auth); }
 
     // Observador
@@ -462,19 +495,18 @@
             window.currentUser = user;
             document.getElementById('landing-page').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
-            document.getElementById('fecha').valueAsDate = new Date();
+            
+            // CONFIGURAR FECHA LOCAL (BUG 2 CORREGIDO)
+            const hoy = new Date();
+            hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
+            document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
+            
             if (localStorage.getItem('theme') === 'light') toggleTheme();
             
-            // ADMIN CHECK
-            if (user.email === 'mafero171189@gmail.com') {
-                document.getElementById('btn-admin-access').style.display = 'block';
-            } else {
-                document.getElementById('btn-admin-access').style.display = 'none';
-            }
+            if (user.email === 'mafero171189@gmail.com') document.getElementById('btn-admin-access').style.display = 'block';
+            else document.getElementById('btn-admin-access').style.display = 'none';
 
-            actualizarConexion();
-            await cargarDatosNube();
-            actualizarUI();
+            actualizarConexion(); await cargarDatosNube(); actualizarUI();
         } else {
             window.currentUser = null;
             document.getElementById('landing-page').style.display = 'flex';
@@ -482,75 +514,50 @@
             document.getElementById('admin-container').style.display = 'none';
             document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
         }
-        loading.style.opacity = '0';
-        setTimeout(() => loading.style.display = 'none', 500);
+        loading.style.opacity = '0'; setTimeout(() => loading.style.display = 'none', 500);
     });
 
-    // --- PANEL DE ADMINISTRADOR ---
+    // --- ADMIN PANEL ---
     window.abrirAdmin = async function() {
         document.getElementById('app-container').style.display = 'none';
         document.getElementById('admin-container').style.display = 'block';
         const lista = document.getElementById('lista-usuarios-admin');
         lista.innerHTML = "<p style='text-align:center'>Cargando personal...</p>";
-        
         try {
             const querySnapshot = await getDocs(collection(db, "directorio_usuarios"));
             lista.innerHTML = "";
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                
-                // Formatear la fecha linda (Día/Mes/Año)
                 let fechaTexto = "Desconocida";
                 if(data.fecha) {
                     const fechaObj = new Date(data.fecha);
                     fechaTexto = fechaObj.toLocaleDateString('es-AR', {day: '2-digit', month: '2-digit', year: 'numeric'});
                 }
-
-                const card = document.createElement('div');
-                card.className = 'user-list-card';
-                card.innerHTML = `
-                    <div class="user-info">
-                        <b>${data.nombre || 'Sin Nombre'}</b>
-                        <span style="color: var(--text-dim); display: block;">${data.email}</span>
-                        <span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">📅 Registrado el: ${fechaTexto}</span>
-                    </div>
-                `;
+                const card = document.createElement('div'); card.className = 'user-list-card';
+                card.innerHTML = `<div class="user-info"><b>${data.nombre || 'Sin Nombre'}</b><span style="color: var(--text-dim); display: block;">${data.email}</span><span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">📅 Registrado el: ${fechaTexto}</span></div>`;
                 lista.appendChild(card);
             });
-        } catch (e) {
-            lista.innerHTML = "<p style='color:red; text-align:center;'>Error al cargar el panel.</p>";
-        }
+        } catch (e) { lista.innerHTML = "<p style='color:red; text-align:center;'>Error al cargar el panel.</p>"; }
     }
+    window.volverApp = function() { document.getElementById('admin-container').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; }
 
-    window.volverApp = function() {
-        document.getElementById('admin-container').style.display = 'none';
-        document.getElementById('app-container').style.display = 'block';
-    }
-
-    // --- MENSAJE GLOBAL ADMIN ---
     window.publicarMensaje = async function() {
         const texto = document.getElementById('admin-mensaje-texto').value;
         const btn = document.getElementById('btn-publicar');
         btn.innerText = "Publicando...";
-        
         try {
             await setDoc(doc(db, "global", "aviso"), { texto: texto, fecha: new Date().toISOString() });
             window.showToast("✅ Aviso publicado a todos", "success");
-            
-            // Actualizar vista propia por si volvemos a la app
             if (texto.trim() !== "") {
                 document.getElementById('texto-aviso-global').innerText = texto;
                 document.getElementById('aviso-global').style.display = 'block';
             } else {
                 document.getElementById('aviso-global').style.display = 'none';
             }
-        } catch(e) {
-            window.showToast("⚠️ Error al publicar", "danger");
-        }
+        } catch(e) { window.showToast("⚠️ Error al publicar", "danger"); }
         btn.innerText = "Publicar a Todos";
     }
 
-    // --- MODAL DE BORRAR TURNO ---
     let confirmCallback = null;
     window.abrirModalBorrar = function(id, fecha, lugar) {
         document.getElementById('modal-title').innerText = "¿Eliminar Turno?";
@@ -561,61 +568,87 @@
     window.closeModal = function() { document.getElementById('custom-modal').style.display = 'none'; }
     document.getElementById('confirm-btn').onclick = () => { confirmCallback(); window.closeModal(); };
 
-    // --- LÓGICA DE NUBE (MÚLTIPLES USUARIOS) ---
+    // --- CARGA DE DATOS ---
     async function cargarDatosNube() {
         if (!window.currentUser) return;
         try {
-            // Cargar Aviso Global
             const msgSnap = await getDoc(doc(db, "global", "aviso"));
             if (msgSnap.exists() && msgSnap.data().texto.trim() !== "") {
                 document.getElementById('texto-aviso-global').innerText = msgSnap.data().texto;
                 document.getElementById('aviso-global').style.display = 'block';
-                if(window.currentUser.email === 'mafero171189@gmail.com') {
-                    document.getElementById('admin-mensaje-texto').value = msgSnap.data().texto;
-                }
-            } else {
-                document.getElementById('aviso-global').style.display = 'none';
-            }
+                if(window.currentUser.email === 'mafero171189@gmail.com') document.getElementById('admin-mensaje-texto').value = msgSnap.data().texto;
+            } else { document.getElementById('aviso-global').style.display = 'none'; }
 
-            // Cargar Config
             const docSnap = await getDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"));
             if (docSnap.exists()) {
-                const p = docSnap.data().precios || {}; const u = docSnap.data().perfil || {};
-                document.getElementById('valBasico').value = p.basico ? parseInt(p.basico, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valHora').value = p.hora ? parseInt(p.hora, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valNoct').value = p.noct ? parseInt(p.noct, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valViatico').value = p.viatico ? parseInt(p.viatico, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valPresentismo').value = p.presentismo ? parseInt(p.presentismo, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
-                document.getElementById('vigiNombre').value = u.nombre || ""; document.getElementById('vigiApellido').value = u.apellido || "";
+                const p = docSnap.data().precios || {}; 
+                const u = docSnap.data().perfil || {};
+                
+                window.preciosGuardados = p; 
+                document.getElementById('vigiNombre').value = u.nombre || ""; 
+                document.getElementById('vigiApellido').value = u.apellido || "";
+            } else {
+                window.preciosGuardados = {};
             }
             
-            // Cargar Turnos
             const q = query(collection(db, "usuarios", window.currentUser.uid, "turnos"), orderBy("f", "desc"));
             const querySnapshot = await getDocs(q);
             window.turnos = [];
             querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
-        } catch (e) { 
-            console.error(e); 
-        }
+        } catch (e) { console.error(e); }
+    }
+
+    const limpiar = (str) => { if(!str) return "0"; return str.toString().replace(/\./g, "").replace(",", "."); };
+    window.formatearMiles = function(input) { 
+        let valor = input.value.replace(/[^\d,]/g, ""); let partes = valor.split(','); let entero = partes[0].replace(/\D/g, "");
+        if (entero !== "") entero = parseInt(entero, 10).toLocaleString('es-AR');
+        if (partes.length > 1) input.value = entero + "," + partes[1].substring(0, 2); else input.value = entero;
     }
 
     window.guardarConfig = async function() {
         if (!window.currentUser) return;
-        const limpiar = (str) => str.replace(/\./g, "");
-        const p = { basico: limpiar(document.getElementById('valBasico').value), hora: limpiar(document.getElementById('valHora').value), noct: limpiar(document.getElementById('valNoct').value), viatico: limpiar(document.getElementById('valViatico').value), presentismo: limpiar(document.getElementById('valPresentismo').value), descuentos: document.getElementById('valDescuentos').value };
+        const p = { 
+            basico: limpiar(document.getElementById('valBasico').value), 
+            hora: limpiar(document.getElementById('valHora').value), 
+            noct: limpiar(document.getElementById('valNoct').value), 
+            viatico: limpiar(document.getElementById('valViatico').value), 
+            presentismo: limpiar(document.getElementById('valPresentismo').value), 
+            descuentos: document.getElementById('valDescuentos').value,
+            feriadoPct: document.getElementById('valFeriadoPct').value,
+            horasBase: document.getElementById('valHorasBase').value // BUG 3 CORREGIDO
+        };
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
-        try { await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); render(); } catch (e) { }
+        try { 
+            await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); 
+            window.preciosGuardados = p; 
+            cerrarModalConfig();
+            window.showToast("✅ Valores de cobro actualizados", "success");
+            render(); 
+        } catch (e) { window.showToast("⚠️ Error al guardar", "danger"); }
+    }
+
+    window.guardarPerfil = async function() {
+        if (!window.currentUser) return;
+        const p = window.preciosGuardados; 
+        const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
+        try { await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); } catch (e) { }
     }
 
     window.guardar = async function() {
         if (!window.currentUser) return;
         const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General", e = document.getElementById('entrada').value, s = document.getElementById('salida').value, fer = document.getElementById('esFeriado').checked;
-        if (!e || !s) { return window.showToast("⚠️ Completá Entrada y Salida", "danger"); }
+        if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
         let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
         if (sal <= ent) sal.setDate(sal.getDate() + 1);
-        let diff = (sal - ent) / 3600000, noct = 0, temp = new Date(ent);
-        while (temp < sal) { if (temp.getHours() >= INICIO_NOCHE || temp.getHours() < FIN_NOCHE) noct++; temp.setHours(temp.getHours() + 1); }
+        let diff = (sal - ent) / 3600000;
+        
+        let noct = 0; let temp = new Date(ent);
+        while (temp < sal) { 
+            if (temp.getHours() >= INICIO_NOCHE || temp.getHours() < FIN_NOCHE) noct += (1/60); 
+            temp.setMinutes(temp.getMinutes() + 1); 
+        }
+        noct = Math.round(noct * 100) / 100; 
+        
         const nuevoTurno = { f, l, e, s, fer, t: diff, n: noct };
         try {
             const docRef = await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
@@ -637,7 +670,6 @@
         document.getElementById('mesBtnLabel').innerText = mesNom.toUpperCase();
         render();
     }
-    window.formatearMiles = function(input) { let valor = input.value.replace(/\D/g, ""); input.value = valor === "" ? "" : parseInt(valor, 10).toLocaleString('es-AR'); }
 
     function render() {
         const lista = document.getElementById('lista'); let st = 0, sn = 0, sf = 0; lista.innerHTML = '';
@@ -646,29 +678,43 @@
             if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
                 st += t.t; sn += t.n; if (t.fer) sf += t.t;
                 const card = document.createElement('div'); card.className = 'shift-card';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="display:flex; align-items:center;"><div style="text-align:right;"><span class="total-h">${t.t.toFixed(1)}hs</span><span class="noct-h">🌙 ${t.n}h</span></div><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${t.l || 'Puesto'}')">✕</button></div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="display:flex; align-items:center;"><div style="text-align:right;"><span class="total-h">${t.t.toFixed(1)}hs</span><span class="noct-h">🌙 ${t.n.toFixed(1)}h</span></div><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${t.l || 'Puesto'}')">✕</button></div>`;
                 lista.appendChild(card);
             }
         });
-        document.getElementById('totH').innerText = st.toFixed(1); document.getElementById('totN').innerText = sn; document.getElementById('totF').innerText = sf.toFixed(1);
+        document.getElementById('totH').innerText = st.toFixed(1); document.getElementById('totN').innerText = sn.toFixed(1); document.getElementById('totF').innerText = sf.toFixed(1);
         
-        const limpiar = (str) => str ? str.replace(/\./g, "") : "0";
-        const basico = parseFloat(limpiar(document.getElementById('valBasico').value)) || 0, presentismo = parseFloat(limpiar(document.getElementById('valPresentismo').value)) || 0, plusN = parseFloat(limpiar(document.getElementById('valNoct').value)) || 0, viatico = parseFloat(limpiar(document.getElementById('valViatico').value)) || 0;
-        let descuentPorcentaje = parseFloat(document.getElementById('valDescuentos').value); if(isNaN(descuentPorcentaje)) descuentPorcentaje = 17;
+        const p = window.preciosGuardados || {};
+        const basico = parseFloat(p.basico) || 0, presentismo = parseFloat(p.presentismo) || 0, plusN = parseFloat(p.noct) || 0, viatico = parseFloat(p.viatico) || 0;
+        
+        let descuentPorcentaje = parseFloat(p.descuentos); if(isNaN(descuentPorcentaje)) descuentPorcentaje = 17;
+        let feriadoPct = parseFloat(p.feriadoPct); if(isNaN(feriadoPct)) feriadoPct = 100;
+        
+        // BUG 3: USO DE LAS HORAS BASE PARA CALCULAR EXTRAS Y VALOR DE HORA NORMAL
+        let horasBase = parseFloat(p.horasBase); if(isNaN(horasBase) || horasBase <= 0) horasBase = 200;
 
-        let horaExtraVal = parseFloat(limpiar(document.getElementById('valHora').value)); if (isNaN(horaExtraVal) || horaExtraVal <= 0) horaExtraVal = (basico + presentismo) / 200; 
-        let pagoHorasTotales = 0, hsExtra = 0;
-        if (basico > 0) { if (st > 200) { hsExtra = st - 200; pagoHorasTotales = hsExtra * horaExtraVal; } } else { pagoHorasTotales = st * horaExtraVal; }
+        let valorHoraNormal = (basico + presentismo) / horasBase;
+        let horaExtraVal = parseFloat(p.hora); 
+        if (isNaN(horaExtraVal) || horaExtraVal <= 0) horaExtraVal = valorHoraNormal; 
+        if (isNaN(valorHoraNormal) || valorHoraNormal <= 0) valorHoraNormal = horaExtraVal;
         
-        const totalBruto = basico + presentismo + viatico + pagoHorasTotales + (sn * plusN), totalNeto = totalBruto - (totalBruto * (descuentPorcentaje / 100));
-        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`; document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
-        window.totalStats = { t: st.toFixed(1), n: sn, f: sf.toFixed(1), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
+        let pagoFeriados = sf * valorHoraNormal * (feriadoPct / 100);
+        let pagoHorasTotales = 0, hsExtra = 0;
+        
+        if (basico > 0) { 
+            if (st > horasBase) { hsExtra = st - horasBase; pagoHorasTotales = hsExtra * horaExtraVal; } 
+        } else { 
+            pagoHorasTotales = st * horaExtraVal; 
+        }
+        
+        const totalBruto = basico + presentismo + viatico + pagoHorasTotales + pagoFeriados + (sn * plusN), totalNeto = totalBruto - (totalBruto * (descuentPorcentaje / 100));
+        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        window.totalStats = { t: st.toFixed(1), n: sn.toFixed(1), f: sf.toFixed(1), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
     }
 
-    // --- REPORTE DE WHATSAPP ---
     window.enviarWhatsapp = function() {
         const nom = document.getElementById('vigiNombre').value, ape = document.getElementById('vigiApellido').value;
-        if (!nom || !ape) { return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger"); }
+        if (!nom || !ape) return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger");
         const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
         let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
         const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n--------------------------\n📈 *Sueldo Bruto:* $${window.totalStats.bruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n💰 *NETO EN MANO:* $${window.totalStats.neto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n_Generado por Control Vigía_`;
