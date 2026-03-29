@@ -13,7 +13,7 @@
             --bg-color: #0f172a; --card-bg: #1e293b; --input-bg: rgba(15, 23, 42, 0.6);
             --accent: #38bdf8; --text-main: #f8fafc; --text-dim: #94a3b8;
             --success: #22c55e; --danger: #ef4444; --warning: #f59e0b;
-            --border: rgba(255, 255, 255, 0.1); --whatsapp: #25d366;
+            --border: rgba(255, 255, 255, 0.1); --whatsapp: #25d366; --admin: #8b5cf6;
         }
 
         body.light-mode {
@@ -21,15 +21,60 @@
             --accent: #0284c7; --text-main: #0f172a; --text-dim: #64748b; --border: rgba(0, 0, 0, 0.1);
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; padding: 20px; margin: 0; min-height: 100vh; transition: 0.3s; }
-        .app-container { width: 100%; max-width: 480px; position: relative; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        header h1 { font-size: 1.5rem; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; min-height: 100vh; transition: 0.3s; overflow-x: hidden; }
+        
+        /* --- LANDING PAGE --- */
+        #landing-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 30px 20px; text-align: center; background: radial-gradient(circle at top, #1e293b, #0f172a); box-sizing: border-box; }
+        .hero-title { font-size: 2.8rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(56, 189, 248, 0.3); }
+        .hero-subtitle { font-size: 1rem; color: var(--text-dim); margin: 15px 0 35px 0; max-width: 420px; line-height: 1.6; }
+        .hero-subtitle b { color: var(--text-main); }
+        
+        .features-grid { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; width: 100%; max-width: 400px; }
+        .feature-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 18px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.2); backdrop-filter: blur(5px); }
+        .feat-icon { font-size: 2rem; background: var(--bg-color); padding: 12px; border-radius: 14px; border: 1px solid var(--border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .feat-text h4 { margin: 0 0 5px 0; color: var(--accent); font-size: 1.05rem; }
+        .feat-text p { margin: 0; font-size: 0.85rem; color: var(--text-dim); line-height: 1.4; }
+        
+        .auth-box { background: var(--card-bg); padding: 30px 25px; border-radius: 20px; border: 1px solid var(--accent); width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; }
+        .auth-box h3 { margin-top: 0; margin-bottom: 20px; color: var(--text-main); font-size: 1.3rem; }
+        
+        .auth-input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: var(--text-main); font-size: 1rem; margin-bottom: 15px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        .auth-input:focus { border-color: var(--accent); box-shadow: 0 0 8px rgba(56, 189, 248, 0.3); }
+        
+        .password-container { position: relative; width: 100%; }
+        .password-container input { margin-bottom: 5px; padding-right: 45px; } 
+        .toggle-password { position: absolute; right: 12px; top: 25px; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-dim); padding: 0; outline: none; }
+        
+        .forgot-password { color: var(--accent); font-size: 0.85rem; cursor: pointer; text-decoration: none; background: none; border: none; padding: 0; margin-bottom: 20px; display: block; text-align: right; width: 100%; font-family: 'Inter', sans-serif; transition: 0.3s; }
+        .forgot-password:hover { text-decoration: underline; color: var(--text-main); }
+
+        .auth-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 1.05rem; margin-bottom: 15px; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .auth-switch { color: var(--text-dim); font-size: 0.9rem; cursor: pointer; background: none; border: none; padding: 5px; transition: 0.3s; }
+        .auth-switch b { color: var(--accent); text-decoration: underline; }
+
+        /* --- APP PRINCIPAL --- */
+        #app-container, #admin-container { display: none; width: 100%; max-width: 480px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        header h1 { font-size: 1.3rem; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; }
+        .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 700; margin-top: 4px; text-transform: uppercase; }
+        .status-badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-badge.online { color: var(--success); } .status-badge.online .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-badge.offline { color: var(--danger); } .status-badge.offline .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-logout { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+        
+        #btn-admin-access { display: none; background: rgba(139, 92, 246, 0.2); color: var(--admin); border: 1px solid var(--admin); padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+        
+        /* AVISO GLOBAL (Usuarios) */
+        .global-alert { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; border-left: 4px solid var(--accent); }
+        .global-alert h4 { margin: 0 0 5px 0; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        .global-alert p { margin: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.4; }
 
         .month-selector { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; background: var(--card-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--border); justify-content: center; }
         .month-selector span { font-weight: 800; font-size: 1rem; color: var(--text-main); min-width: 100px; text-align: center; }
         .btn-nav { background: var(--accent); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
-        .mode-toggle { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 12px; cursor: pointer; }
+        .mode-toggle { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px 10px; border-radius: 12px; cursor: pointer; }
 
         .salary-card { background: linear-gradient(135deg, #0f172a, #1e293b); padding: 15px; border-radius: 16px; border: 1px solid var(--accent); margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2); }
         .salary-card .bruto-text { font-size: 0.8rem; color: var(--text-dim); }
@@ -41,18 +86,17 @@
         .stat-card b { display: block; font-size: 1.2rem; }
         .stat-card span { font-size: 0.6rem; text-transform: uppercase; color: var(--text-dim); font-weight: bold; }
 
-        .btn-whatsapp { width: 100%; background: var(--whatsapp); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-whatsapp { width: 100%; background: var(--whatsapp); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; }
 
         .glass-form { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-dim); margin-bottom: 4px; }
         input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text-main); font-size: 0.95rem; box-sizing: border-box; }
-        .full-width { grid-column: span 2; }
-
-        .feriado-full { grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); margin-top: 5px; cursor: pointer; }
+        
+        .feriado-full { grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); margin-top: 5px; cursor: pointer; width: 100%; box-sizing: border-box; }
         .feriado-full input { width: auto; margin: 0; cursor: pointer; }
         .feriado-full span { font-size: 0.85rem; color: var(--warning); font-weight: 600; }
-
+        
         .btn-submit { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 15px; }
 
         .shift-card { background: var(--card-bg); margin-bottom: 10px; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
@@ -62,29 +106,125 @@
         .noct-h { font-size: 0.65rem; color: var(--accent); font-weight: bold; }
         .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; margin-left: 10px; }
 
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-bg); color: var(--text-main); padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid var(--border); z-index: 1000; transition: 0.4s; opacity: 0; font-weight: 500; }
-        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        /* --- PANEL ADMIN --- */
+        .admin-header { background: linear-gradient(135deg, #4c1d95, #7c3aed); padding: 15px; border-radius: 16px; margin-bottom: 20px; text-align: center; color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }
+        .admin-header h2 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
+        
+        /* Caja de Mensajes Admin */
+        .admin-msg-box { background: var(--card-bg); padding: 15px; border-radius: 14px; border: 1px solid var(--admin); margin-bottom: 20px; }
+        .admin-msg-box textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text-main); font-family: inherit; font-size: 0.9rem; resize: vertical; min-height: 80px; box-sizing: border-box; margin-bottom: 10px; outline: none; }
+        .btn-msg { background: var(--admin); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
 
-        #custom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .user-list-card { background: var(--card-bg); border: 1px solid var(--border); padding: 15px; border-radius: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .user-info { font-size: 0.9rem; }
+        .user-info b { color: var(--text-main); font-size: 1.05rem; }
+        
+        /* Modales */
+        #custom-modal, #modal-recuperar { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; }
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
         .modal-btns button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
         .btn-cancel { background: #334155; color: white; }
         .btn-confirm { background: var(--danger); color: white; }
-        details summary { outline: none; }
-        
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 3000; display: flex; justify-content: center; align-items: center; color: var(--accent); font-weight: bold; font-size: 1.2rem; transition: 0.5s opacity; }
+        .btn-send { background: var(--accent); color: white; }
+
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-bg); color: var(--text-main); padding: 14px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid var(--border); z-index: 4000; transition: 0.4s; opacity: 0; font-weight: 500; font-size: 0.9rem; text-align: center; max-width: 90%; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; display: flex; justify-content: center; align-items: center; color: var(--accent); font-weight: bold; font-size: 1.2rem; transition: 0.5s opacity; }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay">Conectando a la Nube... ☁️</div>
+<div id="loading-overlay">Verificando sesión... 🛡️</div>
+<div id="toast"></div>
 
-<div class="app-container">
+<div id="modal-recuperar">
+    <div class="modal-content" id="recuperar-content-box">
+        <div id="recuperar-step-1">
+            <h3 style="color: var(--accent); margin-top:0;">Recuperar Contraseña</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px;">Ingresá el correo asociado a tu cuenta para recibir un enlace de recuperación.</p>
+            <input type="email" id="recuperar-email" class="auth-input" placeholder="Tu correo electrónico">
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="cerrarModalRecuperar()">Cancelar</button>
+                <button class="btn-send" id="btn-enviar-recupero" onclick="ejecutarRecuperacion()">Enviar Enlace</button>
+            </div>
+        </div>
+        <div id="recuperar-step-2" style="display: none;">
+            <h3 style="color: var(--success); margin-top:0;">¡Correo Enviado! ✉️</h3>
+            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 15px;">Hemos enviado un enlace seguro a tu dirección de correo para restablecer tu clave.</p>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+                <span style="font-size: 0.9rem; color: var(--warning); font-weight: bold; display: block; margin-bottom: 5px;">⚠️ Importante:</span>
+                <span style="font-size: 0.85rem; color: var(--text-dim);">Por favor, revisá tu bandeja principal y también la carpeta de <b>SPAM (Correo no deseado)</b>.</span>
+            </div>
+            <button class="auth-btn" style="margin-bottom: 0;" onclick="cerrarModalRecuperar()">Entendido</button>
+        </div>
+    </div>
+</div>
+
+<div id="landing-page">
+    <h1 class="hero-title">CONTROL VIGÍA</h1>
+    <p class="hero-subtitle">La herramienta definitiva para el <b>personal de seguridad privada</b>. Llevá el control exacto de tus horas y cuidá tu recibo de sueldo mes a mes.</p>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <span class="feat-icon">☁️</span>
+            <div class="feat-text">
+                <h4>Nube Segura</h4>
+                <p>Historial guardado de forma 100% privada y segura.</p>
+            </div>
+        </div>
+        <div class="feature-card">
+            <span class="feat-icon">💰</span>
+            <div class="feat-text">
+                <h4>Sueldo Exacto</h4>
+                <p>Calculadora automática de neto, bruto, extras y feriados.</p>
+            </div>
+        </div>
+        <div class="feature-card">
+            <span class="feat-icon">📲</span>
+            <div class="feat-text">
+                <h4>Reportes Express</h4>
+                <p>Generá un comprobante mensual y envialo por WhatsApp.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-box">
+        <h3 id="auth-title">Iniciar Sesión</h3>
+        <input type="text" id="auth-nombre" class="auth-input" placeholder="Tu Nombre y Apellido" style="display: none;">
+        <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico">
+        
+        <div class="password-container">
+            <input type="password" id="auth-password" class="auth-input" placeholder="Contraseña">
+            <button class="toggle-password" onclick="togglePasswordVisibility()" id="toggle-pwd-icon" tabindex="-1">👁️</button>
+        </div>
+        
+        <button id="btn-forgot-pwd" class="forgot-password" onclick="abrirModalRecuperar()">¿Olvidaste tu contraseña?</button>
+        
+        <button id="btn-action-auth" class="auth-btn" onclick="procesarAuth()">INGRESAR</button>
+        <button id="btn-toggle-auth" class="auth-switch" onclick="toggleAuthMode()">¿No tenés cuenta? <b>Registrate acá</b></button>
+    </div>
+</div>
+
+<div id="app-container">
     <header>
-        <h1>CONTROL VIGÍA</h1>
-        <button class="mode-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div style="display: flex; flex-direction: column;">
+            <h1>CONTROL VIGÍA</h1>
+            <div id="status-badge" class="status-badge online">
+                <span class="dot"></span> <span id="status-text">Conectado</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button id="btn-admin-access" onclick="abrirAdmin()">⭐ Admin</button>
+            <button class="mode-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+            <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+        </div>
     </header>
+
+    <div id="aviso-global" class="global-alert">
+        <h4>📢 Aviso</h4>
+        <p id="texto-aviso-global"></p>
+    </div>
 
     <div class="month-selector">
         <button class="btn-nav" onclick="cambiarMes(-1)">❮</button>
@@ -99,16 +239,24 @@
     </div>
 
     <div class="stats-panel">
-        <div class="stat-card" style="border-bottom: 3px solid var(--accent)"><span>Total Horas</span><b id="totH">0.0</b></div>
-        <div class="stat-card" style="border-bottom: 3px solid var(--text-dim)"><span>Nocturnas</span><b id="totN">0</b></div>
-        <div class="stat-card" style="border-bottom: 3px solid var(--warning)"><span>Feriados</span><b id="totF">0.0</b></div>
+        <div class="stat-card" style="border-bottom: 3px solid var(--accent)">
+            <span>Total Horas</span><b id="totH">0.0</b>
+        </div>
+        <div class="stat-card" style="border-bottom: 3px solid var(--text-dim)">
+            <span>Nocturnas</span><b id="totN">0</b>
+        </div>
+        <div class="stat-card" style="border-bottom: 3px solid var(--warning)">
+            <span>Feriados</span><b id="totF">0.0</b>
+        </div>
     </div>
 
-    <button class="btn-whatsapp" onclick="enviarWhatsapp()"><span>📲 REPORTE DE <span id="mesBtnLabel">...</span></span></button>
+    <button class="btn-whatsapp" onclick="enviarWhatsapp()">
+        <span>📲 REPORTE DE <span id="mesBtnLabel">...</span></span>
+    </button>
 
     <div class="glass-form">
         <details style="margin-bottom: 15px;">
-            <summary style="font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-bottom: 15px; color: var(--accent);">⚙️ CONFIGURAR VALORES DE COBRO</summary>
+            <summary style="font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-bottom: 15px; color: var(--accent);">⚙️ CONFIGURAR VALORES DE COBRO (Tocar aquí)</summary>
             <div class="form-row">
                 <div><label>Sueldo Básico ($)</label><input type="text" inputmode="numeric" id="valBasico" placeholder="0" oninput="formatearMiles(this)" onchange="guardarConfig()"></div>
                 <div><label>Valor Hora Extra ($)</label><input type="text" inputmode="numeric" id="valHora" placeholder="Auto o Fijo" oninput="formatearMiles(this)" onchange="guardarConfig()"></div>
@@ -151,7 +299,30 @@
     <div id="lista"></div>
 </div>
 
-<div id="toast"></div>
+<div id="admin-container">
+    <header>
+        <div style="display: flex; flex-direction: column;">
+            <h1 style="color: var(--admin)">PANEL SUPERVISOR</h1>
+        </div>
+        <button class="btn-logout" onclick="volverApp()">Volver a mi App</button>
+    </header>
+    
+    <div class="admin-msg-box">
+        <h3 style="margin-top:0; font-size: 1.1rem; color: var(--admin);">📢 Publicar Aviso Global</h3>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Este mensaje aparecerá en la pantalla principal de todos los usuarios registrados.</p>
+        <textarea id="admin-mensaje-texto" placeholder="Escribí el aviso acá... (Dejá el texto vacío y publicá para borrar el aviso)"></textarea>
+        <button class="btn-msg" id="btn-publicar" onclick="publicarMensaje()">Publicar a Todos</button>
+    </div>
+
+    <div class="admin-header">
+        <h2>Personal Registrado</h2>
+        <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema (Solo lectura)</p>
+    </div>
+    
+    <div id="lista-usuarios-admin">
+        </div>
+</div>
+
 <div id="custom-modal">
     <div class="modal-content">
         <h3 id="modal-title" style="margin-top:0">¿Eliminar Turno?</h3>
@@ -166,8 +337,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    // Llaves de tu base de datos Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCjSqOhEtmzTFS82f4VLbQQn8ZTiB5Ct_Q",
       authDomain: "control-vigia.firebaseapp.com",
@@ -175,192 +346,211 @@
       projectId: "control-vigia",
       storageBucket: "control-vigia.firebasestorage.app",
       messagingSenderId: "914380958100",
-      appId: "1:914380958100:web:e3e89f561023b01b754781",
-      measurementId: "G-WDG15985MB"
+      appId: "1:914380958100:web:e3e89f561023b01b754781"
     };
 
-    // Iniciar Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    // Variables Globales
+    window.currentUser = null;
     window.turnos = [];
+    let esModoRegistro = false;
     const INICIO_NOCHE = 21, FIN_NOCHE = 6;
     window.fechaFiltro = new Date();
-    window.totalStats = { t: 0, n: 0, f: 0, extra: 0, bruto: 0, neto: 0 };
     window.meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    window.totalStats = { t: 0, n: 0, f: 0, extra: 0, bruto: 0, neto: 0 };
 
-    // --- ARRANQUE DE LA APP ---
-    document.addEventListener('DOMContentLoaded', async () => {
-        document.getElementById('fecha').valueAsDate = new Date();
-        if (localStorage.getItem('theme') === 'light') toggleTheme();
-        
-        await cargarDatosNube(); // Trae config y turnos de Firebase
-        
-        document.getElementById('loading-overlay').style.opacity = '0';
-        setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 500);
-        
-        actualizarUI();
-    });
-
-    // --- LÓGICA DE NUBE (FIREBASE) ---
-    async function cargarDatosNube() {
-        try {
-            // 1. Traer Configuración
-            const docSnap = await getDoc(doc(db, "settings", "userConfig"));
-            if (docSnap.exists()) {
-                const p = docSnap.data().precios || {};
-                const u = docSnap.data().perfil || {};
-                
-                document.getElementById('valBasico').value = p.basico ? parseInt(p.basico, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valHora').value = p.hora ? parseInt(p.hora, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valNoct').value = p.noct ? parseInt(p.noct, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valViatico').value = p.viatico ? parseInt(p.viatico, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valPresentismo').value = p.presentismo ? parseInt(p.presentismo, 10).toLocaleString('es-AR') : "";
-                document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
-                
-                document.getElementById('vigiNombre').value = u.nombre || "";
-                document.getElementById('vigiApellido').value = u.apellido || "";
-            }
-
-            // 2. Traer Historial de Turnos
-            const q = query(collection(db, "turnos"), orderBy("f", "desc"));
-            const querySnapshot = await getDocs(q);
-            window.turnos = [];
-            querySnapshot.forEach((docSnap) => {
-                window.turnos.push({ id: docSnap.id, ...docSnap.data() });
-            });
-        } catch (e) {
-            console.error("Error al conectar con la nube: ", e);
-            showToast("⚠️ Modo sin conexión", "danger");
-        }
-    }
-
-    window.guardarConfig = async function() {
-        const limpiar = (str) => str.replace(/\./g, "");
-        const p = { 
-            basico: limpiar(document.getElementById('valBasico').value), 
-            hora: limpiar(document.getElementById('valHora').value), 
-            noct: limpiar(document.getElementById('valNoct').value), 
-            viatico: limpiar(document.getElementById('valViatico').value),
-            presentismo: limpiar(document.getElementById('valPresentismo').value),
-            descuentos: document.getElementById('valDescuentos').value
-        };
-        const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
-        
-        try {
-            await setDoc(doc(db, "settings", "userConfig"), { precios: p, perfil: u });
-            render();
-        } catch (e) { showToast("⚠️ Error al guardar config", "danger"); }
-    }
-
-    window.guardar = async function() {
-        const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General",
-              e = document.getElementById('entrada').value, s = document.getElementById('salida').value,
-              fer = document.getElementById('esFeriado').checked;
-              
-        if (!e || !s) { showToast("⚠️ Completá la Entrada y Salida", "danger"); return; }
-        
-        let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
-        if (sal <= ent) sal.setDate(sal.getDate() + 1);
-        let diff = (sal - ent) / 3600000, noct = 0, temp = new Date(ent);
-        while (temp < sal) { 
-            if (temp.getHours() >= INICIO_NOCHE || temp.getHours() < FIN_NOCHE) noct++; 
-            temp.setHours(temp.getHours() + 1); 
-        }
-
-        const nuevoTurno = { f, l, e, s, fer, t: diff, n: noct };
-
-        try {
-            const docRef = await addDoc(collection(db, "turnos"), nuevoTurno);
-            window.turnos.push({ id: docRef.id, ...nuevoTurno });
-            window.turnos.sort((a,b) => new Date(b.f) - new Date(a.f));
-            
-            document.getElementById('lugar').value = '';
-            document.getElementById('esFeriado').checked = false;
-            showToast("✅ Turno agendado en la Nube");
-            actualizarUI();
-        } catch (error) { showToast("⚠️ Error de conexión", "danger"); }
-    }
-
-    window.borrarTurnoNube = async function(id) {
-        try {
-            await deleteDoc(doc(db, "turnos", id));
-            window.turnos = window.turnos.filter(t => t.id !== id);
-            showToast("🗑️ Turno eliminado");
-            render();
-        } catch (e) { showToast("⚠️ Error al borrar", "danger"); }
-    }
-
-    // --- INTERFAZ Y RENDERIZADO ---
-    window.cambiarMes = function(delta) { window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); actualizarUI(); }
-    function actualizarUI() {
-        const mesNom = window.meses[window.fechaFiltro.getMonth()];
-        document.getElementById('mesVisual').innerText = `${mesNom.toUpperCase()} ${window.fechaFiltro.getFullYear()}`;
-        document.getElementById('mesBtnLabel').innerText = mesNom.toUpperCase();
-        render();
-    }
-
-    window.formatearMiles = function(input) {
-        let valor = input.value.replace(/\D/g, "");
-        input.value = valor === "" ? "" : parseInt(valor, 10).toLocaleString('es-AR');
-    }
-
-    function render() {
-        const lista = document.getElementById('lista');
-        let st = 0, sn = 0, sf = 0;
-        lista.innerHTML = '';
-        
-        window.turnos.forEach((t) => {
-            const fObj = new Date(t.f + "T00:00:00");
-            if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
-                st += t.t; sn += t.n; if (t.fer) sf += t.t;
-                
-                const card = document.createElement('div');
-                card.className = 'shift-card';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
-                    <div style="display:flex; align-items:center;"><div style="text-align:right;"><span class="total-h">${t.t.toFixed(1)}hs</span><span class="noct-h">🌙 ${t.n}h</span></div>
-                    <button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${t.l || 'Puesto'}')">✕</button></div>`;
-                lista.appendChild(card);
-            }
-        });
-
-        document.getElementById('totH').innerText = st.toFixed(1);
-        document.getElementById('totN').innerText = sn;
-        document.getElementById('totF').innerText = sf.toFixed(1);
-        
-        const limpiar = (str) => str ? str.replace(/\./g, "") : "0";
-        const basico = parseFloat(limpiar(document.getElementById('valBasico').value)) || 0;
-        const presentismo = parseFloat(limpiar(document.getElementById('valPresentismo').value)) || 0;
-        const plusN = parseFloat(limpiar(document.getElementById('valNoct').value)) || 0;
-        const viatico = parseFloat(limpiar(document.getElementById('valViatico').value)) || 0;
-        let descuentPorcentaje = parseFloat(document.getElementById('valDescuentos').value);
-        if(isNaN(descuentPorcentaje)) descuentPorcentaje = 17;
-
-        let horaExtraVal = parseFloat(limpiar(document.getElementById('valHora').value));
-        if (isNaN(horaExtraVal) || horaExtraVal <= 0) horaExtraVal = (basico + presentismo) / 200; 
-
-        let pagoHorasTotales = 0, hsExtra = 0;
-        if (basico > 0) { if (st > 200) { hsExtra = st - 200; pagoHorasTotales = hsExtra * horaExtraVal; } } 
-        else { pagoHorasTotales = st * horaExtraVal; }
-
-        const totalBruto = basico + presentismo + viatico + pagoHorasTotales + (sn * plusN);
-        const descuentoMonto = totalBruto * (descuentPorcentaje / 100);
-        const totalNeto = totalBruto - descuentoMonto;
-        
-        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
-        document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
-        
-        window.totalStats = { t: st.toFixed(1), n: sn, f: sf.toFixed(1), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
-    }
-
-    // --- MODALES Y AVISOS ---
+    // --- UI HELPERS ---
     window.showToast = function(msg, type = 'success') {
         const t = document.getElementById('toast');
-        t.innerText = msg; t.style.borderLeft = `5px solid ${type === 'success' ? 'var(--success)' : 'var(--danger)'}`;
-        t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+        t.innerText = msg; 
+        t.style.borderLeft = `5px solid ${type === 'success' ? 'var(--success)' : 'var(--danger)'}`;
+        t.classList.add('show'); 
+        setTimeout(() => t.classList.remove('show'), 4000);
     }
 
+    function actualizarConexion() {
+        const badge = document.getElementById('status-badge');
+        const text = document.getElementById('status-text');
+        if (navigator.onLine) {
+            badge.className = 'status-badge online';
+            text.innerText = 'En Línea';
+        } else {
+            badge.className = 'status-badge offline';
+            text.innerText = 'Sin Señal';
+        }
+    }
+    window.addEventListener('online', actualizarConexion);
+    window.addEventListener('offline', actualizarConexion);
+
+    window.toggleTheme = function() {
+        document.body.classList.toggle('light-mode');
+        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        document.getElementById('theme-icon').innerText = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+    }
+
+    // --- RECUPERAR CONTRASEÑA ---
+    window.abrirModalRecuperar = function() {
+        const emailActual = document.getElementById('auth-email').value;
+        if (emailActual) document.getElementById('recuperar-email').value = emailActual;
+        document.getElementById('recuperar-step-1').style.display = 'block';
+        document.getElementById('recuperar-step-2').style.display = 'none';
+        document.getElementById('btn-enviar-recupero').innerText = "Enviar Enlace";
+        document.getElementById('modal-recuperar').style.display = 'flex';
+    }
+    window.cerrarModalRecuperar = function() { document.getElementById('modal-recuperar').style.display = 'none'; }
+    window.ejecutarRecuperacion = async function() {
+        const email = document.getElementById('recuperar-email').value;
+        if (!email) return window.showToast("⚠️ Por favor, ingresá un correo válido", "danger");
+        const btnEnviar = document.getElementById('btn-enviar-recupero');
+        btnEnviar.innerText = "Enviando...";
+        try {
+            await sendPasswordResetEmail(auth, email);
+            document.getElementById('recuperar-step-1').style.display = 'none';
+            document.getElementById('recuperar-step-2').style.display = 'block';
+        } catch (error) {
+            btnEnviar.innerText = "Enviar Enlace";
+            window.showToast("⚠️ Error: Correo no encontrado o formato inválido.", "danger");
+        }
+    }
+
+    // --- AUTENTICACIÓN ---
+    window.togglePasswordVisibility = function() {
+        const pwdInput = document.getElementById('auth-password');
+        const pwdIcon = document.getElementById('toggle-pwd-icon');
+        if (pwdInput.type === 'password') { pwdInput.type = 'text'; pwdIcon.innerText = '🙈'; } 
+        else { pwdInput.type = 'password'; pwdIcon.innerText = '👁️'; }
+    }
+
+    window.toggleAuthMode = function() {
+        esModoRegistro = !esModoRegistro;
+        document.getElementById('auth-title').innerText = esModoRegistro ? "Crear Nueva Cuenta" : "Iniciar Sesión";
+        document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
+        document.getElementById('btn-toggle-auth').innerHTML = esModoRegistro ? "¿Ya tenés cuenta? <b>Ingresá acá</b>" : "¿No tenés cuenta? <b>Registrate acá</b>";
+        document.getElementById('auth-nombre').style.display = esModoRegistro ? "block" : "none";
+        document.getElementById('btn-forgot-pwd').style.display = esModoRegistro ? "none" : "block"; 
+    }
+
+    window.procesarAuth = async function() {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-password').value;
+        const nombre = document.getElementById('auth-nombre').value;
+        if(!email || !pass || (esModoRegistro && !nombre)) return window.showToast("Completá todos los campos", "danger");
+        document.getElementById('btn-action-auth').innerText = "Cargando...";
+        try {
+            if (esModoRegistro) {
+                const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "directorio_usuarios", cred.user.uid), { email: email, nombre: nombre, fecha: new Date().toISOString() });
+                window.showToast("¡Cuenta creada con éxito!");
+            } else {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.showToast("¡Bienvenido a Control Vigía!");
+            }
+        } catch (error) {
+            window.showToast("Error: Revisa tus datos", "danger");
+            document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
+        }
+    }
+
+    window.cerrarSesion = async function() { await signOut(auth); }
+
+    // Observador
+    onAuthStateChanged(auth, async (user) => {
+        const loading = document.getElementById('loading-overlay');
+        if (user) {
+            window.currentUser = user;
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            document.getElementById('fecha').valueAsDate = new Date();
+            if (localStorage.getItem('theme') === 'light') toggleTheme();
+            
+            // ADMIN CHECK
+            if (user.email === 'mafero171189@gmail.com') {
+                document.getElementById('btn-admin-access').style.display = 'block';
+            } else {
+                document.getElementById('btn-admin-access').style.display = 'none';
+            }
+
+            actualizarConexion();
+            await cargarDatosNube();
+            actualizarUI();
+        } else {
+            window.currentUser = null;
+            document.getElementById('landing-page').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('admin-container').style.display = 'none';
+            document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
+        }
+        loading.style.opacity = '0';
+        setTimeout(() => loading.style.display = 'none', 500);
+    });
+
+    // --- PANEL DE ADMINISTRADOR ---
+    window.abrirAdmin = async function() {
+        document.getElementById('app-container').style.display = 'none';
+        document.getElementById('admin-container').style.display = 'block';
+        const lista = document.getElementById('lista-usuarios-admin');
+        lista.innerHTML = "<p style='text-align:center'>Cargando personal...</p>";
+        
+        try {
+            const querySnapshot = await getDocs(collection(db, "directorio_usuarios"));
+            lista.innerHTML = "";
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                
+                // Formatear la fecha linda (Día/Mes/Año)
+                let fechaTexto = "Desconocida";
+                if(data.fecha) {
+                    const fechaObj = new Date(data.fecha);
+                    fechaTexto = fechaObj.toLocaleDateString('es-AR', {day: '2-digit', month: '2-digit', year: 'numeric'});
+                }
+
+                const card = document.createElement('div');
+                card.className = 'user-list-card';
+                card.innerHTML = `
+                    <div class="user-info">
+                        <b>${data.nombre || 'Sin Nombre'}</b>
+                        <span style="color: var(--text-dim); display: block;">${data.email}</span>
+                        <span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">📅 Registrado el: ${fechaTexto}</span>
+                    </div>
+                `;
+                lista.appendChild(card);
+            });
+        } catch (e) {
+            lista.innerHTML = "<p style='color:red; text-align:center;'>Error al cargar el panel.</p>";
+        }
+    }
+
+    window.volverApp = function() {
+        document.getElementById('admin-container').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+    }
+
+    // --- MENSAJE GLOBAL ADMIN ---
+    window.publicarMensaje = async function() {
+        const texto = document.getElementById('admin-mensaje-texto').value;
+        const btn = document.getElementById('btn-publicar');
+        btn.innerText = "Publicando...";
+        
+        try {
+            await setDoc(doc(db, "global", "aviso"), { texto: texto, fecha: new Date().toISOString() });
+            window.showToast("✅ Aviso publicado a todos", "success");
+            
+            // Actualizar vista propia por si volvemos a la app
+            if (texto.trim() !== "") {
+                document.getElementById('texto-aviso-global').innerText = texto;
+                document.getElementById('aviso-global').style.display = 'block';
+            } else {
+                document.getElementById('aviso-global').style.display = 'none';
+            }
+        } catch(e) {
+            window.showToast("⚠️ Error al publicar", "danger");
+        }
+        btn.innerText = "Publicar a Todos";
+    }
+
+    // --- MODAL DE BORRAR TURNO ---
     let confirmCallback = null;
     window.abrirModalBorrar = function(id, fecha, lugar) {
         document.getElementById('modal-title').innerText = "¿Eliminar Turno?";
@@ -371,20 +561,117 @@
     window.closeModal = function() { document.getElementById('custom-modal').style.display = 'none'; }
     document.getElementById('confirm-btn').onclick = () => { confirmCallback(); window.closeModal(); };
 
-    window.toggleTheme = function() {
-        document.body.classList.toggle('light-mode');
-        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-        document.getElementById('theme-icon').innerText = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+    // --- LÓGICA DE NUBE (MÚLTIPLES USUARIOS) ---
+    async function cargarDatosNube() {
+        if (!window.currentUser) return;
+        try {
+            // Cargar Aviso Global
+            const msgSnap = await getDoc(doc(db, "global", "aviso"));
+            if (msgSnap.exists() && msgSnap.data().texto.trim() !== "") {
+                document.getElementById('texto-aviso-global').innerText = msgSnap.data().texto;
+                document.getElementById('aviso-global').style.display = 'block';
+                if(window.currentUser.email === 'mafero171189@gmail.com') {
+                    document.getElementById('admin-mensaje-texto').value = msgSnap.data().texto;
+                }
+            } else {
+                document.getElementById('aviso-global').style.display = 'none';
+            }
+
+            // Cargar Config
+            const docSnap = await getDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"));
+            if (docSnap.exists()) {
+                const p = docSnap.data().precios || {}; const u = docSnap.data().perfil || {};
+                document.getElementById('valBasico').value = p.basico ? parseInt(p.basico, 10).toLocaleString('es-AR') : "";
+                document.getElementById('valHora').value = p.hora ? parseInt(p.hora, 10).toLocaleString('es-AR') : "";
+                document.getElementById('valNoct').value = p.noct ? parseInt(p.noct, 10).toLocaleString('es-AR') : "";
+                document.getElementById('valViatico').value = p.viatico ? parseInt(p.viatico, 10).toLocaleString('es-AR') : "";
+                document.getElementById('valPresentismo').value = p.presentismo ? parseInt(p.presentismo, 10).toLocaleString('es-AR') : "";
+                document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
+                document.getElementById('vigiNombre').value = u.nombre || ""; document.getElementById('vigiApellido').value = u.apellido || "";
+            }
+            
+            // Cargar Turnos
+            const q = query(collection(db, "usuarios", window.currentUser.uid, "turnos"), orderBy("f", "desc"));
+            const querySnapshot = await getDocs(q);
+            window.turnos = [];
+            querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
+        } catch (e) { 
+            console.error(e); 
+        }
     }
 
+    window.guardarConfig = async function() {
+        if (!window.currentUser) return;
+        const limpiar = (str) => str.replace(/\./g, "");
+        const p = { basico: limpiar(document.getElementById('valBasico').value), hora: limpiar(document.getElementById('valHora').value), noct: limpiar(document.getElementById('valNoct').value), viatico: limpiar(document.getElementById('valViatico').value), presentismo: limpiar(document.getElementById('valPresentismo').value), descuentos: document.getElementById('valDescuentos').value };
+        const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
+        try { await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); render(); } catch (e) { }
+    }
+
+    window.guardar = async function() {
+        if (!window.currentUser) return;
+        const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General", e = document.getElementById('entrada').value, s = document.getElementById('salida').value, fer = document.getElementById('esFeriado').checked;
+        if (!e || !s) { return window.showToast("⚠️ Completá Entrada y Salida", "danger"); }
+        let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
+        if (sal <= ent) sal.setDate(sal.getDate() + 1);
+        let diff = (sal - ent) / 3600000, noct = 0, temp = new Date(ent);
+        while (temp < sal) { if (temp.getHours() >= INICIO_NOCHE || temp.getHours() < FIN_NOCHE) noct++; temp.setHours(temp.getHours() + 1); }
+        const nuevoTurno = { f, l, e, s, fer, t: diff, n: noct };
+        try {
+            const docRef = await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
+            window.turnos.push({ id: docRef.id, ...nuevoTurno }); window.turnos.sort((a,b) => new Date(b.f) - new Date(a.f));
+            document.getElementById('lugar').value = ''; document.getElementById('esFeriado').checked = false;
+            window.showToast("✅ Turno guardado", "success"); actualizarUI();
+        } catch (error) { window.showToast("⚠️ Error al guardar", "danger"); }
+    }
+
+    window.borrarTurnoNube = async function(id) {
+        if (!window.currentUser) return;
+        try { await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); window.turnos = window.turnos.filter(t => t.id !== id); window.showToast("🗑️ Turno eliminado"); render(); } catch (e) { }
+    }
+
+    window.cambiarMes = function(delta) { window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); actualizarUI(); }
+    function actualizarUI() {
+        const mesNom = window.meses[window.fechaFiltro.getMonth()];
+        document.getElementById('mesVisual').innerText = `${mesNom.toUpperCase()} ${window.fechaFiltro.getFullYear()}`;
+        document.getElementById('mesBtnLabel').innerText = mesNom.toUpperCase();
+        render();
+    }
+    window.formatearMiles = function(input) { let valor = input.value.replace(/\D/g, ""); input.value = valor === "" ? "" : parseInt(valor, 10).toLocaleString('es-AR'); }
+
+    function render() {
+        const lista = document.getElementById('lista'); let st = 0, sn = 0, sf = 0; lista.innerHTML = '';
+        window.turnos.forEach((t) => {
+            const fObj = new Date(t.f + "T00:00:00");
+            if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
+                st += t.t; sn += t.n; if (t.fer) sf += t.t;
+                const card = document.createElement('div'); card.className = 'shift-card';
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="display:flex; align-items:center;"><div style="text-align:right;"><span class="total-h">${t.t.toFixed(1)}hs</span><span class="noct-h">🌙 ${t.n}h</span></div><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${t.l || 'Puesto'}')">✕</button></div>`;
+                lista.appendChild(card);
+            }
+        });
+        document.getElementById('totH').innerText = st.toFixed(1); document.getElementById('totN').innerText = sn; document.getElementById('totF').innerText = sf.toFixed(1);
+        
+        const limpiar = (str) => str ? str.replace(/\./g, "") : "0";
+        const basico = parseFloat(limpiar(document.getElementById('valBasico').value)) || 0, presentismo = parseFloat(limpiar(document.getElementById('valPresentismo').value)) || 0, plusN = parseFloat(limpiar(document.getElementById('valNoct').value)) || 0, viatico = parseFloat(limpiar(document.getElementById('valViatico').value)) || 0;
+        let descuentPorcentaje = parseFloat(document.getElementById('valDescuentos').value); if(isNaN(descuentPorcentaje)) descuentPorcentaje = 17;
+
+        let horaExtraVal = parseFloat(limpiar(document.getElementById('valHora').value)); if (isNaN(horaExtraVal) || horaExtraVal <= 0) horaExtraVal = (basico + presentismo) / 200; 
+        let pagoHorasTotales = 0, hsExtra = 0;
+        if (basico > 0) { if (st > 200) { hsExtra = st - 200; pagoHorasTotales = hsExtra * horaExtraVal; } } else { pagoHorasTotales = st * horaExtraVal; }
+        
+        const totalBruto = basico + presentismo + viatico + pagoHorasTotales + (sn * plusN), totalNeto = totalBruto - (totalBruto * (descuentPorcentaje / 100));
+        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`; document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+        window.totalStats = { t: st.toFixed(1), n: sn, f: sf.toFixed(1), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
+    }
+
+    // --- REPORTE DE WHATSAPP ---
     window.enviarWhatsapp = function() {
         const nom = document.getElementById('vigiNombre').value, ape = document.getElementById('vigiApellido').value;
-        if (!nom || !ape) { window.showToast("⚠️ Configurá Nombre y Apellido para el reporte", "danger"); return; }
-        
+        if (!nom || !ape) { return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger"); }
         const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
         let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
-        
-        const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Vigilador:* ${nom} ${ape}\n--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n--------------------------\n📈 *Sueldo Bruto:* $${window.totalStats.bruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n💰 *NETO EN MANO:* $${window.totalStats.neto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n_Generado por Control Vigía_`;
+        const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n--------------------------\n📈 *Sueldo Bruto:* $${window.totalStats.bruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n💰 *NETO EN MANO:* $${window.totalStats.neto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n_Generado por Control Vigía_`;
         window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
     }
 </script>
