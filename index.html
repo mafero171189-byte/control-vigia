@@ -103,6 +103,11 @@
         .feriado-full { grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); margin-top: 5px; cursor: pointer; width: 100%; box-sizing: border-box; }
         .feriado-full input { width: auto; margin: 0; cursor: pointer; }
         .feriado-full span { font-size: 0.85rem; color: var(--warning); font-weight: 600; }
+
+        /* AGREGADO PARA VACACIONES CSS */
+        .vacaciones-full { grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); margin-top: 5px; cursor: pointer; width: 100%; box-sizing: border-box; }
+        .vacaciones-full input { width: auto; margin: 0; cursor: pointer; }
+        .vacaciones-full span { font-size: 0.85rem; color: var(--success); font-weight: 600; }
         
         .btn-submit { flex: 1; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.3s; }
 
@@ -114,6 +119,11 @@
         .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
         .shift-card.feriado { border-color: var(--warning); background: linear-gradient(135deg, var(--card-bg), rgba(245, 158, 11, 0.08)); }
         .feriado-badge { font-size: 0.65rem; font-weight: 700; color: var(--warning); background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; }
+        
+        /* AGREGADO PARA VACACIONES SHIFT CARD */
+        .shift-card.vacaciones { border-color: var(--success); background: linear-gradient(135deg, var(--card-bg), rgba(34, 197, 94, 0.08)); }
+        .vacaciones-badge { font-size: 0.65rem; font-weight: 700; color: var(--success); background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; }
+
         .btn-toggle-lista { width: 100%; background: transparent; color: var(--text-dim); border: 1px dashed var(--border); padding: 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-toggle-lista:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -208,7 +218,7 @@
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
             <div><label>Plus Nocturno ($)</label><input type="text" inputmode="decimal" id="valNoct" placeholder="0" oninput="formatearMiles(this)"></div>
-            <div><label>Viático Fijo ($)</label><input type="text" inputmode="decimal" id="valViatico" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Viático Mensual ($)</label><input type="text" inputmode="decimal" id="valViatico" placeholder="0" oninput="formatearMiles(this)"></div>
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
             <div><label>Presentismo ($)</label><input type="text" inputmode="decimal" id="valPresentismo" placeholder="0" oninput="formatearMiles(this)"></div>
@@ -217,6 +227,11 @@
         <div class="form-row" style="text-align: left; margin-bottom: 15px;">
             <div><label>Horas Base Mes</label><input type="number" id="valHorasBase" placeholder="Defecto: 200"></div>
             <div><label>Feriados al (%)</label><input type="number" id="valFeriadoPct" placeholder="Defecto: 100"></div>
+        </div>
+        
+        <div class="form-row" style="text-align: left; margin-bottom: 15px;">
+            <div><label>Adi. No Rem. ($)</label><input type="text" inputmode="decimal" id="valNoRem" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Plus Vac. (2027+)</label><input type="text" inputmode="decimal" id="valPlusVacManual" placeholder="0" oninput="formatearMiles(this)"></div>
         </div>
 
         <div class="modal-btns">
@@ -317,9 +332,15 @@
         <div class="form-row">
             <div><label>Entrada</label><input type="time" id="entrada"></div>
             <div><label>Salida</label><input type="time" id="salida"></div>
+            
             <label class="feriado-full">
                 <input type="checkbox" id="esFeriado">
                 <span>🚩 Marcar solo si es Feriado</span>
+            </label>
+            
+            <label class="vacaciones-full">
+                <input type="checkbox" id="esVacaciones">
+                <span>🌴 Marcar si es VACACIONES</span>
             </label>
         </div>
         
@@ -389,7 +410,7 @@
     window.currentUser = null;
     window.turnos = [];
     window.preciosGuardados = {}; 
-    window.turnoEnEdicion = null; // Variable para saber si estamos editando
+    window.turnoEnEdicion = null; 
     
     let esModoRegistro = false;
     const INICIO_NOCHE = 21, FIN_NOCHE = 6;
@@ -419,19 +440,48 @@
         document.getElementById('theme-icon').innerText = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
     }
 
-    // --- MODALES ---
+    // --- FUNCIÓN DINÁMICA DE VACACIONES ---
+    window.obtenerPlusVacacional = function(fObj) {
+        if (!fObj) return 0;
+        const año = fObj.getFullYear();
+        const mes = fObj.getMonth();
+        if (año === 2026) {
+            if (mes === 0) return 18552; // Enero
+            if (mes <= 2) return 18952;  // Feb-Mar
+            if (mes === 3) return 19220;  // Abril
+            if (mes === 4) return 19480;  // Mayo
+            return 19920;                // Junio en adelante
+        }
+        const p = window.preciosGuardados || {};
+        return parseFloat(p.plusVacManual) || 0;
+    };
+
+    // --- MODALES (CÓDIGO BLINDADO A PRUEBA DE FALLOS) ---
     window.abrirModalConfig = function() {
-        const p = window.preciosGuardados;
+        const p = window.preciosGuardados || {};
         const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
-        document.getElementById('valBasico').value = formatearAUI(p.basico);
-        document.getElementById('valHora').value = formatearAUI(p.hora);
-        document.getElementById('valNoct').value = formatearAUI(p.noct);
-        document.getElementById('valViatico').value = formatearAUI(p.viatico);
-        document.getElementById('valPresentismo').value = formatearAUI(p.presentismo);
-        document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
-        document.getElementById('valFeriadoPct').value = p.feriadoPct !== undefined ? p.feriadoPct : "100";
-        document.getElementById('valHorasBase').value = p.horasBase !== undefined ? p.horasBase : "200";
-        document.getElementById('modal-config').style.display = 'flex';
+        
+        if(document.getElementById('valBasico')) document.getElementById('valBasico').value = formatearAUI(p.basico);
+        if(document.getElementById('valHora')) document.getElementById('valHora').value = formatearAUI(p.hora);
+        if(document.getElementById('valNoct')) document.getElementById('valNoct').value = formatearAUI(p.noct);
+        if(document.getElementById('valViatico')) document.getElementById('valViatico').value = formatearAUI(p.viatico);
+        if(document.getElementById('valPresentismo')) document.getElementById('valPresentismo').value = formatearAUI(p.presentismo);
+        if(document.getElementById('valDescuentos')) document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
+        if(document.getElementById('valFeriadoPct')) document.getElementById('valFeriadoPct').value = p.feriadoPct !== undefined ? p.feriadoPct : "100";
+        if(document.getElementById('valHorasBase')) document.getElementById('valHorasBase').value = p.horasBase !== undefined ? p.horasBase : "200";
+        
+        if(document.getElementById('valNoRem')) document.getElementById('valNoRem').value = formatearAUI(p.noRem);
+        
+        const inputVac = document.getElementById('valPlusVacManual');
+        if (inputVac) {
+            const autoVac = window.obtenerPlusVacacional(window.fechaFiltro || new Date());
+            inputVac.placeholder = (window.fechaFiltro && window.fechaFiltro.getFullYear() === 2026) 
+                ? "Auto 2026: $" + autoVac.toLocaleString('es-AR') 
+                : "Monto 2027+";
+            inputVac.value = formatearAUI(p.plusVacManual);
+        }
+        
+        if (document.getElementById('modal-config')) document.getElementById('modal-config').style.display = 'flex';
     }
     window.cerrarModalConfig = function() { document.getElementById('modal-config').style.display = 'none'; }
 
@@ -611,15 +661,27 @@
     window.guardarConfig = async function() {
         if (!window.currentUser) return;
         const p = { 
-            basico: limpiar(document.getElementById('valBasico').value), hora: limpiar(document.getElementById('valHora').value), 
-            noct: limpiar(document.getElementById('valNoct').value), viatico: limpiar(document.getElementById('valViatico').value), 
-            presentismo: limpiar(document.getElementById('valPresentismo').value), descuentos: document.getElementById('valDescuentos').value,
-            feriadoPct: document.getElementById('valFeriadoPct').value, horasBase: document.getElementById('valHorasBase').value 
+            basico: document.getElementById('valBasico') ? limpiar(document.getElementById('valBasico').value) : "0", 
+            hora: document.getElementById('valHora') ? limpiar(document.getElementById('valHora').value) : "0", 
+            noct: document.getElementById('valNoct') ? limpiar(document.getElementById('valNoct').value) : "0", 
+            viatico: document.getElementById('valViatico') ? limpiar(document.getElementById('valViatico').value) : "0", 
+            presentismo: document.getElementById('valPresentismo') ? limpiar(document.getElementById('valPresentismo').value) : "0", 
+            descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "17",
+            feriadoPct: document.getElementById('valFeriadoPct') ? document.getElementById('valFeriadoPct').value : "100", 
+            horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "200",
+            noRem: document.getElementById('valNoRem') ? limpiar(document.getElementById('valNoRem').value) : "0",
+            plusVacManual: document.getElementById('valPlusVacManual') ? limpiar(document.getElementById('valPlusVacManual').value) : "0"
         };
-        const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
+        const u = { 
+            nombre: document.getElementById('vigiNombre') ? document.getElementById('vigiNombre').value : "", 
+            apellido: document.getElementById('vigiApellido') ? document.getElementById('vigiApellido').value : "" 
+        };
         try { 
             await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); 
-            window.preciosGuardados = p; cerrarModalConfig(); window.showToast("✅ Valores actualizados"); render(); 
+            window.preciosGuardados = p; 
+            cerrarModalConfig(); 
+            window.showToast("✅ Valores actualizados"); 
+            render(); 
         } catch (e) { window.showToast("⚠️ Error al guardar", "danger"); }
     }
 
@@ -635,12 +697,12 @@
         const turno = window.turnos.find(t => t.id === id);
         if (!turno) return;
         
-        // Rellenamos el formulario con los datos del turno
         document.getElementById('fecha').value = turno.f;
         document.getElementById('lugar').value = turno.l || "";
         document.getElementById('entrada').value = turno.e;
         document.getElementById('salida').value = turno.s;
-        document.getElementById('esFeriado').checked = turno.fer;
+        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = turno.fer || false;
+        if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = turno.vac || false;
         
         window.turnoEnEdicion = id;
         document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO TURNO";
@@ -649,14 +711,12 @@
         document.getElementById('btn-cancel-edit').style.display = "block";
         document.getElementById('main-form').classList.add('edit-mode');
         
-        // Desplazamiento suave hacia arriba para ver el formulario en el celular
         document.getElementById('main-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     window.cancelarEdicion = function() {
         window.turnoEnEdicion = null;
         
-        // Resetear formulario
         const hoy = new Date();
         hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
         document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
@@ -664,9 +724,9 @@
         document.getElementById('lugar').value = '';
         document.getElementById('entrada').value = '';
         document.getElementById('salida').value = '';
-        document.getElementById('esFeriado').checked = false;
+        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
+        if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
         
-        // Resetear UI
         document.getElementById('form-titulo-modo').innerHTML = "➕ REGISTRAR TURNO";
         document.getElementById('btn-submit-turno').innerText = "AGENDAR TURNO";
         document.getElementById('btn-submit-turno').style.background = "var(--accent)";
@@ -676,7 +736,13 @@
 
     window.guardar = async function() {
         if (!window.currentUser) return;
-        const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General", e = document.getElementById('entrada').value, s = document.getElementById('salida').value, fer = document.getElementById('esFeriado').checked;
+        const f = document.getElementById('fecha').value, 
+              l = document.getElementById('lugar').value || "Puesto General", 
+              e = document.getElementById('entrada').value, 
+              s = document.getElementById('salida').value, 
+              fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false,
+              vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
+              
         if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
         
         let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
@@ -690,25 +756,21 @@
         }
         noct = Math.round(noct * 100) / 100; 
         
-        const nuevoTurno = { f, l, e, s, fer, t: diff, n: noct };
+        const nuevoTurno = { f, l, e, s, fer, vac, t: diff, n: noct };
         
         try {
             if (window.turnoEnEdicion) {
-                // MODIFICAR TURNO EXISTENTE
                 await updateDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", window.turnoEnEdicion), nuevoTurno);
-                
-                // Actualizar la lista local
                 const index = window.turnos.findIndex(t => t.id === window.turnoEnEdicion);
                 window.turnos[index] = { id: window.turnoEnEdicion, ...nuevoTurno };
-                
                 window.showToast("✅ Turno modificado"); 
-                cancelarEdicion(); // Limpia y resetea el formulario
+                cancelarEdicion();
             } else {
-                // CREAR TURNO NUEVO
                 const docRef = await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
                 window.turnos.push({ id: docRef.id, ...nuevoTurno }); 
-                
-                document.getElementById('lugar').value = ''; document.getElementById('esFeriado').checked = false;
+                document.getElementById('lugar').value = ''; 
+                if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
+                if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 window.showToast("✅ Turno guardado"); 
             }
             
@@ -734,7 +796,7 @@
         try { await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); window.turnos = window.turnos.filter(t => t.id !== id); window.showToast("🗑️ Turno eliminado"); render(); } catch (e) { }
     }
 
-    // --- RENDERIZADO ---
+    // --- RENDERIZADO (CON LÓGICA DE VACACIONES 2026/2027+) ---
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
     window.cambiarMes = function(delta) { window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); actualizarUI(); }
     function actualizarUI() {
@@ -745,12 +807,23 @@
     }
 
     function render() {
-        const lista = document.getElementById('lista'); let st = 0, sn = 0, sf = 0; lista.innerHTML = '';
+        const lista = document.getElementById('lista'); 
+        let st = 0, sn = 0, sf = 0, diasTrabajados = 0, plusVacacionalTotal = 0; 
+        lista.innerHTML = '';
         window.turnos.forEach((t) => {
             const fObj = new Date(t.f + "T00:00:00");
             if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
                 st += t.t; sn += t.n; if (t.fer) sf += t.t;
-                const card = document.createElement('div'); card.className = t.fer ? 'shift-card feriado' : 'shift-card';
+                
+                // Novedad: cálculo de días para viático vs días de vacaciones
+                if (t.vac) {
+                    plusVacacionalTotal += window.obtenerPlusVacacional(fObj);
+                } else {
+                    diasTrabajados++;
+                }
+
+                const card = document.createElement('div'); 
+                card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
                 const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
                 card.innerHTML = `
                     <div>
@@ -758,6 +831,7 @@
                         <span class="shift-location">${t.l || "Puesto"}</span>
                     </div>
                     ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
+                    ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
                     <div style="display:flex; align-items:center;">
                         <div style="text-align:right; margin-right: 15px;">
                             <span class="total-h">${fmtH(t.t)}hs</span>
@@ -771,10 +845,19 @@
                 lista.appendChild(card);
             }
         });
-        document.getElementById('totH').innerText = fmtH(st); document.getElementById('totN').innerText = fmtH(sn); document.getElementById('totF').innerText = fmtH(sf);
+        document.getElementById('totH').innerText = fmtH(st); 
+        document.getElementById('totN').innerText = fmtH(sn); 
+        document.getElementById('totF').innerText = fmtH(sf);
         
         const p = window.preciosGuardados || {};
-        const basico = parseFloat(p.basico) || 0, presentismo = parseFloat(p.presentismo) || 0, plusN = parseFloat(p.noct) || 0, viatico = parseFloat(p.viatico) || 0;
+        const basico = parseFloat(p.basico) || 0;
+        const presentismo = parseFloat(p.presentismo) || 0;
+        const plusN = parseFloat(p.noct) || 0;
+        const noRem = parseFloat(p.noRem) || 0;
+        
+        // Viático proporcional (divide el mensual por 22 y lo multiplica solo por días trabajados)
+        const viaticoMensual = parseFloat(p.viatico) || 0;
+        const viaticoFinal = (viaticoMensual / 22) * diasTrabajados;
         
         let descuentPorcentaje = parseFloat(p.descuentos); if(isNaN(descuentPorcentaje)) descuentPorcentaje = 17;
         let feriadoPct = parseFloat(p.feriadoPct); if(isNaN(feriadoPct)) feriadoPct = 100;
@@ -794,8 +877,12 @@
             pagoHorasTotales = st * horaExtraVal; 
         }
         
-        const totalBruto = basico + presentismo + viatico + pagoHorasTotales + pagoFeriados + (sn * plusN), totalNeto = totalBruto - (totalBruto * (descuentPorcentaje / 100));
-        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        // Nueva suma agregando noRem y plusVacacionalTotal
+        const totalBruto = basico + presentismo + noRem + viaticoFinal + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * plusN);
+        const totalNeto = totalBruto - (totalBruto * (descuentPorcentaje / 100));
+        
+        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
+        document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
     }
 
