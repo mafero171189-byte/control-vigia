@@ -329,7 +329,7 @@
         </div>
     </div>
 
-    <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL DE TURNOS</span></button>
+    <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL</span></button>
     <div id="lista"></div>
 </div>
 
@@ -735,6 +735,7 @@
     }
 
     // --- RENDERIZADO ---
+    function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
     window.cambiarMes = function(delta) { window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); actualizarUI(); }
     function actualizarUI() {
         const mesNom = window.meses[window.fechaFiltro.getMonth()];
@@ -759,8 +760,8 @@
                     ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
                     <div style="display:flex; align-items:center;">
                         <div style="text-align:right; margin-right: 15px;">
-                            <span class="total-h">${t.t.toFixed(1)}hs</span>
-                            <span class="noct-h">🌙 ${t.n.toFixed(1)}h</span>
+                            <span class="total-h">${fmtH(t.t)}hs</span>
+                            <span class="noct-h">🌙 ${fmtH(t.n)}h</span>
                         </div>
                         <div style="display:flex; gap: 8px;">
                             <button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button>
@@ -770,7 +771,7 @@
                 lista.appendChild(card);
             }
         });
-        document.getElementById('totH').innerText = st.toFixed(1); document.getElementById('totN').innerText = sn.toFixed(1); document.getElementById('totF').innerText = sf.toFixed(1);
+        document.getElementById('totH').innerText = fmtH(st); document.getElementById('totN').innerText = fmtH(sn); document.getElementById('totF').innerText = fmtH(sf);
         
         const p = window.preciosGuardados || {};
         const basico = parseFloat(p.basico) || 0, presentismo = parseFloat(p.presentismo) || 0, plusN = parseFloat(p.noct) || 0, viatico = parseFloat(p.viatico) || 0;
@@ -795,7 +796,7 @@
         
         const totalBruto = basico + presentismo + viatico + pagoHorasTotales + pagoFeriados + (sn * plusN), totalNeto = totalBruto - (totalBruto * (descuentPorcentaje / 100));
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        window.totalStats = { t: st.toFixed(1), n: sn.toFixed(1), f: sf.toFixed(1), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
+        window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
     }
 
     window.toggleHistorial = function() {
@@ -803,7 +804,7 @@
         const label = document.getElementById('toggle-lista-label');
         const visible = lista.style.display !== 'none';
         lista.style.display = visible ? 'none' : 'block';
-        label.innerText = visible ? 'MOSTRAR HISTORIAL DE TURNOS' : 'OCULTAR HISTORIAL DE TURNOS';
+        label.innerText = visible ? 'MOSTRAR HISTORIAL' : 'OCULTAR HISTORIAL';
     }
 
     window.enviarWhatsapp = function() {
