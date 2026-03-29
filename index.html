@@ -23,12 +23,27 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; min-height: 100vh; transition: 0.3s; overflow-x: hidden; }
         
+        /* --- ESTILOS PARA EL TEXTO GRIS TRANSPARENTE EN NEGITA (PLACEHOLDER) --- */
+        input::placeholder {
+            font-weight: 800;
+            color: rgba(148, 163, 184, 0.65); /* Gris semitransparente */
+            opacity: 1; /* Para que funcione igual en todos los celulares */
+        }
+        
+        /* Achicamos la letra solo para el cartel de antigüedad así no se corta */
+        #valAntiguedad::placeholder {
+            font-size: 0.75rem; 
+        }
+        
         /* --- LANDING PAGE --- */
         #landing-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 30px 20px; text-align: center; background: radial-gradient(circle at top, #1e293b, #0f172a); box-sizing: border-box; }
         .hero-title { font-size: 2.8rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(56, 189, 248, 0.3); }
-        .hero-subtitle { font-size: 1rem; color: var(--text-dim); margin: 15px 0 35px 0; max-width: 420px; line-height: 1.6; }
+        .hero-subtitle { font-size: 1rem; color: var(--text-dim); margin: 15px 0 20px 0; max-width: 420px; line-height: 1.6; }
         .hero-subtitle b { color: var(--text-main); }
         
+        /* ETIQUETA UPSRA EN LANDING PAGE */
+        .upsra-badge { background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-bottom: 35px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
         .features-grid { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; width: 100%; max-width: 400px; }
         .feature-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 18px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.2); backdrop-filter: blur(5px); }
         .feat-icon { font-size: 2rem; background: var(--bg-color); padding: 12px; border-radius: 14px; border: 1px solid var(--border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
@@ -116,13 +131,11 @@
         .total-h { font-size: 1.1rem; font-weight: 800; display: block; }
         .noct-h { font-size: 0.65rem; color: var(--accent); font-weight: bold; }
         .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        
         .shift-card.feriado { border-color: var(--warning); background: linear-gradient(135deg, var(--card-bg), rgba(245, 158, 11, 0.08)); }
         .shift-card.vacaciones { border-color: var(--success); background: linear-gradient(135deg, var(--card-bg), rgba(34, 197, 94, 0.08)); }
-        
         .feriado-badge { font-size: 0.65rem; font-weight: 700; color: var(--warning); background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; }
         .vacaciones-badge { font-size: 0.65rem; font-weight: 700; color: var(--success); background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; }
-
+        
         .btn-toggle-lista { width: 100%; background: transparent; color: var(--text-dim); border: 1px dashed var(--border); padding: 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-toggle-lista:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -139,7 +152,8 @@
         .user-info b { color: var(--text-main); font-size: 1.05rem; }
         
         /* Modales */
-        #custom-modal, #modal-recuperar, #modal-config { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        #custom-modal, #modal-recuperar, #modal-config, #modal-bienvenida { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        #modal-bienvenida { z-index: 9000; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; margin: auto; }
         #modal-config .modal-content { max-width: 380px; padding: 25px 20px; }
         
@@ -184,6 +198,17 @@
 <div id="loading-overlay">Verificando sesión... 🛡️</div>
 <div id="toast"></div>
 
+<div id="modal-bienvenida">
+    <div class="modal-content" style="max-width: 350px; border-color: var(--accent);">
+        <h2 style="color: var(--accent); margin-top: 0; font-size: 1.5rem;">¡Bienvenido a Control Vigía! 🛡️</h2>
+        <p style="font-size: 0.95rem; color: var(--text-main); line-height: 1.5; margin-bottom: 15px;">Tu cuenta fue creada con éxito.</p>
+        <div style="background: rgba(56, 189, 248, 0.1); border-left: 4px solid var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left;">
+            <p style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0;"><b>Dato importante:</b> El sistema está configurado con la paritaria UPSRA 2026 por defecto. <br><br>Si tu empresa paga diferente, podés ir al botón <b>"Configurar Valores"</b> y poner los números exactos de tu recibo. ¡El sistema se adapta a vos!</p>
+        </div>
+        <button onclick="document.getElementById('modal-bienvenida').style.display='none'" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase;">¡ENTENDIDO, A TRABAJAR!</button>
+    </div>
+</div>
+
 <div id="modal-recuperar">
     <div class="modal-content" id="recuperar-content-box">
         <div id="recuperar-step-1">
@@ -209,27 +234,31 @@
 
 <div id="modal-config">
     <div class="modal-content">
-        <h3 style="color: var(--accent); margin-top:0; margin-bottom: 20px;">Valores de Cobro</h3>
+        <h3 style="color: var(--accent); margin-top:0; margin-bottom: 15px;">Valores de Cobro</h3>
+        
+        <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-main); text-align: left; line-height: 1.4;">
+            <b>💡 ¡Personalizá tu sueldo!</b> El sistema sugiere valores UPSRA, pero podés ingresar tus propios montos si cobrás distinto.
+        </div>
         
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Sueldo Básico ($)</label><input type="text" inputmode="decimal" id="valBasico" placeholder="0" oninput="formatearMiles(this)"></div>
-            <div><label>Antigüedad (Años)</label><input type="number" id="valAntiguedad" placeholder="Ej: 12"></div>
+            <div><label>Sueldo Básico ($)</label><input type="text" inputmode="decimal" id="valBasico" oninput="formatearMiles(this)"></div>
+            <div><label style="color: var(--accent);">Antigüedad (Años)</label><input type="number" id="valAntiguedad"></div>
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Valor Hora Extra ($)</label><input type="text" inputmode="decimal" id="valHora" placeholder="Auto o Fijo" oninput="formatearMiles(this)"></div>
-            <div><label>Plus Nocturno ($)</label><input type="text" inputmode="decimal" id="valNoct" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Valor Hora Extra ($)</label><input type="text" inputmode="decimal" id="valHora" oninput="formatearMiles(this)"></div>
+            <div><label>Plus Nocturno ($)</label><input type="text" inputmode="decimal" id="valNoct" oninput="formatearMiles(this)"></div>
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Viático Mensual ($)</label><input type="text" inputmode="decimal" id="valViatico" placeholder="0" oninput="formatearMiles(this)"></div>
-            <div><label>Presentismo ($)</label><input type="text" inputmode="decimal" id="valPresentismo" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Viático Mensual ($)</label><input type="text" inputmode="decimal" id="valViatico" oninput="formatearMiles(this)"></div>
+            <div><label>Presentismo ($)</label><input type="text" inputmode="decimal" id="valPresentismo" oninput="formatearMiles(this)"></div>
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Adi. No Rem. ($)</label><input type="text" inputmode="decimal" id="valNoRem" placeholder="0" oninput="formatearMiles(this)"></div>
-            <div><label>Desc. por Ley (%)</label><input type="number" id="valDescuentos" placeholder="Defecto: 17"></div>
+            <div><label>Adi. No Rem. ($)</label><input type="text" inputmode="decimal" id="valNoRem" oninput="formatearMiles(this)"></div>
+            <div><label>Desc. por Ley (%)</label><input type="number" id="valDescuentos"></div>
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 15px;">
-            <div><label>Horas Base Mes</label><input type="number" id="valHorasBase" placeholder="Defecto: 200"></div>
-            <div><label>Plus Vac. (2027+)</label><input type="text" inputmode="decimal" id="valPlusVacManual" placeholder="0" oninput="formatearMiles(this)"></div>
+            <div><label>Horas Base Mes</label><input type="number" id="valHorasBase"></div>
+            <div><label>Plus Vacacional ($)</label><input type="text" inputmode="decimal" id="valPlusVacManual" oninput="formatearMiles(this)"></div>
         </div>
 
         <div class="modal-btns">
@@ -243,6 +272,10 @@
     <h1 class="hero-title">CONTROL VIGÍA</h1>
     <p class="hero-subtitle">La herramienta definitiva para el <b>personal de seguridad privada</b>. Llevá el control exacto de tus horas y cuidá tu recibo de sueldo mes a mes.</p>
     
+    <div class="upsra-badge">
+        ⚖️ Configurado según Paritaria UPSRA 2026
+    </div>
+
     <div class="features-grid">
         <div class="feature-card"><span class="feat-icon">☁️</span><div class="feat-text"><h4>Nube Segura</h4><p>Historial guardado de forma 100% privada y segura.</p></div></div>
         <div class="feature-card"><span class="feat-icon">💰</span><div class="feat-text"><h4>Sueldo Exacto</h4><p>Calculadora automática de neto, bruto, extras y feriados.</p></div></div>
@@ -457,7 +490,7 @@
             basico: parseFloat(p.basico),
             antiguedadAños: parseInt(p.antiguedad) || 0,
             hora: parseFloat(p.hora),
-            noct: parseFloat(p.noct) || 0,
+            noct: parseFloat(p.noct),
             viatico: parseFloat(p.viatico),
             presentismo: parseFloat(p.presentismo),
             noRem: parseFloat(p.noRem),
@@ -494,43 +527,66 @@
         return v;
     };
 
-    // --- MODALES ---
+    // --- MODALES (CON PLACEHOLDERS TRANSPARENTES) ---
     window.abrirModalConfig = function() {
         const p = window.preciosGuardados || {};
         const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
         
         const auto = window.obtenerValoresMes(window.fechaFiltro);
-        const prefix = (window.fechaFiltro.getFullYear() === 2026) ? "Auto: $" : "Monto manual: $";
+        
+        // Formato para los placeholder en gris
+        const fmtAuto = (num) => "Auto: $" + num.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 2});
         
         if(document.getElementById('valBasico')) {
-            document.getElementById('valBasico').placeholder = prefix + auto.basico.toLocaleString('es-AR');
+            document.getElementById('valBasico').placeholder = fmtAuto(auto.basico);
             document.getElementById('valBasico').value = formatearAUI(p.basico);
         }
         
-        if(document.getElementById('valAntiguedad')) document.getElementById('valAntiguedad').value = p.antiguedad !== undefined ? p.antiguedad : "0";
+        if(document.getElementById('valAntiguedad')) {
+            document.getElementById('valAntiguedad').placeholder = "👉 Configurar tu antigüedad";
+            document.getElementById('valAntiguedad').value = p.antiguedad !== undefined ? p.antiguedad : "";
+        }
         
-        if(document.getElementById('valHora')) document.getElementById('valHora').value = formatearAUI(p.hora);
-        if(document.getElementById('valNoct')) document.getElementById('valNoct').value = formatearAUI(p.noct);
+        const montoAnt = auto.basico * ((parseInt(p.antiguedad) || 0) / 100);
+        const autoHora = (auto.basico + auto.presentismo + montoAnt) / auto.horasBase;
+        
+        if(document.getElementById('valHora')) {
+            document.getElementById('valHora').placeholder = fmtAuto(autoHora);
+            document.getElementById('valHora').value = formatearAUI(p.hora);
+        }
+        
+        const autoNocturno = (auto.basico + auto.presentismo + montoAnt) / 1000;
+        if(document.getElementById('valNoct')) {
+            document.getElementById('valNoct').placeholder = fmtAuto(autoNocturno);
+            document.getElementById('valNoct').value = formatearAUI(p.noct);
+        }
         
         if(document.getElementById('valViatico')) {
-            document.getElementById('valViatico').placeholder = prefix + auto.viatico.toLocaleString('es-AR');
+            document.getElementById('valViatico').placeholder = fmtAuto(auto.viatico);
             document.getElementById('valViatico').value = formatearAUI(p.viatico);
         }
         if(document.getElementById('valPresentismo')) {
-            document.getElementById('valPresentismo').placeholder = prefix + auto.presentismo.toLocaleString('es-AR');
+            document.getElementById('valPresentismo').placeholder = fmtAuto(auto.presentismo);
             document.getElementById('valPresentismo').value = formatearAUI(p.presentismo);
         }
         if(document.getElementById('valNoRem')) {
-            document.getElementById('valNoRem').placeholder = prefix + auto.noRem.toLocaleString('es-AR');
+            document.getElementById('valNoRem').placeholder = fmtAuto(auto.noRem);
             document.getElementById('valNoRem').value = formatearAUI(p.noRem);
         }
         
-        if(document.getElementById('valDescuentos')) document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
-        if(document.getElementById('valHorasBase')) document.getElementById('valHorasBase').value = p.horasBase !== undefined ? p.horasBase : "200";
+        if(document.getElementById('valDescuentos')) {
+            document.getElementById('valDescuentos').placeholder = "Auto: 17%";
+            document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "";
+        }
+        
+        if(document.getElementById('valHorasBase')) {
+            document.getElementById('valHorasBase').placeholder = "Auto: 200 hs";
+            document.getElementById('valHorasBase').value = p.horasBase !== undefined ? p.horasBase : "";
+        }
         
         const inputVac = document.getElementById('valPlusVacManual');
         if (inputVac) {
-            inputVac.placeholder = (window.fechaFiltro.getFullYear() === 2026) ? "Auto 2026: $" + auto.plusVac.toLocaleString('es-AR') : "Manual 2027+";
+            inputVac.placeholder = (window.fechaFiltro.getFullYear() === 2026) ? fmtAuto(auto.plusVac) : "Monto Manual";
             inputVac.value = formatearAUI(p.plusVacManual);
         }
         
@@ -600,6 +656,10 @@
                 await setDoc(doc(db, "usuarios", cred.user.uid, "config", "datos"), { perfil: { nombre: nom, apellido: ape }, precios: {} });
 
                 window.showToast("¡Cuenta creada con éxito!");
+                
+                // MOSTRAR MODAL DE BIENVENIDA AL REGISTRARSE
+                document.getElementById('modal-bienvenida').style.display = 'flex';
+                
             } else {
                 await signInWithEmailAndPassword(auth, email, pass);
                 window.showToast("¡Bienvenido a Control Vigía!");
@@ -715,15 +775,15 @@
 
         const p = { 
             basico: getVal('valBasico'), 
-            antiguedad: document.getElementById('valAntiguedad') ? document.getElementById('valAntiguedad').value : "0",
+            antiguedad: document.getElementById('valAntiguedad') ? document.getElementById('valAntiguedad').value : "",
             hora: getVal('valHora'), 
             noct: getVal('valNoct'), 
             viatico: getVal('valViatico'), 
             presentismo: getVal('valPresentismo'), 
             noRem: getVal('valNoRem'),
             plusVacManual: getVal('valPlusVacManual'),
-            descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "17",
-            horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "200" 
+            descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "",
+            horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "" 
         };
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
         try { 
@@ -904,11 +964,17 @@
         // 1. CÁLCULO DE ANTIGÜEDAD (1% por año sobre el básico)
         const montoAntiguedad = valMes.basico * (valMes.antiguedadAños / 100);
 
-        // 2. VALOR HORA (Incluye Básico + Presentismo + Antigüedad)
+        // 2. VALOR HORA NOCTURNA (1/1000 del total remunerativo según UPSRA)
+        let valorNocturnoFinal = valMes.noct;
+        if (isNaN(valorNocturnoFinal) || valorNocturnoFinal <= 0) {
+            valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000;
+        }
+
+        // 3. VALOR HORA NORMAL
         let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
         let horaExtraVal = valMes.hora > 0 ? valMes.hora : valorHoraNormal; 
 
-        // 3. HORAS EXTRAS Y FERIADOS
+        // 4. HORAS EXTRAS Y FERIADOS
         let pagoFeriados = sf * horaExtraVal;
         let pagoHorasTotales = 0, hsExtra = 0;
         if (st > valMes.horasBase) { 
@@ -916,15 +982,13 @@
             pagoHorasTotales = hsExtra * horaExtraVal; 
         }
 
-        // 4. VIÁTICO PROPORCIONAL
+        // 5. VIÁTICO PROPORCIONAL
         const viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
 
-        // 5. CÁLCULO INTELIGENTE (Separación de Blancos y No Remunerativos para el 17%)
-        // La retención del 17% solo afecta a los conceptos remunerativos.
-        const sumaRemunerativa = valMes.basico + valMes.presentismo + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valMes.noct);
+        // 6. CÁLCULO INTELIGENTE DE DESCUENTOS
+        const sumaRemunerativa = valMes.basico + valMes.presentismo + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal);
         const descuentosLey = sumaRemunerativa * (valMes.descuentos / 100);
         
-        // Viáticos y Suma Decreto no llevan descuentos.
         const sumaNoRemunerativa = viaticoFinal + valMes.noRem;
 
         const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
