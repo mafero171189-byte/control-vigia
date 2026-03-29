@@ -45,7 +45,10 @@
         .password-container input { margin-bottom: 5px; padding-right: 45px; } 
         .toggle-password { position: absolute; right: 12px; top: 25px; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-dim); padding: 0; outline: none; }
         
-        .forgot-password { color: var(--accent); font-size: 0.85rem; cursor: pointer; text-decoration: none; background: none; border: none; padding: 0; margin-bottom: 20px; display: block; text-align: right; width: 100%; font-family: 'Inter', sans-serif; transition: 0.3s; }
+        .auth-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 0.85rem; }
+        .remember-me { display: flex; align-items: center; gap: 5px; color: var(--text-dim); cursor: pointer; }
+        .remember-me input { cursor: pointer; accent-color: var(--accent); }
+        .forgot-password { color: var(--accent); cursor: pointer; text-decoration: none; background: none; border: none; padding: 0; font-family: 'Inter', sans-serif; transition: 0.3s; }
         .forgot-password:hover { text-decoration: underline; color: var(--text-main); }
 
         .auth-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 1.05rem; margin-bottom: 15px; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
@@ -66,7 +69,6 @@
         
         #btn-admin-access { display: none; background: rgba(139, 92, 246, 0.2); color: var(--admin); border: 1px solid var(--admin); padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         
-        /* AVISO GLOBAL */
         .global-alert { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; border-left: 4px solid var(--accent); }
         .global-alert h4 { margin: 0 0 5px 0; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         .global-alert p { margin: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.4; }
@@ -88,7 +90,8 @@
 
         .btn-whatsapp { width: 100%; background: var(--whatsapp); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; }
 
-        .glass-form { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px; }
+        .glass-form { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px; transition: 0.3s; }
+        .glass-form.edit-mode { border-color: var(--warning); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
         
         .btn-config-main { width: 100%; background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; }
         .btn-config-main:hover { background: rgba(56, 189, 248, 0.2); }
@@ -101,14 +104,14 @@
         .feriado-full input { width: auto; margin: 0; cursor: pointer; }
         .feriado-full span { font-size: 0.85rem; color: var(--warning); font-weight: 600; }
         
-        .btn-submit { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 15px; }
+        .btn-submit { flex: 1; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.3s; }
 
         .shift-card { background: var(--card-bg); margin-bottom: 10px; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
         .shift-date { font-weight: 800; font-size: 0.95rem; display: block; }
         .shift-location { font-size: 0.85rem; color: var(--text-dim); display: block; font-weight: 500; }
         .total-h { font-size: 1.1rem; font-weight: 800; display: block; }
         .noct-h { font-size: 0.65rem; color: var(--accent); font-weight: bold; }
-        .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; margin-left: 10px; }
+        .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
 
         /* --- PANEL ADMIN --- */
         .admin-header { background: linear-gradient(135deg, #4c1d95, #7c3aed); padding: 15px; border-radius: 16px; margin-bottom: 20px; text-align: center; color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }
@@ -125,7 +128,6 @@
         /* Modales */
         #custom-modal, #modal-recuperar, #modal-config { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; margin: auto; }
-        
         #modal-config .modal-content { max-width: 380px; padding: 25px 20px; }
         
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
@@ -134,8 +136,33 @@
         .btn-confirm { background: var(--danger); color: white; }
         .btn-send { background: var(--accent); color: white; }
 
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-bg); color: var(--text-main); padding: 14px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid var(--border); z-index: 4000; transition: 0.4s; opacity: 0; font-weight: 500; font-size: 0.9rem; text-align: center; max-width: 90%; }
-        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        /* ================= ALERTAS (TOAST) EN EL CENTRO ================= */
+        #toast { 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%) scale(0.8); 
+            background: var(--card-bg); 
+            color: var(--text-main); 
+            padding: 16px 24px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+            border: 1px solid var(--accent); 
+            z-index: 6000; 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            opacity: 0; 
+            pointer-events: none; 
+            font-weight: 700; 
+            font-size: 1rem; 
+            text-align: center; 
+            width: max-content;
+            max-width: 85%; 
+        }
+        #toast.show { 
+            transform: translate(-50%, -50%) scale(1); 
+            opacity: 1; 
+        }
+        
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; display: flex; justify-content: center; align-items: center; color: var(--accent); font-weight: bold; font-size: 1.2rem; transition: 0.5s opacity; }
     </style>
 </head>
@@ -200,42 +227,31 @@
     <p class="hero-subtitle">La herramienta definitiva para el <b>personal de seguridad privada</b>. Llevá el control exacto de tus horas y cuidá tu recibo de sueldo mes a mes.</p>
     
     <div class="features-grid">
-        <div class="feature-card">
-            <span class="feat-icon">☁️</span>
-            <div class="feat-text">
-                <h4>Nube Segura</h4>
-                <p>Historial guardado de forma 100% privada y segura.</p>
-            </div>
-        </div>
-        <div class="feature-card">
-            <span class="feat-icon">💰</span>
-            <div class="feat-text">
-                <h4>Sueldo Exacto</h4>
-                <p>Calculadora automática de neto, bruto, extras y feriados.</p>
-            </div>
-        </div>
-        <div class="feature-card">
-            <span class="feat-icon">📲</span>
-            <div class="feat-text">
-                <h4>Reportes Express</h4>
-                <p>Generá un comprobante mensual y envialo por WhatsApp.</p>
-            </div>
-        </div>
+        <div class="feature-card"><span class="feat-icon">☁️</span><div class="feat-text"><h4>Nube Segura</h4><p>Historial guardado de forma 100% privada y segura.</p></div></div>
+        <div class="feature-card"><span class="feat-icon">💰</span><div class="feat-text"><h4>Sueldo Exacto</h4><p>Calculadora automática de neto, bruto, extras y feriados.</p></div></div>
+        <div class="feature-card"><span class="feat-icon">📲</span><div class="feat-text"><h4>Reportes Express</h4><p>Generá un comprobante mensual y envialo por WhatsApp.</p></div></div>
     </div>
 
     <div class="auth-box">
         <h3 id="auth-title">Iniciar Sesión</h3>
-        <input type="text" id="auth-nombre" class="auth-input" placeholder="Tu Nombre y Apellido" style="display: none;">
-        <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico">
         
-        <div class="password-container">
-            <input type="password" id="auth-password" class="auth-input" placeholder="Contraseña">
-            <button class="toggle-password" onclick="togglePasswordVisibility()" id="toggle-pwd-icon" tabindex="-1">👁️</button>
-        </div>
-        
-        <button id="btn-forgot-pwd" class="forgot-password" onclick="abrirModalRecuperar()">¿Olvidaste tu contraseña?</button>
-        
-        <button id="btn-action-auth" class="auth-btn" onclick="procesarAuth()">INGRESAR</button>
+        <form onsubmit="event.preventDefault(); procesarAuth();">
+            <input type="text" id="auth-nombre" class="auth-input" placeholder="Tu Nombre y Apellido" autocomplete="name" style="display: none;">
+            <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico" autocomplete="email" required>
+            
+            <div class="password-container">
+                <input type="password" id="auth-password" class="auth-input" placeholder="Contraseña" autocomplete="current-password" required>
+                <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" id="toggle-pwd-icon" tabindex="-1">👁️</button>
+            </div>
+            
+            <div class="auth-options">
+                <label class="remember-me"><input type="checkbox" id="chk-recordar" checked> Recordar sesión</label>
+                <button type="button" id="btn-forgot-pwd" class="forgot-password" onclick="abrirModalRecuperar()">¿Olvidaste tu clave?</button>
+            </div>
+            
+            <button type="submit" id="btn-action-auth" class="auth-btn">INGRESAR</button>
+        </form>
+
         <button id="btn-toggle-auth" class="auth-switch" onclick="toggleAuthMode()">¿No tenés cuenta? <b>Registrate acá</b></button>
     </div>
 </div>
@@ -244,9 +260,7 @@
     <header>
         <div style="display: flex; flex-direction: column;">
             <h1>CONTROL VIGÍA</h1>
-            <div id="status-badge" class="status-badge online">
-                <span class="dot"></span> <span id="status-text">Conectado</span>
-            </div>
+            <div id="status-badge" class="status-badge online"><span class="dot"></span> <span id="status-text">Conectado</span></div>
         </div>
         <div class="header-actions">
             <button id="btn-admin-access" onclick="abrirAdmin()">⭐ Admin</button>
@@ -273,23 +287,14 @@
     </div>
 
     <div class="stats-panel">
-        <div class="stat-card" style="border-bottom: 3px solid var(--accent)">
-            <span>Total Horas</span><b id="totH">0.0</b>
-        </div>
-        <div class="stat-card" style="border-bottom: 3px solid var(--text-dim)">
-            <span>Nocturnas</span><b id="totN">0</b>
-        </div>
-        <div class="stat-card" style="border-bottom: 3px solid var(--warning)">
-            <span>Feriados</span><b id="totF">0.0</b>
-        </div>
+        <div class="stat-card" style="border-bottom: 3px solid var(--accent)"><span>Total Horas</span><b id="totH">0.0</b></div>
+        <div class="stat-card" style="border-bottom: 3px solid var(--text-dim)"><span>Nocturnas</span><b id="totN">0</b></div>
+        <div class="stat-card" style="border-bottom: 3px solid var(--warning)"><span>Feriados</span><b id="totF">0.0</b></div>
     </div>
 
-    <button class="btn-whatsapp" onclick="enviarWhatsapp()">
-        <span>📲 REPORTE DE <span id="mesBtnLabel">...</span></span>
-    </button>
+    <button class="btn-whatsapp" onclick="enviarWhatsapp()"><span>📲 REPORTE DE <span id="mesBtnLabel">...</span></span></button>
 
-    <div class="glass-form">
-        
+    <div class="glass-form" id="main-form">
         <button class="btn-config-main" onclick="abrirModalConfig()">⚙️ Configurar Valores de Cobro</button>
 
         <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
@@ -300,7 +305,7 @@
             </div>
         </div>
         
-        <label>➕ REGISTRAR TURNO</label>
+        <label id="form-titulo-modo">➕ REGISTRAR TURNO</label>
         <div class="form-row">
             <div><label>Fecha</label><input type="date" id="fecha"></div>
             <div><label>Objetivo</label><input type="text" id="lugar" placeholder="Puesto"></div>
@@ -313,7 +318,11 @@
                 <span>🚩 Marcar solo si es Feriado</span>
             </label>
         </div>
-        <button class="btn-submit" onclick="guardar()">AGENDAR TURNO</button>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button id="btn-submit-turno" class="btn-submit" onclick="guardar()">AGENDAR TURNO</button>
+            <button id="btn-cancel-edit" class="btn-submit" style="display: none; background: var(--danger); flex: 0.5;" onclick="cancelarEdicion()">✕</button>
+        </div>
     </div>
 
     <div id="lista"></div>
@@ -336,11 +345,10 @@
 
     <div class="admin-header">
         <h2>Personal Registrado</h2>
-        <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema (Solo lectura)</p>
+        <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema</p>
     </div>
     
-    <div id="lista-usuarios-admin">
-        </div>
+    <div id="lista-usuarios-admin"></div>
 </div>
 
 <div id="custom-modal">
@@ -356,8 +364,8 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCjSqOhEtmzTFS82f4VLbQQn8ZTiB5Ct_Q",
@@ -376,6 +384,8 @@
     window.currentUser = null;
     window.turnos = [];
     window.preciosGuardados = {}; 
+    window.turnoEnEdicion = null; // Variable para saber si estamos editando
+    
     let esModoRegistro = false;
     const INICIO_NOCHE = 21, FIN_NOCHE = 6;
     window.fechaFiltro = new Date();
@@ -386,7 +396,8 @@
         const t = document.getElementById('toast');
         t.innerText = msg; 
         t.style.borderLeft = `5px solid ${type === 'success' ? 'var(--success)' : 'var(--danger)'}`;
-        t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 4000);
+        t.classList.add('show'); 
+        setTimeout(() => t.classList.remove('show'), 3500);
     }
 
     function actualizarConexion() {
@@ -403,11 +414,10 @@
         document.getElementById('theme-icon').innerText = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
     }
 
-    // --- MODAL DE CONFIGURACIÓN ---
+    // --- MODALES ---
     window.abrirModalConfig = function() {
         const p = window.preciosGuardados;
         const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
-        
         document.getElementById('valBasico').value = formatearAUI(p.basico);
         document.getElementById('valHora').value = formatearAUI(p.hora);
         document.getElementById('valNoct').value = formatearAUI(p.noct);
@@ -416,15 +426,10 @@
         document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "17";
         document.getElementById('valFeriadoPct').value = p.feriadoPct !== undefined ? p.feriadoPct : "100";
         document.getElementById('valHorasBase').value = p.horasBase !== undefined ? p.horasBase : "200";
-        
         document.getElementById('modal-config').style.display = 'flex';
     }
-    
-    window.cerrarModalConfig = function() {
-        document.getElementById('modal-config').style.display = 'none';
-    }
+    window.cerrarModalConfig = function() { document.getElementById('modal-config').style.display = 'none'; }
 
-    // --- RECUPERAR CONTRASEÑA ---
     window.abrirModalRecuperar = function() {
         const emailActual = document.getElementById('auth-email').value;
         if (emailActual) document.getElementById('recuperar-email').value = emailActual;
@@ -434,6 +439,7 @@
         document.getElementById('modal-recuperar').style.display = 'flex';
     }
     window.cerrarModalRecuperar = function() { document.getElementById('modal-recuperar').style.display = 'none'; }
+    
     window.ejecutarRecuperacion = async function() {
         const email = document.getElementById('recuperar-email').value;
         if (!email) return window.showToast("⚠️ Por favor, ingresá un correo válido", "danger");
@@ -445,7 +451,7 @@
             document.getElementById('recuperar-step-2').style.display = 'block';
         } catch (error) {
             btnEnviar.innerText = "Enviar Enlace";
-            window.showToast("⚠️ Error: Correo no encontrado o formato inválido.", "danger");
+            window.showToast("⚠️ Error: Correo no encontrado.", "danger");
         }
     }
 
@@ -470,12 +476,21 @@
         const email = document.getElementById('auth-email').value;
         const pass = document.getElementById('auth-password').value;
         const nombre = document.getElementById('auth-nombre').value;
+        const recordar = document.getElementById('chk-recordar').checked;
         if(!email || !pass || (esModoRegistro && !nombre)) return window.showToast("Completá todos los campos", "danger");
+        
         document.getElementById('btn-action-auth').innerText = "Cargando...";
         try {
+            await setPersistence(auth, recordar ? browserLocalPersistence : browserSessionPersistence);
             if (esModoRegistro) {
                 const cred = await createUserWithEmailAndPassword(auth, email, pass);
                 await setDoc(doc(db, "directorio_usuarios", cred.user.uid), { email: email, nombre: nombre, fecha: new Date().toISOString() });
+                
+                let partesNombre = nombre.trim().split(" ");
+                let nom = partesNombre[0] || "";
+                let ape = partesNombre.slice(1).join(" ") || "";
+                await setDoc(doc(db, "usuarios", cred.user.uid, "config", "datos"), { perfil: { nombre: nom, apellido: ape }, precios: {} });
+
                 window.showToast("¡Cuenta creada con éxito!");
             } else {
                 await signInWithEmailAndPassword(auth, email, pass);
@@ -486,9 +501,9 @@
             document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
         }
     }
+    
     window.cerrarSesion = async function() { await signOut(auth); }
 
-    // Observador
     onAuthStateChanged(auth, async (user) => {
         const loading = document.getElementById('loading-overlay');
         if (user) {
@@ -496,13 +511,11 @@
             document.getElementById('landing-page').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             
-            // CONFIGURAR FECHA LOCAL (BUG 2 CORREGIDO)
             const hoy = new Date();
             hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
             document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
             
             if (localStorage.getItem('theme') === 'light') toggleTheme();
-            
             if (user.email === 'mafero171189@gmail.com') document.getElementById('btn-admin-access').style.display = 'block';
             else document.getElementById('btn-admin-access').style.display = 'none';
 
@@ -551,24 +564,12 @@
             if (texto.trim() !== "") {
                 document.getElementById('texto-aviso-global').innerText = texto;
                 document.getElementById('aviso-global').style.display = 'block';
-            } else {
-                document.getElementById('aviso-global').style.display = 'none';
-            }
+            } else { document.getElementById('aviso-global').style.display = 'none'; }
         } catch(e) { window.showToast("⚠️ Error al publicar", "danger"); }
         btn.innerText = "Publicar a Todos";
     }
 
-    let confirmCallback = null;
-    window.abrirModalBorrar = function(id, fecha, lugar) {
-        document.getElementById('modal-title').innerText = "¿Eliminar Turno?";
-        document.getElementById('modal-text').innerText = `${fecha} - ${lugar}`;
-        document.getElementById('custom-modal').style.display = 'flex';
-        confirmCallback = () => window.borrarTurnoNube(id);
-    }
-    window.closeModal = function() { document.getElementById('custom-modal').style.display = 'none'; }
-    document.getElementById('confirm-btn').onclick = () => { confirmCallback(); window.closeModal(); };
-
-    // --- CARGA DE DATOS ---
+    // --- CARGA DE DATOS Y CONFIG ---
     async function cargarDatosNube() {
         if (!window.currentUser) return;
         try {
@@ -583,13 +584,10 @@
             if (docSnap.exists()) {
                 const p = docSnap.data().precios || {}; 
                 const u = docSnap.data().perfil || {};
-                
                 window.preciosGuardados = p; 
                 document.getElementById('vigiNombre').value = u.nombre || ""; 
                 document.getElementById('vigiApellido').value = u.apellido || "";
-            } else {
-                window.preciosGuardados = {};
-            }
+            } else { window.preciosGuardados = {}; }
             
             const q = query(collection(db, "usuarios", window.currentUser.uid, "turnos"), orderBy("f", "desc"));
             const querySnapshot = await getDocs(q);
@@ -608,22 +606,15 @@
     window.guardarConfig = async function() {
         if (!window.currentUser) return;
         const p = { 
-            basico: limpiar(document.getElementById('valBasico').value), 
-            hora: limpiar(document.getElementById('valHora').value), 
-            noct: limpiar(document.getElementById('valNoct').value), 
-            viatico: limpiar(document.getElementById('valViatico').value), 
-            presentismo: limpiar(document.getElementById('valPresentismo').value), 
-            descuentos: document.getElementById('valDescuentos').value,
-            feriadoPct: document.getElementById('valFeriadoPct').value,
-            horasBase: document.getElementById('valHorasBase').value // BUG 3 CORREGIDO
+            basico: limpiar(document.getElementById('valBasico').value), hora: limpiar(document.getElementById('valHora').value), 
+            noct: limpiar(document.getElementById('valNoct').value), viatico: limpiar(document.getElementById('valViatico').value), 
+            presentismo: limpiar(document.getElementById('valPresentismo').value), descuentos: document.getElementById('valDescuentos').value,
+            feriadoPct: document.getElementById('valFeriadoPct').value, horasBase: document.getElementById('valHorasBase').value 
         };
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
         try { 
             await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); 
-            window.preciosGuardados = p; 
-            cerrarModalConfig();
-            window.showToast("✅ Valores de cobro actualizados", "success");
-            render(); 
+            window.preciosGuardados = p; cerrarModalConfig(); window.showToast("✅ Valores actualizados"); render(); 
         } catch (e) { window.showToast("⚠️ Error al guardar", "danger"); }
     }
 
@@ -634,10 +625,55 @@
         try { await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); } catch (e) { }
     }
 
+    // --- EDICIÓN Y GUARDADO DE TURNOS ---
+    window.editarTurno = function(id) {
+        const turno = window.turnos.find(t => t.id === id);
+        if (!turno) return;
+        
+        // Rellenamos el formulario con los datos del turno
+        document.getElementById('fecha').value = turno.f;
+        document.getElementById('lugar').value = turno.l || "";
+        document.getElementById('entrada').value = turno.e;
+        document.getElementById('salida').value = turno.s;
+        document.getElementById('esFeriado').checked = turno.fer;
+        
+        window.turnoEnEdicion = id;
+        document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO TURNO";
+        document.getElementById('btn-submit-turno').innerText = "GUARDAR CAMBIOS";
+        document.getElementById('btn-submit-turno').style.background = "var(--warning)";
+        document.getElementById('btn-cancel-edit').style.display = "block";
+        document.getElementById('main-form').classList.add('edit-mode');
+        
+        // Desplazamiento suave hacia arriba para ver el formulario en el celular
+        document.getElementById('main-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    window.cancelarEdicion = function() {
+        window.turnoEnEdicion = null;
+        
+        // Resetear formulario
+        const hoy = new Date();
+        hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
+        document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
+        
+        document.getElementById('lugar').value = '';
+        document.getElementById('entrada').value = '';
+        document.getElementById('salida').value = '';
+        document.getElementById('esFeriado').checked = false;
+        
+        // Resetear UI
+        document.getElementById('form-titulo-modo').innerHTML = "➕ REGISTRAR TURNO";
+        document.getElementById('btn-submit-turno').innerText = "AGENDAR TURNO";
+        document.getElementById('btn-submit-turno').style.background = "var(--accent)";
+        document.getElementById('btn-cancel-edit').style.display = "none";
+        document.getElementById('main-form').classList.remove('edit-mode');
+    }
+
     window.guardar = async function() {
         if (!window.currentUser) return;
         const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General", e = document.getElementById('entrada').value, s = document.getElementById('salida').value, fer = document.getElementById('esFeriado').checked;
         if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
+        
         let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
         if (sal <= ent) sal.setDate(sal.getDate() + 1);
         let diff = (sal - ent) / 3600000;
@@ -650,19 +686,50 @@
         noct = Math.round(noct * 100) / 100; 
         
         const nuevoTurno = { f, l, e, s, fer, t: diff, n: noct };
+        
         try {
-            const docRef = await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
-            window.turnos.push({ id: docRef.id, ...nuevoTurno }); window.turnos.sort((a,b) => new Date(b.f) - new Date(a.f));
-            document.getElementById('lugar').value = ''; document.getElementById('esFeriado').checked = false;
-            window.showToast("✅ Turno guardado", "success"); actualizarUI();
+            if (window.turnoEnEdicion) {
+                // MODIFICAR TURNO EXISTENTE
+                await updateDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", window.turnoEnEdicion), nuevoTurno);
+                
+                // Actualizar la lista local
+                const index = window.turnos.findIndex(t => t.id === window.turnoEnEdicion);
+                window.turnos[index] = { id: window.turnoEnEdicion, ...nuevoTurno };
+                
+                window.showToast("✅ Turno modificado"); 
+                cancelarEdicion(); // Limpia y resetea el formulario
+            } else {
+                // CREAR TURNO NUEVO
+                const docRef = await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
+                window.turnos.push({ id: docRef.id, ...nuevoTurno }); 
+                
+                document.getElementById('lugar').value = ''; document.getElementById('esFeriado').checked = false;
+                window.showToast("✅ Turno guardado"); 
+            }
+            
+            window.turnos.sort((a,b) => new Date(b.f) - new Date(a.f));
+            actualizarUI();
+            
         } catch (error) { window.showToast("⚠️ Error al guardar", "danger"); }
     }
+
+    // --- BORRAR TURNOS ---
+    let confirmCallback = null;
+    window.abrirModalBorrar = function(id, fecha, lugar) {
+        document.getElementById('modal-title').innerText = "¿Eliminar Turno?";
+        document.getElementById('modal-text').innerText = `${fecha} - ${lugar}`;
+        document.getElementById('custom-modal').style.display = 'flex';
+        confirmCallback = () => window.borrarTurnoNube(id);
+    }
+    window.closeModal = function() { document.getElementById('custom-modal').style.display = 'none'; }
+    document.getElementById('confirm-btn').onclick = () => { confirmCallback(); window.closeModal(); };
 
     window.borrarTurnoNube = async function(id) {
         if (!window.currentUser) return;
         try { await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); window.turnos = window.turnos.filter(t => t.id !== id); window.showToast("🗑️ Turno eliminado"); render(); } catch (e) { }
     }
 
+    // --- RENDERIZADO ---
     window.cambiarMes = function(delta) { window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); actualizarUI(); }
     function actualizarUI() {
         const mesNom = window.meses[window.fechaFiltro.getMonth()];
@@ -678,7 +745,21 @@
             if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
                 st += t.t; sn += t.n; if (t.fer) sf += t.t;
                 const card = document.createElement('div'); card.className = 'shift-card';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="display:flex; align-items:center;"><div style="text-align:right;"><span class="total-h">${t.t.toFixed(1)}hs</span><span class="noct-h">🌙 ${t.n.toFixed(1)}h</span></div><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${t.l || 'Puesto'}')">✕</button></div>`;
+                card.innerHTML = `
+                    <div>
+                        <span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span>
+                        <span class="shift-location">${t.l || "Puesto"}</span>
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <div style="text-align:right; margin-right: 15px;">
+                            <span class="total-h">${t.t.toFixed(1)}hs</span>
+                            <span class="noct-h">🌙 ${t.n.toFixed(1)}h</span>
+                        </div>
+                        <div style="display:flex; gap: 8px;">
+                            <button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button>
+                            <button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${t.l || 'Puesto'}')">✕</button>
+                        </div>
+                    </div>`;
                 lista.appendChild(card);
             }
         });
@@ -689,8 +770,6 @@
         
         let descuentPorcentaje = parseFloat(p.descuentos); if(isNaN(descuentPorcentaje)) descuentPorcentaje = 17;
         let feriadoPct = parseFloat(p.feriadoPct); if(isNaN(feriadoPct)) feriadoPct = 100;
-        
-        // BUG 3: USO DE LAS HORAS BASE PARA CALCULAR EXTRAS Y VALOR DE HORA NORMAL
         let horasBase = parseFloat(p.horasBase); if(isNaN(horasBase) || horasBase <= 0) horasBase = 200;
 
         let valorHoraNormal = (basico + presentismo) / horasBase;
@@ -717,7 +796,7 @@
         if (!nom || !ape) return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger");
         const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
         let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
-        const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n--------------------------\n📈 *Sueldo Bruto:* $${window.totalStats.bruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n💰 *NETO EN MANO:* $${window.totalStats.neto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n_Generado por Control Vigía_`;
+        const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n--------------------------\n📈 *Sueldo Bruto:* $${window.totalStats.bruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n💰 *NETO EN Mano:* $${window.totalStats.neto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n_Generado por Control Vigía_`;
         window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
     }
 </script>
