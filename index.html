@@ -329,7 +329,7 @@
         </div>
     </div>
 
-    <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL</span></button>
+    <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL DE TURNOS</span></button>
     <div id="lista"></div>
 </div>
 
@@ -804,7 +804,7 @@
         const label = document.getElementById('toggle-lista-label');
         const visible = lista.style.display !== 'none';
         lista.style.display = visible ? 'none' : 'block';
-        label.innerText = visible ? 'MOSTRAR HISTORIAL' : 'OCULTAR HISTORIAL';
+        label.innerText = visible ? 'MOSTRAR HISTORIAL DE TURNOS' : 'OCULTAR HISTORIAL DE TURNOS';
     }
 
     window.enviarWhatsapp = function() {
