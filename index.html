@@ -26,11 +26,9 @@
         /* --- ESTILOS PARA EL TEXTO GRIS TRANSPARENTE EN NEGITA (PLACEHOLDER) --- */
         input::placeholder {
             font-weight: 800;
-            color: rgba(148, 163, 184, 0.65); /* Gris semitransparente */
-            opacity: 1; /* Para que funcione igual en todos los celulares */
+            color: rgba(148, 163, 184, 0.65);
+            opacity: 1; 
         }
-        
-        /* Achicamos la letra solo para el cartel de antigüedad así no se corta */
         #valAntiguedad::placeholder {
             font-size: 0.75rem; 
         }
@@ -41,7 +39,6 @@
         .hero-subtitle { font-size: 1rem; color: var(--text-dim); margin: 15px 0 20px 0; max-width: 420px; line-height: 1.6; }
         .hero-subtitle b { color: var(--text-main); }
         
-        /* ETIQUETA UPSRA EN LANDING PAGE */
         .upsra-badge { background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-bottom: 35px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
         .features-grid { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; width: 100%; max-width: 400px; }
@@ -79,7 +76,7 @@
         .status-badge.online { color: var(--success); } .status-badge.online .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .status-badge.offline { color: var(--danger); } .status-badge.offline .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
         
-        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
         .btn-logout { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         
         #btn-admin-access { display: none; background: rgba(139, 92, 246, 0.2); color: var(--admin); border: 1px solid var(--admin); padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
@@ -152,7 +149,7 @@
         .user-info b { color: var(--text-main); font-size: 1.05rem; }
         
         /* Modales */
-        #custom-modal, #modal-recuperar, #modal-config, #modal-bienvenida { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        #custom-modal, #modal-recuperar, #modal-config, #modal-bienvenida, #modal-cambiar-clave { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
         #modal-bienvenida { z-index: 9000; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; margin: auto; }
         #modal-config .modal-content { max-width: 380px; padding: 25px 20px; }
@@ -198,6 +195,19 @@
 <div id="loading-overlay">Verificando sesión... 🛡️</div>
 <div id="toast"></div>
 
+<div id="modal-cambiar-clave">
+    <div class="modal-content">
+        <h3 style="color: var(--accent); margin-top:0; margin-bottom: 15px;">Cambiar Contraseña</h3>
+        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px; text-align: left;">Ingresá tu nueva clave (mínimo 6 caracteres).</p>
+        <input type="password" id="nueva-clave-1" class="auth-input" placeholder="Nueva contraseña" style="margin-bottom: 10px;">
+        <input type="password" id="nueva-clave-2" class="auth-input" placeholder="Repetir nueva contraseña">
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="cerrarModalCambiarClave()">Cancelar</button>
+            <button class="btn-send" onclick="cambiarClaveUsuario()">Guardar</button>
+        </div>
+    </div>
+</div>
+
 <div id="modal-bienvenida">
     <div class="modal-content" style="max-width: 350px; border-color: var(--accent);">
         <h2 style="color: var(--accent); margin-top: 0; font-size: 1.5rem;">¡Bienvenido a Control Vigía! 🛡️</h2>
@@ -237,7 +247,7 @@
         <h3 style="color: var(--accent); margin-top:0; margin-bottom: 15px;">Valores de Cobro</h3>
         
         <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-main); text-align: left; line-height: 1.4;">
-            <b>💡 ¡Personalizá tu sueldo!</b> El sistema sugiere valores UPSRA 2026, pero podés ingresar tus propios montos si cobrás distinto.
+            <b>💡 ¡Personalizá tu sueldo!</b> El sistema sugiere valores UPSRA, pero podés ingresar tus propios montos si cobrás distinto.
         </div>
         
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
@@ -315,6 +325,7 @@
         <div class="header-actions">
             <button id="btn-admin-access" onclick="abrirAdmin()">⭐ Admin</button>
             <button class="mode-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+            <button class="btn-logout" style="border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1);" onclick="abrirModalCambiarClave()" title="Cambiar Contraseña">🔑</button>
             <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
         </div>
     </header>
@@ -422,7 +433,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    // NUEVO IMPORT: updatePassword agregado acá 👇
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCjSqOhEtmzTFS82f4VLbQQn8ZTiB5Ct_Q",
@@ -479,7 +491,6 @@
 
     const limpiar = (str) => { if(!str || str.trim() === "") return ""; return str.toString().replace(/\./g, "").replace(",", "."); };
 
-    // --- EL CEREBRO DE TU SISTEMA (AUTOMATIZACIÓN SEGÚN PDF 2026) ---
     window.obtenerValoresMes = function(fObj) {
         if (!fObj) fObj = new Date();
         const año = fObj.getFullYear();
@@ -527,14 +538,49 @@
         return v;
     };
 
-    // --- MODALES (CON PLACEHOLDERS TRANSPARENTES) ---
+    // --- NUEVO: FUNCIONES PARA CAMBIAR CLAVE ---
+    window.abrirModalCambiarClave = function() {
+        document.getElementById('nueva-clave-1').value = '';
+        document.getElementById('nueva-clave-2').value = '';
+        document.getElementById('modal-cambiar-clave').style.display = 'flex';
+    }
+
+    window.cerrarModalCambiarClave = function() {
+        document.getElementById('modal-cambiar-clave').style.display = 'none';
+    }
+
+    window.cambiarClaveUsuario = async function() {
+        const pass1 = document.getElementById('nueva-clave-1').value;
+        const pass2 = document.getElementById('nueva-clave-2').value;
+
+        if (pass1.length < 6) return window.showToast("⚠️ La clave debe tener al menos 6 caracteres", "danger");
+        if (pass1 !== pass2) return window.showToast("⚠️ Las contraseñas no coinciden", "danger");
+
+        try {
+            // Se actualiza en Firebase Auth
+            await updatePassword(window.currentUser, pass1);
+            
+            // Se guarda registro en la base de datos (seccion datos del usuario)
+            await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), {
+                ultima_clave_cambiada: new Date().toISOString()
+            }, { merge: true });
+            
+            window.showToast("✅ Contraseña actualizada con éxito");
+            window.cerrarModalCambiarClave();
+        } catch (error) {
+            if (error.code === 'auth/requires-recent-login') {
+                window.showToast("⚠️ Por seguridad, cerrá sesión y volvé a ingresar para poder cambiarla.", "danger");
+            } else {
+                window.showToast("⚠️ Error al cambiar la contraseña", "danger");
+            }
+        }
+    }
+
+    // --- MODALES ---
     window.abrirModalConfig = function() {
         const p = window.preciosGuardados || {};
         const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
-        
         const auto = window.obtenerValoresMes(window.fechaFiltro);
-        
-        // Formato para los placeholder en gris
         const fmtAuto = (num) => "Auto: $" + num.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 2});
         
         if(document.getElementById('valBasico')) {
@@ -619,7 +665,6 @@
         }
     }
 
-    // --- AUTENTICACIÓN ---
     window.togglePasswordVisibility = function() {
         const pwdInput = document.getElementById('auth-password');
         const pwdIcon = document.getElementById('toggle-pwd-icon');
@@ -657,7 +702,6 @@
 
                 window.showToast("¡Cuenta creada con éxito!");
                 
-                // MOSTRAR MODAL DE BIENVENIDA AL REGISTRARSE
                 document.getElementById('modal-bienvenida').style.display = 'flex';
                 
             } else {
@@ -698,7 +742,6 @@
         loading.style.opacity = '0'; setTimeout(() => loading.style.display = 'none', 500);
     });
 
-    // --- ADMIN PANEL ---
     window.abrirAdmin = async function() {
         document.getElementById('app-container').style.display = 'none';
         document.getElementById('admin-container').style.display = 'block';
@@ -737,7 +780,6 @@
         btn.innerText = "Publicar a Todos";
     }
 
-    // --- CARGA DE DATOS Y CONFIG ---
     async function cargarDatosNube() {
         if (!window.currentUser) return;
         try {
@@ -766,28 +808,13 @@
 
     window.guardarConfig = async function() {
         if (!window.currentUser) return;
-        
-        const getVal = (id) => {
-            const el = document.getElementById(id);
-            if (!el || el.value.trim() === "") return ""; 
-            return limpiar(el.value);
-        };
-
+        const getVal = (id) => { const el = document.getElementById(id); if (!el || el.value.trim() === "") return ""; return limpiar(el.value); };
         const p = { 
-            basico: getVal('valBasico'), 
-            antiguedad: document.getElementById('valAntiguedad') ? document.getElementById('valAntiguedad').value : "",
-            hora: getVal('valHora'), 
-            noct: getVal('valNoct'), 
-            viatico: getVal('valViatico'), 
-            presentismo: getVal('valPresentismo'), 
-            noRem: getVal('valNoRem'),
-            plusVacManual: getVal('valPlusVacManual'),
-            descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "",
-            horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "" 
+            basico: getVal('valBasico'), antiguedad: document.getElementById('valAntiguedad') ? document.getElementById('valAntiguedad').value : "", hora: getVal('valHora'), noct: getVal('valNoct'), viatico: getVal('valViatico'), presentismo: getVal('valPresentismo'), noRem: getVal('valNoRem'), plusVacManual: getVal('valPlusVacManual'), descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "" 
         };
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
         try { 
-            await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); 
+            await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }, {merge: true}); 
             window.preciosGuardados = p; 
             cerrarModalConfig(); 
             window.showToast("✅ Valores actualizados"); 
@@ -799,10 +826,9 @@
         if (!window.currentUser) return;
         const p = window.preciosGuardados; 
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
-        try { await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }); } catch (e) { }
+        try { await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }, {merge: true}); } catch (e) { }
     }
 
-    // --- EDICIÓN Y GUARDADO DE TURNOS ---
     window.editarTurno = function(id) {
         const turno = window.turnos.find(t => t.id === id);
         if (!turno) return;
@@ -846,12 +872,7 @@
 
     window.guardar = async function() {
         if (!window.currentUser) return;
-        const f = document.getElementById('fecha').value, 
-              l = document.getElementById('lugar').value || "Puesto General", 
-              e = document.getElementById('entrada').value, 
-              s = document.getElementById('salida').value, 
-              fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false,
-              vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
+        const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General", e = document.getElementById('entrada').value, s = document.getElementById('salida').value, fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false, vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
               
         if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
         
@@ -883,14 +904,11 @@
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 window.showToast("✅ Turno guardado"); 
             }
-            
             window.turnos.sort((a,b) => new Date(b.f) - new Date(a.f));
             actualizarUI();
-            
         } catch (error) { window.showToast("⚠️ Error al guardar", "danger"); }
     }
 
-    // --- BORRAR TURNOS ---
     let confirmCallback = null;
     window.abrirModalBorrar = function(id, fecha, lugar) {
         document.getElementById('modal-title').innerText = "¿Eliminar Turno?";
@@ -906,7 +924,6 @@
         try { await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); window.turnos = window.turnos.filter(t => t.id !== id); window.showToast("🗑️ Turno eliminado"); render(); } catch (e) { }
     }
 
-    // --- RENDERIZADO (CÁLCULOS DINÁMICOS MEJORADOS) ---
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
     window.cambiarMes = function(delta) { window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); actualizarUI(); }
     function actualizarUI() {
@@ -927,32 +944,18 @@
             const fObj = new Date(t.f + "T00:00:00");
             if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
                 st += t.t; sn += t.n; if (t.fer) sf += t.t;
-                
-                if (t.vac) {
-                    plusVacacionalTotal += valMes.plusVac;
-                } else {
-                    diasTrabajados++;
-                }
+                if (t.vac) { plusVacacionalTotal += valMes.plusVac; } else { diasTrabajados++; }
 
                 const card = document.createElement('div'); 
                 card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
                 const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
                 card.innerHTML = `
-                    <div>
-                        <span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span>
-                        <span class="shift-location">${t.l || "Puesto"}</span>
-                    </div>
+                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
                     ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
                     ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
                     <div style="display:flex; align-items:center;">
-                        <div style="text-align:right; margin-right: 15px;">
-                            <span class="total-h">${fmtH(t.t)}hs</span>
-                            <span class="noct-h">🌙 ${fmtH(t.n)}h</span>
-                        </div>
-                        <div style="display:flex; gap: 8px;">
-                            <button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button>
-                            <button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button>
-                        </div>
+                        <div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span></div>
+                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
                     </div>`;
                 lista.appendChild(card);
             }
@@ -961,31 +964,19 @@
         document.getElementById('totN').innerText = fmtH(sn); 
         document.getElementById('totF').innerText = fmtH(sf);
         
-        // 1. CÁLCULO DE ANTIGÜEDAD (1% por año sobre el básico)
         const montoAntiguedad = valMes.basico * (valMes.antiguedadAños / 100);
-
-        // 2. VALOR HORA NOCTURNA (1/1000 del total remunerativo según UPSRA)
         let valorNocturnoFinal = valMes.noct;
-        if (isNaN(valorNocturnoFinal) || valorNocturnoFinal <= 0) {
-            valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000;
-        }
+        if (isNaN(valorNocturnoFinal) || valorNocturnoFinal <= 0) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
 
-        // 3. VALOR HORA NORMAL
         let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
         let horaExtraVal = valMes.hora > 0 ? valMes.hora : valorHoraNormal; 
 
-        // 4. HORAS EXTRAS Y FERIADOS
         let pagoFeriados = sf * horaExtraVal;
         let pagoHorasTotales = 0, hsExtra = 0;
-        if (st > valMes.horasBase) { 
-            hsExtra = st - valMes.horasBase; 
-            pagoHorasTotales = hsExtra * horaExtraVal; 
-        }
+        if (st > valMes.horasBase) { hsExtra = st - valMes.horasBase; pagoHorasTotales = hsExtra * horaExtraVal; }
 
-        // 5. VIÁTICO PROPORCIONAL
         const viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
 
-        // 6. CÁLCULO INTELIGENTE DE DESCUENTOS
         const sumaRemunerativa = valMes.basico + valMes.presentismo + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal);
         const descuentosLey = sumaRemunerativa * (valMes.descuentos / 100);
         
@@ -997,11 +988,7 @@
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
-        window.totalStats = { 
-            t: fmtH(st), n: fmtH(sn), f: fmtH(sf), 
-            extra: hsExtra, bruto: totalBruto, neto: totalNeto,
-            antiguedad: valMes.antiguedadAños
-        };
+        window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
     }
 
     window.toggleHistorial = function() {
@@ -1018,7 +1005,6 @@
         const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
         let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
         let antiguedadTexto = window.totalStats.antiguedad > 0 ? `🏅 *Antigüedad:* ${window.totalStats.antiguedad} Años\n` : "";
-        
         const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n--------------------------\n📈 *Sueldo Bruto:* $${window.totalStats.bruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n💰 *NETO EN Mano:* $${window.totalStats.neto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n_Generado por Control Vigía_`;
         window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
     }
