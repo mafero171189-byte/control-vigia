@@ -112,6 +112,10 @@
         .total-h { font-size: 1.1rem; font-weight: 800; display: block; }
         .noct-h { font-size: 0.65rem; color: var(--accent); font-weight: bold; }
         .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .shift-card.feriado { border-color: var(--warning); background: linear-gradient(135deg, var(--card-bg), rgba(245, 158, 11, 0.08)); }
+        .feriado-badge { font-size: 0.65rem; font-weight: 700; color: var(--warning); background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; }
+        .btn-toggle-lista { width: 100%; background: transparent; color: var(--text-dim); border: 1px dashed var(--border); padding: 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-toggle-lista:hover { border-color: var(--accent); color: var(--accent); }
 
         /* --- PANEL ADMIN --- */
         .admin-header { background: linear-gradient(135deg, #4c1d95, #7c3aed); padding: 15px; border-radius: 16px; margin-bottom: 20px; text-align: center; color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }
@@ -325,6 +329,7 @@
         </div>
     </div>
 
+    <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL DE TURNOS</span></button>
     <div id="lista"></div>
 </div>
 
@@ -744,12 +749,14 @@
             const fObj = new Date(t.f + "T00:00:00");
             if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
                 st += t.t; sn += t.n; if (t.fer) sf += t.t;
-                const card = document.createElement('div'); card.className = 'shift-card';
+                const card = document.createElement('div'); card.className = t.fer ? 'shift-card feriado' : 'shift-card';
+                const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
                 card.innerHTML = `
                     <div>
                         <span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span>
                         <span class="shift-location">${t.l || "Puesto"}</span>
                     </div>
+                    ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
                     <div style="display:flex; align-items:center;">
                         <div style="text-align:right; margin-right: 15px;">
                             <span class="total-h">${t.t.toFixed(1)}hs</span>
@@ -757,7 +764,7 @@
                         </div>
                         <div style="display:flex; gap: 8px;">
                             <button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button>
-                            <button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${t.l || 'Puesto'}')">✕</button>
+                            <button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button>
                         </div>
                     </div>`;
                 lista.appendChild(card);
@@ -789,6 +796,14 @@
         const totalBruto = basico + presentismo + viatico + pagoHorasTotales + pagoFeriados + (sn * plusN), totalNeto = totalBruto - (totalBruto * (descuentPorcentaje / 100));
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         window.totalStats = { t: st.toFixed(1), n: sn.toFixed(1), f: sf.toFixed(1), extra: hsExtra, bruto: totalBruto, neto: totalNeto };
+    }
+
+    window.toggleHistorial = function() {
+        const lista = document.getElementById('lista');
+        const label = document.getElementById('toggle-lista-label');
+        const visible = lista.style.display !== 'none';
+        lista.style.display = visible ? 'none' : 'block';
+        label.innerText = visible ? 'MOSTRAR HISTORIAL DE TURNOS' : 'OCULTAR HISTORIAL DE TURNOS';
     }
 
     window.enviarWhatsapp = function() {
