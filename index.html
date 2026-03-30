@@ -444,8 +444,9 @@
 </div>
 
 <script type="module">
+    // 🔴 CAMBIO 1: Se agregó onSnapshot a las importaciones de Firestore
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -466,6 +467,7 @@
     window.turnos = [];
     window.preciosGuardados = {}; 
     window.turnoEnEdicion = null; 
+    window.unsubTurnos = null; // 🔴 Variable para guardar el "micrófono abierto"
     
     let esModoRegistro = false;
     const INICIO_NOCHE = 21, FIN_NOCHE = 6;
@@ -717,7 +719,11 @@
         }
     }
     
-    window.cerrarSesion = async function() { await signOut(auth); }
+    // 🔴 CAMBIO 2: Desconectar el micrófono abierto al cerrar sesión
+    window.cerrarSesion = async function() { 
+        if (window.unsubTurnos) window.unsubTurnos(); 
+        await signOut(auth); 
+    }
 
     onAuthStateChanged(auth, async (user) => {
         const loading = document.getElementById('loading-overlay');
@@ -859,6 +865,7 @@
         btn.innerText = "Publicar a Todos";
     }
 
+    // 🔴 CAMBIO 3: Se modificó cómo se leen los turnos para que sean en tiempo real
     async function cargarDatosNube() {
         if (!window.currentUser) return;
         try {
@@ -878,10 +885,14 @@
                 document.getElementById('vigiApellido').value = u.apellido || "";
             } else { window.preciosGuardados = {}; }
             
+            // Acá es donde habilitamos la magia en tiempo real para los turnos
             const q = query(collection(db, "usuarios", window.currentUser.uid, "turnos"), orderBy("f", "desc"));
-            const querySnapshot = await getDocs(q);
-            window.turnos = [];
-            querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
+            if (window.unsubTurnos) window.unsubTurnos(); // Desconecta el anterior si había
+            window.unsubTurnos = onSnapshot(q, (querySnapshot) => {
+                window.turnos = [];
+                querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
+                actualizarUI(); // Actualiza toda la pantalla solito cuando hay un cambio
+            });
         } catch (e) { console.error(e); }
     }
 
@@ -949,6 +960,7 @@
         document.getElementById('main-form').classList.remove('edit-mode');
     }
 
+    // 🔴 CAMBIO 4: Se limpió la función de guardar para que dependa de onSnapshot
     window.guardar = async function() {
         if (!window.currentUser) return;
         const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General", e = document.getElementById('entrada').value, s = document.getElementById('salida').value, fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false, vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
@@ -971,20 +983,16 @@
         try {
             if (window.turnoEnEdicion) {
                 await updateDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", window.turnoEnEdicion), nuevoTurno);
-                const index = window.turnos.findIndex(t => t.id === window.turnoEnEdicion);
-                window.turnos[index] = { id: window.turnoEnEdicion, ...nuevoTurno };
                 window.showToast("✅ Turno modificado"); 
                 cancelarEdicion();
             } else {
-                const docRef = await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
-                window.turnos.push({ id: docRef.id, ...nuevoTurno }); 
+                await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
                 document.getElementById('lugar').value = ''; 
                 if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 window.showToast("✅ Turno guardado"); 
             }
-            window.turnos.sort((a,b) => new Date(b.f) - new Date(a.f));
-            actualizarUI();
+            // Ya no manipulamos window.turnos acá porque onSnapshot se encarga de todo.
         } catch (error) { window.showToast("⚠️ Error al guardar", "danger"); }
     }
 
@@ -998,9 +1006,13 @@
     window.closeModal = function() { document.getElementById('custom-modal').style.display = 'none'; }
     document.getElementById('confirm-btn').onclick = () => { confirmCallback(); window.closeModal(); };
 
+    // 🔴 CAMBIO 5: Se limpió la función de borrar para que dependa de onSnapshot
     window.borrarTurnoNube = async function(id) {
         if (!window.currentUser) return;
-        try { await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); window.turnos = window.turnos.filter(t => t.id !== id); window.showToast("🗑️ Turno eliminado"); render(); } catch (e) { }
+        try { 
+            await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); 
+            window.showToast("🗑️ Turno eliminado"); 
+        } catch (e) { }
     }
 
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
