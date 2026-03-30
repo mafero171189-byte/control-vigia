@@ -82,8 +82,10 @@
         #btn-admin-access { display: none; background: rgba(139, 92, 246, 0.2); color: var(--admin); border: 1px solid var(--admin); padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         
         .global-alert { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; border-left: 4px solid var(--accent); }
-        .global-alert h4 { margin: 0 0 5px 0; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        .global-alert-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .global-alert h4 { margin: 0; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         .global-alert p { margin: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.4; }
+        .btn-cerrar-aviso { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: var(--accent); font-size: 0.85rem; font-weight: bold; cursor: pointer; border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
 
         .month-selector { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; background: var(--card-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--border); justify-content: center; }
         .month-selector span { font-weight: 800; font-size: 1rem; color: var(--text-main); min-width: 100px; text-align: center; }
@@ -353,7 +355,10 @@
     </header>
 
     <div id="aviso-global" class="global-alert">
-        <h4>📢 Aviso</h4>
+        <div class="global-alert-header">
+            <h4>📢 Aviso</h4>
+            <button class="btn-cerrar-aviso" onclick="cerrarAviso()" title="Cerrar aviso">✕</button>
+        </div>
         <p id="texto-aviso-global"></p>
     </div>
 
@@ -849,6 +854,57 @@
             }
         });
     }
+    
+window.formatearEnlaces = function(texto) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    
+    // 1. Primero procesamos los enlaces y los convertimos en botones
+    let textoProcesado = texto.replace(urlRegex, function(url) {
+        
+        let textoEnlace = "ABRIR ENLACE 🔗"; 
+        let colorEnlace = "var(--accent)"; 
+
+        if (url.includes("wa.me") || url.includes("whatsapp.com")) {
+            textoEnlace = "WHATSAPP 💬";
+            colorEnlace = "var(--whatsapp)"; 
+            
+        } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
+            textoEnlace = "VER VIDEO 📺";
+            colorEnlace = "var(--danger)"; 
+            
+        } else if (url.includes("drive.google") || url.includes("mediafire") || url.includes("dropbox") || url.includes("mega.nz")) {
+            textoEnlace = "DESCARGAR ARCHIVO 📎";
+        }
+
+        // CAMBIOS ACÁ: 'display: block', 'width: fit-content' y los márgenes
+        const estiloBoton = `
+            display: block; 
+            width: fit-content; 
+            margin-top: 12px; 
+            margin-bottom: 12px;
+            padding: 8px 14px; 
+            color: ${colorEnlace}; 
+            border: 1px solid ${colorEnlace}; 
+            border-radius: 10px; 
+            text-decoration: none; 
+            font-weight: 800; 
+            font-size: 0.8rem; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        `;
+
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="${estiloBoton}">${textoEnlace}</a>`;
+    });
+
+    // 2. Finalmente, convertimos los "Enter" del teclado (\n) en saltos de línea HTML (<br>)
+    return textoProcesado.replace(/\n/g, '<br>');
+}
+
+    window.cerrarAviso = function() {
+        document.getElementById('aviso-global').style.display = 'none';
+        // Solo oculta en esta sesión. Al volver a ingresar, el aviso reaparecerá
+        // hasta que el super admin lo elimine publicando un texto vacío.
+    }
 
     window.publicarMensaje = async function() {
         const texto = document.getElementById('admin-mensaje-texto').value;
@@ -858,7 +914,7 @@
             await setDoc(doc(db, "global", "aviso"), { texto: texto, fecha: new Date().toISOString() });
             window.showToast("✅ Aviso publicado a todos", "success");
             if (texto.trim() !== "") {
-                document.getElementById('texto-aviso-global').innerText = texto;
+                document.getElementById('texto-aviso-global').innerHTML = window.formatearEnlaces(texto);
                 document.getElementById('aviso-global').style.display = 'block';
             } else { document.getElementById('aviso-global').style.display = 'none'; }
         } catch(e) { window.showToast("⚠️ Error al publicar", "danger"); }
@@ -871,7 +927,7 @@
         try {
             const msgSnap = await getDoc(doc(db, "global", "aviso"));
             if (msgSnap.exists() && msgSnap.data().texto.trim() !== "") {
-                document.getElementById('texto-aviso-global').innerText = msgSnap.data().texto;
+                document.getElementById('texto-aviso-global').innerHTML = window.formatearEnlaces(msgSnap.data().texto);
                 document.getElementById('aviso-global').style.display = 'block';
                 if(window.currentUser.email === 'mafero171189@gmail.com') document.getElementById('admin-mensaje-texto').value = msgSnap.data().texto;
             } else { document.getElementById('aviso-global').style.display = 'none'; }
