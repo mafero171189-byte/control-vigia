@@ -1,0 +1,36 @@
+name: Generar APK Control Vigia
+on:
+  push:
+    branches: [ main ] # Se activa cada vez que guardas en la rama principal
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargando codigo de GitHub
+        uses: actions/checkout@v3
+
+      - name: Configurando Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Instalando herramientas de Android
+        run: npm install -g @bubblewrap/cli
+
+      - name: Generar APK
+        # Este paso simula la creacion del paquete Android
+        run: |
+          bubblewrap build --skipSigning
+        env:
+          # El versionCode sube solo con cada intento (1, 2, 3...)
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: "1.2.${{ github.run_number }}"
+
+      - name: Guardar el APK generado
+        uses: actions/upload-artifact@v3
+        with:
+          name: ControlVigia-Instalador
+          path: ./*.apk
+          retention-days: 1 # Se borra en 1 dia para no llenar tus 500MB gratis
+          
