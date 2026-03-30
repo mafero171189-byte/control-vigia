@@ -24,7 +24,7 @@
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; min-height: 100vh; transition: 0.3s; overflow-x: hidden; }
         
         /* --- ESTILOS PARA EL TEXTO GRIS TRANSPARENTE EN NEGITA (PLACEHOLDER) --- */
-        input::placeholder {
+        input::placeholder, textarea::placeholder {
             font-weight: 800;
             color: rgba(148, 163, 184, 0.65);
             opacity: 1; 
@@ -149,7 +149,7 @@
         .user-info b { color: var(--text-main); font-size: 1.05rem; }
         
         /* Modales */
-        #custom-modal, #modal-recuperar, #modal-config, #modal-bienvenida, #modal-cambiar-clave { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        #custom-modal, #modal-recuperar, #modal-config, #modal-bienvenida, #modal-cambiar-clave, #modal-eliminar-usuario { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; overflow-y: auto; }
         #modal-bienvenida { z-index: 9000; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; margin: auto; }
         #modal-config .modal-content { max-width: 380px; padding: 25px 20px; }
@@ -274,6 +274,28 @@
         <div class="modal-btns">
             <button class="btn-cancel" onclick="cerrarModalConfig()">Cancelar</button>
             <button class="btn-send" onclick="guardarConfig()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div id="custom-modal">
+    <div class="modal-content">
+        <h3 id="modal-title" style="margin-top:0">¿Eliminar Turno?</h3>
+        <p id="modal-text" style="color:var(--text-dim)"></p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+            <button class="btn-confirm" id="confirm-btn">Sí, borrar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-eliminar-usuario">
+    <div class="modal-content" style="border-color: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">
+        <h3 style="margin-top:0; color: var(--danger);">⚠️ Eliminar Usuario</h3>
+        <p style="color:var(--text-dim); font-size: 0.9rem; line-height: 1.5;" id="txt-eliminar-usuario"></p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="cerrarModalEliminarUsuario()">Cancelar</button>
+            <button class="btn-confirm" id="btn-confirmar-eliminar-usuario" onclick="confirmarEliminarUsuario()">Sí, eliminar</button>
         </div>
     </div>
 </div>
@@ -416,24 +438,14 @@
         <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema</p>
     </div>
     
+    <input type="text" id="admin-buscar-usuario" class="auth-input" placeholder="🔍 Buscar por nombre o email..." onkeyup="filtrarUsuariosAdmin()" style="margin-bottom: 15px;">
+    
     <div id="lista-usuarios-admin"></div>
-</div>
-
-<div id="custom-modal">
-    <div class="modal-content">
-        <h3 id="modal-title" style="margin-top:0">¿Eliminar Turno?</h3>
-        <p id="modal-text" style="color:var(--text-dim)"></p>
-        <div class="modal-btns">
-            <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-            <button class="btn-confirm" id="confirm-btn">Sí, borrar</button>
-        </div>
-    </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    // NUEVO IMPORT: updatePassword agregado acá 👇
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -538,7 +550,6 @@
         return v;
     };
 
-    // --- NUEVO: FUNCIONES PARA CAMBIAR CLAVE ---
     window.abrirModalCambiarClave = function() {
         document.getElementById('nueva-clave-1').value = '';
         document.getElementById('nueva-clave-2').value = '';
@@ -557,14 +568,8 @@
         if (pass1 !== pass2) return window.showToast("⚠️ Las contraseñas no coinciden", "danger");
 
         try {
-            // Se actualiza en Firebase Auth
             await updatePassword(window.currentUser, pass1);
-            
-            // Se guarda registro en la base de datos (seccion datos del usuario)
-            await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), {
-                ultima_clave_cambiada: new Date().toISOString()
-            }, { merge: true });
-            
+            await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { ultima_clave_cambiada: new Date().toISOString() }, { merge: true });
             window.showToast("✅ Contraseña actualizada con éxito");
             window.cerrarModalCambiarClave();
         } catch (error) {
@@ -576,7 +581,6 @@
         }
     }
 
-    // --- MODALES ---
     window.abrirModalConfig = function() {
         const p = window.preciosGuardados || {};
         const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
@@ -701,7 +705,6 @@
                 await setDoc(doc(db, "usuarios", cred.user.uid, "config", "datos"), { perfil: { nombre: nom, apellido: ape }, precios: {} });
 
                 window.showToast("¡Cuenta creada con éxito!");
-                
                 document.getElementById('modal-bienvenida').style.display = 'flex';
                 
             } else {
@@ -745,6 +748,9 @@
     window.abrirAdmin = async function() {
         document.getElementById('app-container').style.display = 'none';
         document.getElementById('admin-container').style.display = 'block';
+        
+        document.getElementById('admin-buscar-usuario').value = '';
+        
         const lista = document.getElementById('lista-usuarios-admin');
         lista.innerHTML = "<p style='text-align:center'>Cargando personal...</p>";
         try {
@@ -758,12 +764,85 @@
                     fechaTexto = fechaObj.toLocaleDateString('es-AR', {day: '2-digit', month: '2-digit', year: 'numeric'});
                 }
                 const card = document.createElement('div'); card.className = 'user-list-card';
-                card.innerHTML = `<div class="user-info"><b>${data.nombre || 'Sin Nombre'}</b><span style="color: var(--text-dim); display: block;">${data.email}</span><span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">📅 Registrado el: ${fechaTexto}</span></div>`;
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="user-info">
+                            <b>${data.nombre || 'Sin Nombre'}</b>
+                            <span style="color: var(--text-dim); display: block;">${data.email}</span>
+                            <span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">📅 Registrado el: ${fechaTexto}</span>
+                        </div>
+                        <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0;" title="Eliminar usuario">🗑️</button>
+                    </div>
+                `;
                 lista.appendChild(card);
             });
         } catch (e) { lista.innerHTML = "<p style='color:red; text-align:center;'>Error al cargar el panel.</p>"; }
     }
+    
     window.volverApp = function() { document.getElementById('admin-container').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; }
+
+    window.idUsuarioAEliminar = null;
+
+    window.abrirModalEliminarUsuario = function(uid, nombre, email) {
+        window.idUsuarioAEliminar = uid;
+        document.getElementById('txt-eliminar-usuario').innerHTML = `¿Estás seguro que querés eliminar a <b style="color: var(--text-main);">${nombre}</b> (${email})?<br><br><span style="font-size: 0.8rem; color: var(--warning);">Esta acción borrará sus datos del sistema de forma permanente.</span>`;
+        document.getElementById('modal-eliminar-usuario').style.display = 'flex';
+    }
+
+    window.cerrarModalEliminarUsuario = function() {
+        document.getElementById('modal-eliminar-usuario').style.display = 'none';
+        window.idUsuarioAEliminar = null;
+    }
+
+    window.confirmarEliminarUsuario = async function() {
+        if(!window.idUsuarioAEliminar) return;
+        const btn = document.getElementById('btn-confirmar-eliminar-usuario');
+        btn.innerText = "Borrando todo...";
+        
+        try {
+            const uid = window.idUsuarioAEliminar;
+
+            // 1. Buscar y borrar todos los turnos del usuario (subcolección)
+            const turnosRef = collection(db, "usuarios", uid, "turnos");
+            const turnosSnapshot = await getDocs(turnosRef);
+            
+            // Creamos un array de promesas para borrar todos los turnos al mismo tiempo
+            const promesasBorrado = [];
+            turnosSnapshot.forEach((docSnap) => {
+                promesasBorrado.push(deleteDoc(doc(db, "usuarios", uid, "turnos", docSnap.id)));
+            });
+            await Promise.all(promesasBorrado); // Esperamos a que se borren todos los turnos
+
+            // 2. Borrar la configuración y datos personales del usuario
+            await deleteDoc(doc(db, "usuarios", uid, "config", "datos"));
+
+            // 3. Finalmente, borrarlo del directorio de usuarios
+            await deleteDoc(doc(db, "directorio_usuarios", uid));
+            
+            window.showToast("🗑️ Usuario y todos sus turnos eliminados", "success");
+            window.cerrarModalEliminarUsuario();
+            window.abrirAdmin(); 
+        } catch (e) {
+            console.error("Error al borrar datos:", e);
+            window.showToast("⚠️ Error al eliminar. Revisá tu conexión.", "danger");
+        }
+        
+        btn.innerText = "Sí, eliminar";
+    }
+
+    window.filtrarUsuariosAdmin = function() {
+        const input = document.getElementById("admin-buscar-usuario").value.toLowerCase();
+        const tarjetas = document.querySelectorAll("#lista-usuarios-admin .user-list-card");
+        
+        tarjetas.forEach(tarjeta => {
+            const texto = tarjeta.innerText.toLowerCase();
+            if (texto.includes(input)) {
+                tarjeta.style.display = "flex";
+            } else {
+                tarjeta.style.display = "none";
+            }
+        });
+    }
 
     window.publicarMensaje = async function() {
         const texto = document.getElementById('admin-mensaje-texto').value;
