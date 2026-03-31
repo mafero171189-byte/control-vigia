@@ -470,9 +470,9 @@
 </div>
 
 <script type="module">
-    // 🔴 CAMBIO 1: Se agregó onSnapshot a las importaciones de Firestore
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    // 🔴 IMPORTANTE: Se agregó 'where' a la importación
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -493,10 +493,42 @@
     window.turnos = [];
     window.preciosGuardados = {}; 
     window.turnoEnEdicion = null; 
-    window.unsubTurnos = null; // 🔴 Variable para guardar el "micrófono abierto"
+    window.unsubTurnos = null; 
     
     let esModoRegistro = false;
+    window.isRegistering = false; // 🔴 Bandera para evitar la condición de carrera
+    
     const INICIO_NOCHE = 21, FIN_NOCHE = 6;
+
+    // --- LÓGICA DE INTERFAZ PARA VACACIONES Y FERIADOS ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const chkVacaciones = document.getElementById('esVacaciones');
+        const chkFeriado = document.getElementById('esFeriado');
+        const inputEntrada = document.getElementById('entrada');
+        const inputSalida = document.getElementById('salida');
+        if(chkVacaciones && chkFeriado) {
+            chkVacaciones.addEventListener('change', function() {
+                if(this.checked) {
+                    chkFeriado.checked = false; // Desmarca feriado
+                    inputEntrada.disabled = true; // Bloquea horas
+                    inputSalida.disabled = true;
+                    inputEntrada.value = "";
+                    inputSalida.value = "";
+                } else {
+                    inputEntrada.disabled = false; // Desbloquea horas
+                    inputSalida.disabled = false;
+                }
+            });
+            chkFeriado.addEventListener('change', function() {
+                if(this.checked) {
+                    chkVacaciones.checked = false; // Desmarca vacaciones
+                    inputEntrada.disabled = false;
+                    inputSalida.disabled = false;
+                }
+            });
+        }
+    });
+
     window.fechaFiltro = new Date();
     window.meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     window.totalStats = { t: 0, n: 0, f: 0, extra: 0, bruto: 0, neto: 0 };
@@ -713,6 +745,7 @@
         document.getElementById('btn-forgot-pwd').style.display = esModoRegistro ? "none" : "block"; 
     }
 
+    // 🔴 CORRECCIÓN: Manejo de Race Condition al registrar
     window.procesarAuth = async function() {
         const email = document.getElementById('auth-email').value;
         const pass = document.getElementById('auth-password').value;
@@ -724,6 +757,7 @@
         try {
             await setPersistence(auth, recordar ? browserLocalPersistence : browserSessionPersistence);
             if (esModoRegistro) {
+                window.isRegistering = true; // Frenamos a onAuthStateChanged
                 const cred = await createUserWithEmailAndPassword(auth, email, pass);
                 await setDoc(doc(db, "directorio_usuarios", cred.user.uid), { email: email, nombre: nombre, fecha: new Date().toISOString() });
                 
@@ -732,6 +766,10 @@
                 let ape = partesNombre.slice(1).join(" ") || "";
                 await setDoc(doc(db, "usuarios", cred.user.uid, "config", "datos"), { perfil: { nombre: nom, apellido: ape }, precios: {} });
 
+                window.isRegistering = false; // Ya guardamos todo
+                window.currentUser = cred.user; // Set manual rápido
+                await cargarDatosNube(); // Forzamos carga segura
+                
                 window.showToast("¡Cuenta creada con éxito!");
                 document.getElementById('modal-bienvenida').style.display = 'flex';
                 
@@ -742,10 +780,10 @@
         } catch (error) {
             window.showToast("Error: Revisa tus datos", "danger");
             document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
+            window.isRegistering = false;
         }
     }
     
-    // 🔴 CAMBIO 2: Desconectar el micrófono abierto al cerrar sesión
     window.cerrarSesion = async function() { 
         if (window.unsubTurnos) window.unsubTurnos(); 
         await signOut(auth); 
@@ -753,6 +791,10 @@
 
     onAuthStateChanged(auth, async (user) => {
         const loading = document.getElementById('loading-overlay');
+        
+        // 🔴 CORRECCIÓN: Si estamos en medio de un registro, no ejecutamos esto todavía
+        if (window.isRegistering) return; 
+
         if (user) {
             window.currentUser = user;
             document.getElementById('landing-page').style.display = 'none';
@@ -766,7 +808,8 @@
             if (user.email === 'mafero171189@gmail.com') document.getElementById('btn-admin-access').style.display = 'block';
             else document.getElementById('btn-admin-access').style.display = 'none';
 
-            actualizarConexion(); await cargarDatosNube(); actualizarUI();
+            actualizarConexion(); 
+            await cargarDatosNube(); 
         } else {
             window.currentUser = null;
             document.getElementById('landing-page').style.display = 'flex';
@@ -833,22 +876,17 @@
         
         try {
             const uid = window.idUsuarioAEliminar;
-
-            // 1. Buscar y borrar todos los turnos del usuario (subcolección)
+            // 🔴 AVISO ADMIN: Esta parte necesita reglas estrictas en Firestore.
             const turnosRef = collection(db, "usuarios", uid, "turnos");
             const turnosSnapshot = await getDocs(turnosRef);
             
-            // Creamos un array de promesas para borrar todos los turnos al mismo tiempo
             const promesasBorrado = [];
             turnosSnapshot.forEach((docSnap) => {
                 promesasBorrado.push(deleteDoc(doc(db, "usuarios", uid, "turnos", docSnap.id)));
             });
-            await Promise.all(promesasBorrado); // Esperamos a que se borren todos los turnos
+            await Promise.all(promesasBorrado); 
 
-            // 2. Borrar la configuración y datos personales del usuario
             await deleteDoc(doc(db, "usuarios", uid, "config", "datos"));
-
-            // 3. Finalmente, borrarlo del directorio de usuarios
             await deleteDoc(doc(db, "directorio_usuarios", uid));
             
             window.showToast("🗑️ Usuario y todos sus turnos eliminados", "success");
@@ -856,7 +894,7 @@
             window.abrirAdmin(); 
         } catch (e) {
             console.error("Error al borrar datos:", e);
-            window.showToast("⚠️ Error al eliminar. Revisá tu conexión.", "danger");
+            window.showToast("⚠️ Error de permisos de administrador.", "danger");
         }
         
         btn.innerText = "Sí, eliminar";
@@ -921,11 +959,7 @@ window.formatearEnlaces = function(texto) {
     return textoProcesado.replace(/\n/g, '<br>');
 }
 
-    window.cerrarAviso = function() {
-        document.getElementById('aviso-global').style.display = 'none';
-        // Solo oculta en esta sesión. Al volver a ingresar, el aviso reaparecerá
-        // hasta que el super admin lo elimine publicando un texto vacío.
-    }
+    window.cerrarAviso = function() { document.getElementById('aviso-global').style.display = 'none'; }
 
     window.publicarMensaje = async function() {
         const texto = document.getElementById('admin-mensaje-texto').value;
@@ -942,7 +976,31 @@ window.formatearEnlaces = function(texto) {
         btn.innerText = "Publicar a Todos";
     }
 
-    // 🔴 CAMBIO 3: Se modificó cómo se leen los turnos para que sean en tiempo real
+    // 🔴 CORRECCIÓN: Optimización de Firestore (No descargar todo el historial)
+    function suscribirTurnosMes(fechaObj) {
+        if (!window.currentUser) return;
+        
+        const año = fechaObj.getFullYear();
+        const mesStr = String(fechaObj.getMonth() + 1).padStart(2, '0');
+        const inicioMes = `${año}-${mesStr}-01`;
+        const finMes = `${año}-${mesStr}-31`;
+
+        const q = query(
+            collection(db, "usuarios", window.currentUser.uid, "turnos"),
+            where("f", ">=", inicioMes),
+            where("f", "<=", finMes),
+            orderBy("f", "desc")
+        );
+
+        if (window.unsubTurnos) window.unsubTurnos(); 
+        
+        window.unsubTurnos = onSnapshot(q, (querySnapshot) => {
+            window.turnos = [];
+            querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
+            actualizarUI(); // Actualiza pantalla al instante
+        });
+    }
+
     async function cargarDatosNube() {
         if (!window.currentUser) return;
         try {
@@ -962,14 +1020,8 @@ window.formatearEnlaces = function(texto) {
                 document.getElementById('vigiApellido').value = u.apellido || "";
             } else { window.preciosGuardados = {}; }
             
-            // Acá es donde habilitamos la magia en tiempo real para los turnos
-            const q = query(collection(db, "usuarios", window.currentUser.uid, "turnos"), orderBy("f", "desc"));
-            if (window.unsubTurnos) window.unsubTurnos(); // Desconecta el anterior si había
-            window.unsubTurnos = onSnapshot(q, (querySnapshot) => {
-                window.turnos = [];
-                querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
-                actualizarUI(); // Actualiza toda la pantalla solito cuando hay un cambio
-            });
+            // Suscribimos solo a los turnos del mes seleccionado
+            suscribirTurnosMes(window.fechaFiltro);
         } catch (e) { console.error(e); }
     }
 
@@ -985,7 +1037,7 @@ window.formatearEnlaces = function(texto) {
             window.preciosGuardados = p; 
             cerrarModalConfig(); 
             window.showToast("✅ Valores actualizados"); 
-            render(); 
+            actualizarUI(); 
         } catch (e) { window.showToast("⚠️ Error al guardar", "danger"); }
     }
 
@@ -1006,6 +1058,11 @@ window.formatearEnlaces = function(texto) {
         document.getElementById('salida').value = turno.s;
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = turno.fer || false;
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = turno.vac || false;
+        
+        // Disparar los eventos para que la interfaz se bloquee/desbloquee sola
+        const ev = new Event('change');
+        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
+        if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         
         window.turnoEnEdicion = id;
         document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO TURNO";
@@ -1029,6 +1086,9 @@ window.formatearEnlaces = function(texto) {
         document.getElementById('salida').value = '';
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
+        const ev = new Event('change');
+        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
+        if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         
         document.getElementById('form-titulo-modo').innerHTML = "➕ REGISTRAR TURNO";
         document.getElementById('btn-submit-turno').innerText = "AGENDAR TURNO";
@@ -1037,23 +1097,37 @@ window.formatearEnlaces = function(texto) {
         document.getElementById('main-form').classList.remove('edit-mode');
     }
 
-    // 🔴 CAMBIO 4: Se limpió la función de guardar para que dependa de onSnapshot
+    // 🔴 CORRECCIÓN: Precisión de coma flotante en horas nocturnas
     window.guardar = async function() {
         if (!window.currentUser) return;
-        const f = document.getElementById('fecha').value, l = document.getElementById('lugar').value || "Puesto General", e = document.getElementById('entrada').value, s = document.getElementById('salida').value, fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false, vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
+        const f = document.getElementById('fecha').value;
+        const l = document.getElementById('lugar').value || "Puesto General";
+        let e = document.getElementById('entrada').value;
+        let s = document.getElementById('salida').value;
+        const fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false;
+        const vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
               
-        if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
-        
-        let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
-        if (sal <= ent) sal.setDate(sal.getDate() + 1);
-        let diff = (sal - ent) / 3600000;
-        
-        let noct = 0; let temp = new Date(ent);
-        while (temp < sal) { 
-            if (temp.getHours() >= INICIO_NOCHE || temp.getHours() < FIN_NOCHE) noct += (1/60); 
-            temp.setMinutes(temp.getMinutes() + 1); 
+        let diff = 0;
+        let noct = 0;
+        // Si NO son vacaciones, calculamos las horas normales
+        if (!vac) {
+            if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
+            
+            let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
+            if (sal <= ent) sal.setDate(sal.getDate() + 1);
+            diff = (sal - ent) / 3600000;
+            
+            let noctMinutos = 0; let temp = new Date(ent);
+            while (temp < sal) { 
+                if (temp.getHours() >= INICIO_NOCHE || temp.getHours() < FIN_NOCHE) noctMinutos++; 
+                temp.setMinutes(temp.getMinutes() + 1); 
+            }
+            noct = Number((noctMinutos / 60).toFixed(2));
+        } else {
+            // Si son vacaciones, limpiamos los horarios para que no queden guardados en la base
+            e = "";
+            s = "";
         }
-        noct = Math.round(noct * 100) / 100; 
         
         const nuevoTurno = { f, l, e, s, fer, vac, t: diff, n: noct };
         
@@ -1067,9 +1141,11 @@ window.formatearEnlaces = function(texto) {
                 document.getElementById('lugar').value = ''; 
                 if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
+                // Reactivamos los inputs de hora por si estaban bloqueados
+                document.getElementById('entrada').disabled = false;
+                document.getElementById('salida').disabled = false;
                 window.showToast("✅ Turno guardado"); 
             }
-            // Ya no manipulamos window.turnos acá porque onSnapshot se encarga de todo.
         } catch (error) { window.showToast("⚠️ Error al guardar", "danger"); }
     }
 
@@ -1083,7 +1159,6 @@ window.formatearEnlaces = function(texto) {
     window.closeModal = function() { document.getElementById('custom-modal').style.display = 'none'; }
     document.getElementById('confirm-btn').onclick = () => { confirmCallback(); window.closeModal(); };
 
-    // 🔴 CAMBIO 5: Se limpió la función de borrar para que dependa de onSnapshot
     window.borrarTurnoNube = async function(id) {
         if (!window.currentUser) return;
         try { 
@@ -1093,7 +1168,23 @@ window.formatearEnlaces = function(texto) {
     }
 
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
-    window.cambiarMes = function(delta) { window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); actualizarUI(); }
+    
+    // 🔴 CORRECCIÓN: Actualizar la suscripción de Firebase al cambiar de mes
+    window.cambiarMes = function(delta) { 
+        // 👇 ESTA LÍNEA EVITA EL BUG DEL DÍA 31
+        window.fechaFiltro.setDate(1); 
+        
+        window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); 
+        
+        const mesNom = window.meses[window.fechaFiltro.getMonth()];
+        document.getElementById('mesVisual').innerText = `${mesNom.toUpperCase()} ${window.fechaFiltro.getFullYear()}`;
+        document.getElementById('mesBtnLabel').innerText = mesNom.toUpperCase();
+        
+        // Conectar los turnos del mes nuevo (actualizarUI se llama solo al terminar de descargar)
+        suscribirTurnosMes(window.fechaFiltro);
+    }
+
+    // Ya no lo llamamos desde cambiarMes, porque el onSnapshot ahora se encarga.
     function actualizarUI() {
         const mesNom = window.meses[window.fechaFiltro.getMonth()];
         document.getElementById('mesVisual').innerText = `${mesNom.toUpperCase()} ${window.fechaFiltro.getFullYear()}`;
@@ -1101,32 +1192,37 @@ window.formatearEnlaces = function(texto) {
         render();
     }
 
+    // 🔴 CORRECCIÓN LÓGICA: Viáticos calculados por días únicos
     function render() {
         const lista = document.getElementById('lista'); 
-        let st = 0, sn = 0, sf = 0, diasTrabajados = 0, plusVacacionalTotal = 0; 
+        let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0; 
+        let diasUnicosTrabajados = new Set(); // El nuevo Set para contar días reales
         lista.innerHTML = '';
         
         const valMes = window.obtenerValoresMes(window.fechaFiltro);
 
         window.turnos.forEach((t) => {
             const fObj = new Date(t.f + "T00:00:00");
-            if (fObj.getMonth() === window.fechaFiltro.getMonth() && fObj.getFullYear() === window.fechaFiltro.getFullYear()) {
-                st += t.t; sn += t.n; if (t.fer) sf += t.t;
-                if (t.vac) { plusVacacionalTotal += valMes.plusVac; } else { diasTrabajados++; }
-
-                const card = document.createElement('div'); 
-                card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
-                const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
-                card.innerHTML = `
-                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
-                    ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
-                    ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
-                    <div style="display:flex; align-items:center;">
-                        <div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span></div>
-                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
-                    </div>`;
-                lista.appendChild(card);
+            
+            st += t.t; sn += t.n; if (t.fer) sf += t.t;
+            if (t.vac) { 
+                plusVacacionalTotal += valMes.plusVac; 
+            } else { 
+                diasUnicosTrabajados.add(t.f); // Guarda la fecha, si se repite en el mismo día no suma doble
             }
+
+            const card = document.createElement('div'); 
+            card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
+            const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
+            card.innerHTML = `
+                <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
+                ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
+                ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
+                <div style="display:flex; align-items:center;">
+                    <div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span></div>
+                    <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
+                </div>`;
+            lista.appendChild(card);
         });
         document.getElementById('totH').innerText = fmtH(st); 
         document.getElementById('totN').innerText = fmtH(sn); 
@@ -1141,8 +1237,15 @@ window.formatearEnlaces = function(texto) {
 
         let pagoFeriados = sf * horaExtraVal;
         let pagoHorasTotales = 0, hsExtra = 0;
-        if (st > valMes.horasBase) { hsExtra = st - valMes.horasBase; pagoHorasTotales = hsExtra * horaExtraVal; }
+        // Calculamos horas extras excluyendo las que ya cobraron recargo por feriado
+        let horasNormalesTrabajadas = st - sf; 
+        if (horasNormalesTrabajadas > valMes.horasBase) { 
+            hsExtra = horasNormalesTrabajadas - valMes.horasBase; 
+            pagoHorasTotales = hsExtra * horaExtraVal; 
+        }
 
+        // El cálculo ahora usa el tamaño del Set
+        const diasTrabajados = diasUnicosTrabajados.size;
         const viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
 
         const sumaRemunerativa = valMes.basico + valMes.presentismo + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal);
