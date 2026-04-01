@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Control Vigía - Gestión de Guardia</title>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1286,7 +1289,7 @@ window.formatearEnlaces = function(texto) {
     // 1. Crear el Manifest dinámicamente y generar un ícono con el emoji 🛡️
     const manifestJSON = {
         "name": "Control Vigía",
-        "short_name": "Control Vigía",
+        "short_name": "Vigía",
         "start_url": location.href,
         "display": "standalone",
         "background_color": "#0f172a",
@@ -1312,7 +1315,7 @@ window.formatearEnlaces = function(texto) {
     const bannerInstalar = document.createElement('div');
     bannerInstalar.id = 'banner-instalar-app';
     bannerInstalar.innerHTML = `
-        <span>📲 ¡Instalá Control Vigía como app en tu celular!</span>
+        <span>📲 ¡Instalá Vigía como app en tu celular!</span>
         <button id="btn-instalar-si">Instalar</button>
         <button id="btn-instalar-no" title="Cerrar">✕</button>
     `;
