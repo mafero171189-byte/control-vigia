@@ -1343,11 +1343,19 @@ window.formatearEnlaces = function(texto) {
     btnNo.style.cssText = 'background:transparent;color:#86efac;border:none;font-size:1.1rem;cursor:pointer;padding:2px 6px;line-height:1;';
 
     // 4. Lógica para mostrar el banner nativo de Chrome
+    // Solo mostrar en dispositivos móviles, no en PC
+    function esMobile() {
+        return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent)); // iPad moderno
+    }
+
     let eventoInstalacion = null;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         eventoInstalacion = e;
-        bannerInstalar.style.display = 'flex';
+        if (esMobile()) {
+            bannerInstalar.style.display = 'flex';
+        }
     });
     btnSi.addEventListener('click', async () => {
         if (!eventoInstalacion) return;
