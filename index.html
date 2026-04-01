@@ -1289,7 +1289,7 @@ window.formatearEnlaces = function(texto) {
     // 1. Crear el Manifest dinámicamente y generar un ícono con el emoji 🛡️
     const manifestJSON = {
         "name": "Control Vigía",
-        "short_name": "Vigía",
+        "short_name": "Control Vigía",
         "start_url": location.href,
         "display": "standalone",
         "background_color": "#0f172a",
@@ -1315,7 +1315,7 @@ window.formatearEnlaces = function(texto) {
     const bannerInstalar = document.createElement('div');
     bannerInstalar.id = 'banner-instalar-app';
     bannerInstalar.innerHTML = `
-        <span>📲 ¡Instalá Vigía como app en tu celular!</span>
+        <span>📲 ¡Instalá Control Vigía como app en tu celular!</span>
         <button id="btn-instalar-si">Instalar</button>
         <button id="btn-instalar-no" title="Cerrar">✕</button>
     `;
@@ -1368,11 +1368,6 @@ window.formatearEnlaces = function(texto) {
     });
     btnNo.addEventListener('click', () => {
         bannerInstalar.style.display = 'none';
-    });
-    // Escuchar si la app ya fue instalada
-    window.addEventListener('appinstalled', () => {
-        bannerInstalar.style.display = 'none';
-        if(window.showToast) window.showToast("¡App instalada con éxito! 🎉", "success");
     });
 </script>
 </body>
