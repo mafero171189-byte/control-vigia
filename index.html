@@ -467,7 +467,12 @@
         <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema</p>
     </div>
     
-    <input type="text" id="admin-buscar-usuario" class="auth-input" placeholder="🔍 Buscar por nombre o email..." onkeyup="filtrarUsuariosAdmin()" style="margin-bottom: 15px;">
+    <!-- Buscador en el Panel Admin -->
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <input type="text" id="admin-buscar-usuario" class="auth-input" placeholder="📧 Email exacto del usuario..." style="margin-bottom: 0;">
+        <button onclick="buscarUsuarioPorEmail()" style="background: var(--accent); border: none; border-radius: 12px; width: 50px; cursor: pointer; font-size: 1.2rem;">🔍</button>
+    </div>
+    <button onclick="abrirAdmin()" id="btn-volver-admin" style="display:none; width: 100%; background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 10px; border-radius: 12px; margin-bottom: 15px; cursor: pointer; font-weight: bold;">← VOLVER AL LISTADO COMPLETO</button>
     
     <div id="lista-usuarios-admin"></div>
 </div>
@@ -475,7 +480,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     // 🔴 IMPORTANTE: Se agregó 'where' a la importación
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -489,7 +494,10 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // Esto activa el caché en el disco del celular/PC
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache()
+    });
     const auth = getAuth(app);
 
     window.currentUser = null;
@@ -497,6 +505,7 @@
     window.preciosGuardados = {}; 
     window.turnoEnEdicion = null; 
     window.unsubTurnos = null; 
+    window.ultimoUsuarioDoc = null; // Para saber desde dónde seguir cargando
     
     let esModoRegistro = false;
     window.isRegistering = false; // 🔴 Bandera para evitar la condición de carrera
@@ -828,33 +837,99 @@
         document.getElementById('admin-container').style.display = 'block';
         
         document.getElementById('admin-buscar-usuario').value = '';
+        document.getElementById('btn-volver-admin').style.display = 'none';
         
         const lista = document.getElementById('lista-usuarios-admin');
         lista.innerHTML = "<p style='text-align:center'>Cargando personal...</p>";
+        
+        window.ultimoUsuarioDoc = null;
+        await buscarUsuariosEnNube();
+    }
+
+    async function buscarUsuariosEnNube() {
+        const lista = document.getElementById('lista-usuarios-admin');
         try {
-            const querySnapshot = await getDocs(collection(db, "directorio_usuarios"));
-            lista.innerHTML = "";
+            let q;
+            if (window.ultimoUsuarioDoc) {
+                q = query(collection(db, "directorio_usuarios"), orderBy("fecha", "desc"), startAfter(window.ultimoUsuarioDoc), limit(20));
+            } else {
+                q = query(collection(db, "directorio_usuarios"), orderBy("fecha", "desc"), limit(20));
+                lista.innerHTML = "";
+            }
+            const querySnapshot = await getDocs(q);
+            
+            window.ultimoUsuarioDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                let fechaTexto = "Desconocida";
-                if(data.fecha) {
-                    const fechaObj = new Date(data.fecha);
-                    fechaTexto = fechaObj.toLocaleDateString('es-AR', {day: '2-digit', month: '2-digit', year: 'numeric'});
-                }
-                const card = document.createElement('div'); card.className = 'user-list-card';
+                const card = document.createElement('div');
+                card.className = 'user-list-card';
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div class="user-info">
                             <b>${data.nombre || 'Sin Nombre'}</b>
                             <span style="color: var(--text-dim); display: block;">${data.email}</span>
-                            <span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">📅 Registrado el: ${fechaTexto}</span>
                         </div>
                         <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0;" title="Eliminar usuario">🗑️</button>
-                    </div>
-                `;
+                    </div>`;
                 lista.appendChild(card);
             });
-        } catch (e) { lista.innerHTML = "<p style='color:red; text-align:center;'>Error al cargar el panel.</p>"; }
+            renderizarBotonCargarMas(querySnapshot.size === 20);
+        } catch (e) {
+            console.error(e);
+            lista.innerHTML += "<p style='color:red'>Error al cargar más usuarios.</p>";
+        }
+    }
+
+    function renderizarBotonCargarMas(hayMas) {
+        const viejoBtn = document.getElementById('btn-cargar-mas-admin');
+        if (viejoBtn) viejoBtn.remove();
+        if (hayMas) {
+            const btn = document.createElement('button');
+            btn.id = 'btn-cargar-mas-admin';
+            btn.innerText = "VER MÁS USUARIOS 👇";
+            btn.style.cssText = "width:100%; padding:15px; background:var(--admin); color:white; border:none; border-radius:12px; margin-top:10px; font-weight:bold; cursor:pointer;";
+            btn.onclick = () => buscarUsuariosEnNube();
+            document.getElementById('lista-usuarios-admin').appendChild(btn);
+        }
+    }
+
+    window.buscarUsuarioPorEmail = async function() {
+        const emailBuscado = document.getElementById('admin-buscar-usuario').value.trim().toLowerCase();
+        const lista = document.getElementById('lista-usuarios-admin');
+        const btnVolver = document.getElementById('btn-volver-admin');
+        if (!emailBuscado) return window.showToast("⚠️ Ingresá un email para buscar", "danger");
+        lista.innerHTML = "<p style='text-align:center'>Buscando en la base de datos...</p>";
+        
+        try {
+            const q = query(collection(db, "directorio_usuarios"), where("email", "==", emailBuscado));
+            const querySnapshot = await getDocs(q);
+            lista.innerHTML = "";
+            btnVolver.style.display = "block";
+            if (querySnapshot.empty) {
+                lista.innerHTML = "<p style='text-align:center; color:var(--warning);'>No se encontró ningún usuario con ese email.</p>";
+                return;
+            }
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const card = document.createElement('div');
+                card.className = 'user-list-card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="user-info">
+                            <b>${data.nombre || 'Sin Nombre'}</b>
+                            <span style="color: var(--text-dim); display: block;">${data.email}</span>
+                            <span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">🔍 Resultado de búsqueda</span>
+                        </div>
+                        <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 40px; border-radius: 12px; cursor: pointer;">🗑️</button>
+                    </div>`;
+                lista.appendChild(card);
+            });
+            const viejoBtn = document.getElementById('btn-cargar-mas-admin');
+            if (viejoBtn) viejoBtn.remove();
+        } catch (e) {
+            console.error(e);
+            window.showToast("⚠️ Error al buscar", "danger");
+        }
     }
     
     window.volverApp = function() { document.getElementById('admin-container').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; }
@@ -903,19 +978,7 @@
         btn.innerText = "Sí, eliminar";
     }
 
-    window.filtrarUsuariosAdmin = function() {
-        const input = document.getElementById("admin-buscar-usuario").value.toLowerCase();
-        const tarjetas = document.querySelectorAll("#lista-usuarios-admin .user-list-card");
-        
-        tarjetas.forEach(tarjeta => {
-            const texto = tarjeta.innerText.toLowerCase();
-            if (texto.includes(input)) {
-                tarjeta.style.display = "flex";
-            } else {
-                tarjeta.style.display = "none";
-            }
-        });
-    }
+    // filtrarUsuariosAdmin reemplazada por buscarUsuarioPorEmail (búsqueda por email exacto en Firestore)
     
 window.formatearEnlaces = function(texto) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
