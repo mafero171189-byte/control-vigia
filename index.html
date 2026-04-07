@@ -480,7 +480,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     // 🔴 IMPORTANTE: Se agregó 'where' a la importación
-    import { initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -954,18 +954,26 @@
         
         try {
             const uid = window.idUsuarioAEliminar;
-            // 🔴 AVISO ADMIN: Esta parte necesita reglas estrictas en Firestore.
             const turnosRef = collection(db, "usuarios", uid, "turnos");
             const turnosSnapshot = await getDocs(turnosRef);
             
-            const promesasBorrado = [];
+            let batch = writeBatch(db);
+            let count = 0;
+            
             turnosSnapshot.forEach((docSnap) => {
-                promesasBorrado.push(deleteDoc(doc(db, "usuarios", uid, "turnos", docSnap.id)));
+                batch.delete(docSnap.ref);
+                count++;
+                // Firestore permite hasta 500 operaciones por lote
+                if (count === 490) { 
+                    batch.commit();
+                    batch = writeBatch(db);
+                    count = 0;
+                }
             });
-            await Promise.all(promesasBorrado); 
-
-            await deleteDoc(doc(db, "usuarios", uid, "config", "datos"));
-            await deleteDoc(doc(db, "directorio_usuarios", uid));
+            
+            batch.delete(doc(db, "usuarios", uid, "config", "datos"));
+            batch.delete(doc(db, "directorio_usuarios", uid));
+            await batch.commit();
             
             window.showToast("🗑️ Usuario y todos sus turnos eliminados", "success");
             window.cerrarModalEliminarUsuario();
@@ -1070,12 +1078,18 @@ window.formatearEnlaces = function(texto) {
     async function cargarDatosNube() {
         if (!window.currentUser) return;
         try {
-            const msgSnap = await getDoc(doc(db, "global", "aviso"));
-            if (msgSnap.exists() && msgSnap.data().texto.trim() !== "") {
-                document.getElementById('texto-aviso-global').innerHTML = window.formatearEnlaces(msgSnap.data().texto);
-                document.getElementById('aviso-global').style.display = 'block';
-                if(window.currentUser.email === 'mafero171189@gmail.com') document.getElementById('admin-mensaje-texto').value = msgSnap.data().texto;
-            } else { document.getElementById('aviso-global').style.display = 'none'; }
+            onSnapshot(doc(db, "global", "aviso"), (docSnap) => {
+                if (docSnap.exists() && docSnap.data().texto.trim() !== "") {
+                    const data = docSnap.data();
+                    document.getElementById('texto-aviso-global').innerHTML = window.formatearEnlaces(data.texto);
+                    document.getElementById('aviso-global').style.display = 'block';
+                    if(window.currentUser.email === 'mafero171189@gmail.com') {
+                        document.getElementById('admin-mensaje-texto').value = data.texto;
+                    }
+                } else { 
+                    document.getElementById('aviso-global').style.display = 'none'; 
+                }
+            });
 
             const docSnap = await getDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"));
             if (docSnap.exists()) {
@@ -1110,8 +1124,13 @@ window.formatearEnlaces = function(texto) {
     window.guardarPerfil = async function() {
         if (!window.currentUser) return;
         const p = window.preciosGuardados; 
-        const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
-        try { await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }, {merge: true}); } catch (e) { }
+        const nombreNuevo = document.getElementById('vigiNombre').value.trim();
+        const apellidoNuevo = document.getElementById('vigiApellido').value.trim();
+        const u = { nombre: nombreNuevo, apellido: apellidoNuevo };
+        try { 
+            await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }, {merge: true}); 
+            await setDoc(doc(db, "directorio_usuarios", window.currentUser.uid), { nombre: nombreNuevo + " " + apellidoNuevo }, {merge: true});
+        } catch (e) { console.error(e); }
     }
 
     window.editarTurno = function(id) {
