@@ -462,6 +462,44 @@
         <button class="btn-msg" id="btn-publicar" onclick="publicarMensaje()">Publicar a Todos</button>
     </div>
 
+    <div class="admin-msg-box">
+        <h3 style="margin-top:0; font-size: 1.1rem; color: var(--admin);">📊 Valores Oficiales UPSRA</h3>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Cargá los valores de la paritaria para que todos los recibos se calculen solos.</p>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <select id="admin-upsra-anio" class="auth-input" style="margin-bottom:0; padding:10px;" onchange="cargarValoresAdmin()">
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="2029">2029</option>
+            </select>
+            <select id="admin-upsra-mes" class="auth-input" style="margin-bottom:0; padding:10px;" onchange="cargarValoresAdmin()">
+                <option value="0">Enero</option>
+                <option value="1">Febrero</option>
+                <option value="2">Marzo</option>
+                <option value="3">Abril</option>
+                <option value="4">Mayo</option>
+                <option value="5">Junio</option>
+                <option value="6">Julio</option>
+                <option value="7">Agosto</option>
+                <option value="8">Septiembre</option>
+                <option value="9">Octubre</option>
+                <option value="10">Noviembre</option>
+                <option value="11">Diciembre</option>
+            </select>
+        </div>
+        <div class="form-row" style="margin-bottom: 10px;">
+            <input type="number" id="admin-upsra-b" class="auth-input" placeholder="Básico ($)" style="margin-bottom:0;">
+            <input type="number" id="admin-upsra-p" class="auth-input" placeholder="Presentismo ($)" style="margin-bottom:0;">
+        </div>
+        <div class="form-row" style="margin-bottom: 10px;">
+            <input type="number" id="admin-upsra-v" class="auth-input" placeholder="Viáticos ($)" style="margin-bottom:0;">
+            <input type="number" id="admin-upsra-nr" class="auth-input" placeholder="No Remunerativo ($)" style="margin-bottom:0;">
+        </div>
+        <input type="number" id="admin-upsra-vac" class="auth-input" placeholder="Plus Vacacional por día ($)" style="margin-bottom:10px;">
+        
+        <button class="btn-msg" id="btn-guardar-upsra" onclick="guardarValoresAdmin()">Guardar Mes</button>
+    </div>
+
     <div class="admin-header">
         <h2>Personal Registrado</h2>
         <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema</p>
@@ -575,12 +613,12 @@
 
     const limpiar = (str) => { if(!str || str.trim() === "") return ""; return str.toString().replace(/\./g, "").replace(",", "."); };
 
+    window.valoresUPSRA = window.valoresUPSRA || {}; // Inicializar por las dudas
     window.obtenerValoresMes = function(fObj) {
         if (!fObj) fObj = new Date();
         const año = fObj.getFullYear();
         const mes = fObj.getMonth();
         const p = window.preciosGuardados || {};
-
         let v = {
             basico: parseFloat(p.basico),
             antiguedadAños: parseInt(p.antiguedad) || 0,
@@ -594,18 +632,20 @@
             feriadoPct: parseFloat(p.feriadoPct) || 100,
             horasBase: parseFloat(p.horasBase) || 200
         };
-
         if (isNaN(v.descuentos)) v.descuentos = 17;
-
-        if (año === 2026) {
-            let auto = {};
+        // Buscamos si el Admin cargó valores en Firebase para este mes (Ej: "2027-0" para Enero 2027)
+        const claveMes = `${año}-${mes}`;
+        let auto = window.valoresUPSRA[claveMes];
+        // "Plan B" de seguridad: los de este año quedan fijos si la base de datos está vacía
+        if (!auto && año === 2026) {
             if (mes === 0) auto = { b: 867200, p: 165000, v: 473800, nr: 10000, vac: 18552 };
             else if (mes === 1) auto = { b: 876000, p: 165000, v: 473800, nr: 25000, vac: 18952 };
             else if (mes === 2) auto = { b: 884800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
             else if (mes === 3) auto = { b: 893650, p: 165000, v: 480500, nr: 25000, vac: 19220 };
             else if (mes === 4) auto = { b: 902600, p: 165000, v: 487000, nr: 30000, vac: 19480 };
             else auto = { b: 911650, p: 165000, v: 498000, nr: 70000, vac: 19920 }; 
-
+        }
+        if (auto) {
             if (isNaN(v.basico)) v.basico = auto.b;
             if (isNaN(v.presentismo)) v.presentismo = auto.p;
             if (isNaN(v.viatico)) v.viatico = auto.v;
@@ -618,7 +658,6 @@
             if (isNaN(v.noRem)) v.noRem = 0;
             if (isNaN(v.plusVac)) v.plusVac = 0;
         }
-
         return v;
     };
 
@@ -839,6 +878,12 @@
         document.getElementById('admin-buscar-usuario').value = '';
         document.getElementById('btn-volver-admin').style.display = 'none';
         
+        // Configura los desplegables en el mes y año actual
+        const hoy = new Date();
+        document.getElementById('admin-upsra-anio').value = hoy.getFullYear();
+        document.getElementById('admin-upsra-mes').value = hoy.getMonth();
+        window.cargarValoresAdmin();
+        
         const lista = document.getElementById('lista-usuarios-admin');
         lista.innerHTML = "<p style='text-align:center'>Cargando personal...</p>";
         
@@ -1050,6 +1095,48 @@ window.formatearEnlaces = function(texto) {
         btn.innerText = "Publicar a Todos";
     }
 
+    window.cargarValoresAdmin = function() {
+        const anio = document.getElementById('admin-upsra-anio').value;
+        const mes = document.getElementById('admin-upsra-mes').value;
+        const clave = `${anio}-${mes}`;
+        
+        // Si no hay valores cargados para ese mes, muestra los inputs vacíos
+        const auto = window.valoresUPSRA[clave] || { b:'', p:'', v:'', nr:'', vac:'' };
+        
+        document.getElementById('admin-upsra-b').value = auto.b;
+        document.getElementById('admin-upsra-p').value = auto.p;
+        document.getElementById('admin-upsra-v').value = auto.v;
+        document.getElementById('admin-upsra-nr').value = auto.nr;
+        document.getElementById('admin-upsra-vac').value = auto.vac;
+    };
+    window.guardarValoresAdmin = async function() {
+        const anio = document.getElementById('admin-upsra-anio').value;
+        const mes = document.getElementById('admin-upsra-mes').value;
+        const clave = `${anio}-${mes}`;
+        const btn = document.getElementById('btn-guardar-upsra');
+        btn.innerText = "Guardando...";
+        const b = parseFloat(document.getElementById('admin-upsra-b').value) || 0;
+        const p = parseFloat(document.getElementById('admin-upsra-p').value) || 0;
+        const v = parseFloat(document.getElementById('admin-upsra-v').value) || 0;
+        const nr = parseFloat(document.getElementById('admin-upsra-nr').value) || 0;
+        const vac = parseFloat(document.getElementById('admin-upsra-vac').value) || 0;
+        const nuevosValores = {
+            [clave]: { b, p, v, nr, vac }
+        };
+        try {
+            // "merge: true" impide que borres los meses viejos de la base de datos
+            await setDoc(doc(db, "global", "upsra"), nuevosValores, { merge: true });
+            
+            // Actualiza la variable para que impacte ya mismo sin refrescar
+            window.valoresUPSRA[clave] = { b, p, v, nr, vac };
+            window.showToast("✅ Valores de UPSRA guardados con éxito", "success");
+            actualizarUI(); // Refresca la pantalla por las dudas
+        } catch(e) {
+            window.showToast("⚠️ Error al guardar. Revisá la conexión.", "danger");
+        }
+        btn.innerText = "Guardar Mes";
+    };
+
     // 🔴 CORRECCIÓN: Optimización de Firestore (No descargar todo el historial)
     function suscribirTurnosMes(fechaObj) {
         if (!window.currentUser) return;
@@ -1100,6 +1187,13 @@ window.formatearEnlaces = function(texto) {
                 document.getElementById('vigiApellido').value = u.apellido || "";
             } else { window.preciosGuardados = {}; }
             
+            // NUEVO: Cargar tabla de UPSRA global (Gasta solo 1 lectura)
+            const upsraSnap = await getDoc(doc(db, "global", "upsra"));
+            if (upsraSnap.exists()) {
+                window.valoresUPSRA = upsraSnap.data();
+            } else {
+                window.valoresUPSRA = {};
+            }
             // Suscribimos solo a los turnos del mes seleccionado
             suscribirTurnosMes(window.fechaFiltro);
         } catch (e) { console.error(e); }
