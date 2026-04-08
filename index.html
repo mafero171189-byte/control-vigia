@@ -821,6 +821,14 @@
                 window.currentUser = cred.user; // Set manual rápido
                 await cargarDatosNube(); // Forzamos carga segura
                 
+                // NUEVO: Ocultamos el login y mostramos la app manualmente
+                document.getElementById('landing-page').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                const hoy = new Date();
+                hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
+                document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
+                actualizarConexion();
+                
                 window.showToast("¡Cuenta creada con éxito!");
                 document.getElementById('modal-bienvenida').style.display = 'flex';
                 
