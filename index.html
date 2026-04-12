@@ -1552,6 +1552,11 @@ window.formatearEnlaces = function(texto) {
     // 4. Lógica para mostrar el modal de instalación PWA
     const PWA_KEY = 'cv_pwa_estado'; // 'instalada' | 'descartada'
 
+    // Para testing: entrá con ?reset-pwa en la URL para limpiar el estado
+    if (new URLSearchParams(location.search).has('reset-pwa')) {
+        localStorage.removeItem(PWA_KEY);
+    }
+
     function esMobile() {
         return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
