@@ -1549,32 +1549,55 @@ window.formatearEnlaces = function(texto) {
     btnSi.style.cssText = 'display:block;width:100%;background:linear-gradient(135deg,#0ea5e9,#22c55e);color:#fff;border:none;padding:14px;border-radius:14px;font-weight:900;cursor:pointer;font-size:1rem;letter-spacing:0.5px;box-shadow:0 4px 15px rgba(34,197,94,0.3);';
     btnNo.style.cssText = 'position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.08);color:#94a3b8;border:none;font-size:1rem;cursor:pointer;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;';
 
-    // 4. Lógica para mostrar el banner nativo de Chrome
-    // Solo mostrar en dispositivos móviles, no en PC
+    // 4. Lógica para mostrar el modal de instalación PWA
+    const PWA_KEY = 'cv_pwa_estado'; // 'instalada' | 'descartada'
+
     function esMobile() {
         return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-            || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent)); // iPad moderno
+            || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+    }
+
+    function yaEstaInstalada() {
+        return window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true;
+    }
+
+    function debeMostrarModal() {
+        if (!esMobile()) return false;
+        if (yaEstaInstalada()) return false;
+        if (localStorage.getItem(PWA_KEY)) return false;
+        return true;
     }
 
     let eventoInstalacion = null;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         eventoInstalacion = e;
-        if (esMobile()) {
+        if (debeMostrarModal()) {
             bannerInstalar.style.display = 'flex';
         }
     });
+
     btnSi.addEventListener('click', async () => {
         if (!eventoInstalacion) return;
         eventoInstalacion.prompt();
         const { outcome } = await eventoInstalacion.userChoice;
+        bannerInstalar.style.display = 'none';
         if (outcome === 'accepted') {
-            bannerInstalar.style.display = 'none';
+            localStorage.setItem(PWA_KEY, 'instalada');
         }
         eventoInstalacion = null;
     });
+
     btnNo.addEventListener('click', () => {
         bannerInstalar.style.display = 'none';
+        localStorage.setItem(PWA_KEY, 'descartada');
+    });
+
+    // Si el usuario instala desde el banner del navegador (sin tocar el botón)
+    window.addEventListener('appinstalled', () => {
+        bannerInstalar.style.display = 'none';
+        localStorage.setItem(PWA_KEY, 'instalada');
     });
 </script>
 </body>
