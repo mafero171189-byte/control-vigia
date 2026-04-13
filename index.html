@@ -253,6 +253,24 @@
         .vacaciones-full { grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); margin-top: 5px; cursor: pointer; width: 100%; box-sizing: border-box; }
         .vacaciones-full input { width: auto; margin: 0; cursor: pointer; }
         .vacaciones-full span { font-size: 0.85rem; color: var(--success); font-weight: 600; }
+        /* Estilo para el checkbox en el formulario */
+        .licencia-full { 
+            grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; 
+            border-radius: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); 
+            margin-top: 5px; cursor: pointer; width: 100%; box-sizing: border-box; 
+        }
+        .licencia-full input { width: auto; margin: 0; cursor: pointer; }
+        .licencia-full span { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+        /* Estilo para la tarjeta en el historial */
+        .shift-card.licencia { 
+            border-color: var(--accent); 
+            background: linear-gradient(135deg, var(--card-bg), rgba(56, 189, 248, 0.08)); 
+        }
+        .licencia-badge { 
+            font-size: 0.65rem; font-weight: 700; color: var(--accent); 
+            background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); 
+            padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; 
+        }
         
         .btn-submit { flex: 1; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.3s; }
 
@@ -635,6 +653,11 @@
                 <input type="checkbox" id="esVacaciones">
                 <span>🌴 Marcar si es VACACIONES</span>
             </label>
+            
+            <label class="licencia-full">
+                <input type="checkbox" id="esLicencia">
+                <span>🏥 Marcar si es LICENCIA / CARPETA</span>
+            </label>
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -701,6 +724,9 @@
     </div>
 
     <div class="admin-header">
+        <div id="admin-contador-total" style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 12px; margin-bottom: 10px; text-align: center; border: 1px solid var(--accent);">
+            <b style="color: var(--accent); font-size: 1.1rem;" id="admin-txt-contador">👥 Cargando usuarios...</b>
+        </div>
         <h2>Personal Registrado</h2>
         <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema</p>
     </div>
@@ -754,12 +780,14 @@
     document.addEventListener('DOMContentLoaded', () => {
         const chkVacaciones = document.getElementById('esVacaciones');
         const chkFeriado = document.getElementById('esFeriado');
+        const chkLicencia = document.getElementById('esLicencia');
         const inputEntrada = document.getElementById('entrada');
         const inputSalida = document.getElementById('salida');
         if(chkVacaciones && chkFeriado) {
             chkVacaciones.addEventListener('change', function() {
                 if(this.checked) {
                     chkFeriado.checked = false; // Desmarca feriado
+                    chkLicencia.checked = false; // Desmarca licencia
                     inputEntrada.disabled = true; // Bloquea horas
                     inputSalida.disabled = true;
                     inputEntrada.value = "";
@@ -772,6 +800,20 @@
             chkFeriado.addEventListener('change', function() {
                 if(this.checked) {
                     chkVacaciones.checked = false; // Desmarca vacaciones
+                    chkLicencia.checked = false; // Desmarca licencia
+                    inputEntrada.disabled = false;
+                    inputSalida.disabled = false;
+                }
+            });
+            chkLicencia.addEventListener('change', function() {
+                if(this.checked) {
+                    chkFeriado.checked = false;
+                    chkVacaciones.checked = false;
+                    inputEntrada.disabled = true;
+                    inputSalida.disabled = true;
+                    inputEntrada.value = "";
+                    inputSalida.value = "";
+                } else {
                     inputEntrada.disabled = false;
                     inputSalida.disabled = false;
                 }
@@ -1086,6 +1128,14 @@
         document.getElementById('admin-buscar-usuario').value = '';
         document.getElementById('btn-volver-admin').style.display = 'none';
         
+        // Contador de usuarios totales
+        try {
+            const snapshotTotal = await getDocs(collection(db, "directorio_usuarios"));
+            document.getElementById('admin-txt-contador').innerText = `👥 TOTAL USUARIOS: ${snapshotTotal.size}`;
+        } catch (e) {
+            document.getElementById('admin-txt-contador').innerText = `👥 Error al contar`;
+        }
+
         // Configura los desplegables en el mes y año actual
         const hoy = new Date();
         document.getElementById('admin-upsra-anio').value = hoy.getFullYear();
@@ -1461,11 +1511,13 @@ window.formatearEnlaces = function(texto) {
         document.getElementById('salida').value = turno.s;
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = turno.fer || false;
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = turno.vac || false;
+        if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = turno.lic || false;
         
         // Disparar los eventos para que la interfaz se bloquee/desbloquee sola
         const ev = new Event('change');
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
+        if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         
         window.turnoEnEdicion = id;
         document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO TURNO";
@@ -1489,9 +1541,11 @@ window.formatearEnlaces = function(texto) {
         document.getElementById('salida').value = '';
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
+        if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
         const ev = new Event('change');
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
+        if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         
         document.getElementById('form-titulo-modo').innerHTML = "➕ REGISTRAR TURNO";
         document.getElementById('btn-submit-turno').innerText = "AGENDAR TURNO";
@@ -1509,11 +1563,12 @@ window.formatearEnlaces = function(texto) {
         let s = document.getElementById('salida').value;
         const fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false;
         const vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
+        const lic = document.getElementById('esLicencia') ? document.getElementById('esLicencia').checked : false;
               
         let diff = 0;
         let noct = 0;
-        // Si NO son vacaciones, calculamos las horas normales
-        if (!vac) {
+        // Si NO son vacaciones ni licencia, calculamos las horas normales
+        if (!vac && !lic) {
             if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
             
             let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
@@ -1527,12 +1582,12 @@ window.formatearEnlaces = function(texto) {
             }
             noct = Number((noctMinutos / 60).toFixed(2));
         } else {
-            // Si son vacaciones, limpiamos los horarios para que no queden guardados en la base
+            // Si son vacaciones o licencia, limpiamos los horarios para que no queden guardados en la base
             e = "";
             s = "";
         }
         
-        const nuevoTurno = { f, l, e, s, fer, vac, t: diff, n: noct };
+        const nuevoTurno = { f, l, e, s, fer, vac, lic, t: diff, n: noct };
         
         try {
             if (window.turnoEnEdicion) {
@@ -1544,6 +1599,7 @@ window.formatearEnlaces = function(texto) {
                 document.getElementById('lugar').value = ''; 
                 if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
+                if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
                 // Reactivamos los inputs de hora por si estaban bloqueados
                 document.getElementById('entrada').disabled = false;
                 document.getElementById('salida').disabled = false;
@@ -1610,21 +1666,34 @@ window.formatearEnlaces = function(texto) {
             st += t.t; sn += t.n; if (t.fer) sf += t.t;
             if (t.vac) { 
                 plusVacacionalTotal += valMes.plusVac; 
+            } else if (t.lic) {
+                // No suma viático ni plus vacacional, pero se cuenta para el básico (ya implícito)
             } else { 
                 diasUnicosTrabajados.add(t.f); // Guarda la fecha, si se repite en el mismo día no suma doble
             }
 
             const card = document.createElement('div'); 
-            card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
             const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
-            card.innerHTML = `
-                <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
-                ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
-                ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
-                <div style="display:flex; align-items:center;">
-                    <div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span></div>
-                    <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
-                </div>`;
+
+            if (t.lic) {
+                card.className = 'shift-card licencia';
+                card.innerHTML = `
+                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
+                    <div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div>
+                    <div style="display:flex; align-items:center;">
+                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
+                    </div>`;
+            } else {
+                card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
+                card.innerHTML = `
+                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
+                    ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
+                    ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
+                    <div style="display:flex; align-items:center;">
+                        <div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span></div>
+                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
+                    </div>`;
+            }
             lista.appendChild(card);
         });
         document.getElementById('totH').innerText = fmtH(st); 
