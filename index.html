@@ -1128,12 +1128,14 @@
         document.getElementById('admin-buscar-usuario').value = '';
         document.getElementById('btn-volver-admin').style.display = 'none';
         
-        // Contador de usuarios totales
+        // Contador de usuarios totales actualizado
+        const txtContador = document.getElementById('admin-txt-contador');
+        txtContador.innerText = "👥 Contando personal...";
         try {
             const snapshotTotal = await getDocs(collection(db, "directorio_usuarios"));
-            document.getElementById('admin-txt-contador').innerText = `👥 TOTAL USUARIOS: ${snapshotTotal.size}`;
+            txtContador.innerText = `👥 TOTAL USUARIOS: ${snapshotTotal.size}`;
         } catch (e) {
-            document.getElementById('admin-txt-contador').innerText = `👥 Error al contar`;
+            txtContador.innerText = `👥 Error al contar`;
         }
 
         // Configura los desplegables en el mes y año actual
@@ -1705,7 +1707,7 @@ window.formatearEnlaces = function(texto) {
         if (isNaN(valorNocturnoFinal) || valorNocturnoFinal <= 0) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
 
         let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
-        let horaExtraVal = valMes.hora > 0 ? valMes.hora : valorHoraNormal; 
+        let horaExtraVal = valMes.hora > 0 ? valMes.hora : (valorHoraNormal * 1.5);
 
         let pagoFeriados = sf * horaExtraVal;
         let pagoHorasTotales = 0, hsExtra = 0;
