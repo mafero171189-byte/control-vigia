@@ -1114,6 +1114,13 @@
             window.ultimoUsuarioDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
+                
+                // Formatear la fecha de registro
+                let fechaRegistro = "Fecha desconocida";
+                if (data.fecha) {
+                    const d = new Date(data.fecha);
+                    fechaRegistro = d.toLocaleDateString('es-AR') + ' - ' + d.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
+                }
                 const card = document.createElement('div');
                 card.className = 'user-list-card';
                 card.innerHTML = `
@@ -1121,6 +1128,7 @@
                         <div class="user-info">
                             <b>${data.nombre || 'Sin Nombre'}</b>
                             <span style="color: var(--text-dim); display: block;">${data.email}</span>
+                            <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
                         </div>
                         <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0;" title="Eliminar usuario">🗑️</button>
                     </div>`;
@@ -1164,6 +1172,13 @@
             }
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
+                
+                // Formatear la fecha de registro
+                let fechaRegistro = "Fecha desconocida";
+                if (data.fecha) {
+                    const d = new Date(data.fecha);
+                    fechaRegistro = d.toLocaleDateString('es-AR') + ' - ' + d.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
+                }
                 const card = document.createElement('div');
                 card.className = 'user-list-card';
                 card.innerHTML = `
@@ -1171,7 +1186,8 @@
                         <div class="user-info">
                             <b>${data.nombre || 'Sin Nombre'}</b>
                             <span style="color: var(--text-dim); display: block;">${data.email}</span>
-                            <span style="color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block;">🔍 Resultado de búsqueda</span>
+                            <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
+                            <span style="color: var(--success); font-size: 0.75rem; font-weight: bold; margin-top: 4px; display: inline-block;">🔍 Resultado de búsqueda</span>
                         </div>
                         <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 40px; border-radius: 12px; cursor: pointer;">🗑️</button>
                     </div>`;
