@@ -37,18 +37,147 @@
         }
         
         /* --- LANDING PAGE --- */
-        #landing-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 30px 20px; text-align: center; background: radial-gradient(circle at top, #1e293b, #0f172a); box-sizing: border-box; }
-        .hero-title { font-size: 2.8rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(56, 189, 248, 0.3); }
-        .hero-subtitle { font-size: 1rem; color: var(--text-dim); margin: 15px 0 20px 0; max-width: 420px; line-height: 1.6; }
-        .hero-subtitle b { color: var(--text-main); }
-        
-        .upsra-badge { background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-bottom: 35px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        @keyframes lp-glow  { 0%,100%{ opacity:.6; } 50%{ opacity:1; } }
+        @keyframes lp-float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-7px); } }
+        @keyframes lp-in    { from{ opacity:0; transform:translateY(30px); } to{ opacity:1; transform:translateY(0); } }
+        @keyframes lp-scan  { 0%{ transform:translateY(-100%); } 100%{ transform:translateY(100vh); } }
+        @keyframes lp-bar   { from{ width:0; } to{ width:100%; } }
 
-        .features-grid { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; width: 100%; max-width: 400px; }
-        .feature-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 18px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.2); backdrop-filter: blur(5px); }
-        .feat-icon { font-size: 2rem; background: var(--bg-color); padding: 12px; border-radius: 14px; border: 1px solid var(--border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
-        .feat-text h4 { margin: 0 0 5px 0; color: var(--accent); font-size: 1.05rem; }
-        .feat-text p { margin: 0; font-size: 0.85rem; color: var(--text-dim); line-height: 1.4; }
+        #landing-page {
+            display:flex; flex-direction:column; align-items:center;
+            min-height:100vh; padding:0; text-align:center;
+            background:#060c18; overflow-x:hidden; position:relative; box-sizing:border-box;
+        }
+        /* Grilla de fondo */
+        .lp-grid {
+            position:fixed; inset:0; z-index:0; pointer-events:none;
+            background-image:
+                linear-gradient(rgba(56,189,248,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56,189,248,0.05) 1px, transparent 1px);
+            background-size:50px 50px;
+        }
+        /* Línea de scan */
+        .lp-scan {
+            position:fixed; left:0; right:0; height:2px; z-index:0; pointer-events:none;
+            background:linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent);
+            animation: lp-scan 6s linear infinite;
+        }
+        /* Glow superior */
+        .lp-glow-top {
+            position:fixed; top:0; left:50%; transform:translateX(-50%);
+            width:600px; height:300px; z-index:0; pointer-events:none;
+            background:radial-gradient(ellipse at top, rgba(56,189,248,0.18) 0%, transparent 70%);
+        }
+
+        .landing-inner {
+            position:relative; z-index:1; width:100%; max-width:430px;
+            padding:44px 20px 56px; box-sizing:border-box;
+            animation: lp-in .7s cubic-bezier(.16,1,.3,1) both;
+        }
+
+        /* ── HERO ── */
+        .lp-logo-wrap {
+            position:relative; width:96px; height:96px; margin:0 auto 24px;
+        }
+        .lp-logo-ring {
+            position:absolute; inset:-8px; border-radius:30px;
+            border:1px solid rgba(56,189,248,0.3);
+            animation: lp-float 4s ease-in-out infinite;
+        }
+        .lp-logo-ring2 {
+            position:absolute; inset:-16px; border-radius:36px;
+            border:1px solid rgba(56,189,248,0.12);
+            animation: lp-float 4s ease-in-out infinite reverse;
+        }
+        .lp-logo {
+            width:96px; height:96px; border-radius:24px;
+            background:linear-gradient(145deg, #0e2040, #0a1628);
+            border:2px solid rgba(56,189,248,0.5);
+            display:flex; align-items:center; justify-content:center; font-size:2.6rem;
+            box-shadow:0 0 40px rgba(56,189,248,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+            position:relative; z-index:1;
+        }
+        .lp-chip {
+            display:inline-flex; align-items:center; gap:7px;
+            background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25);
+            padding:6px 14px; border-radius:50px; margin-bottom:14px;
+            font-size:0.7rem; font-weight:800; letter-spacing:2.5px;
+            color:var(--accent); text-transform:uppercase;
+        }
+        .lp-chip-dot { width:6px; height:6px; border-radius:50%; background:var(--success); box-shadow:0 0 6px var(--success); animation:lp-glow 2s infinite; }
+        .lp-title {
+            font-size:3.2rem; font-weight:900; letter-spacing:4px; line-height:.95;
+            text-transform:uppercase; margin:0 0 4px;
+            background:linear-gradient(160deg, #fff 20%, #38bdf8 60%, #818cf8 100%);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+        }
+        .lp-sub {
+            font-size:0.72rem; font-weight:700; letter-spacing:3px; color:var(--text-dim);
+            text-transform:uppercase; margin:0 0 20px; opacity:.7;
+        }
+        .lp-desc {
+            font-size:0.93rem; color:var(--text-dim); line-height:1.7;
+            max-width:320px; margin:0 auto 28px;
+        }
+        .lp-desc strong { color:var(--text-main); font-weight:700; }
+
+        /* ── UPSRA HERO BANNER ── */
+        .lp-upsra-banner {
+            background:linear-gradient(135deg, rgba(34,197,94,0.12), rgba(56,189,248,0.08));
+            border:1px solid rgba(34,197,94,0.35); border-radius:16px;
+            padding:16px 18px; margin-bottom:20px; text-align:left;
+            position:relative; overflow:hidden;
+        }
+        .lp-upsra-banner::before {
+            content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+            background:linear-gradient(to bottom, var(--success), var(--accent));
+            border-radius:3px 0 0 3px;
+        }
+        .lp-upsra-banner-title {
+            font-size:0.72rem; font-weight:800; letter-spacing:2px; text-transform:uppercase;
+            color:var(--success); margin:0 0 4px 10px; display:flex; align-items:center; gap:7px;
+        }
+        .lp-upsra-banner-body {
+            font-size:0.88rem; color:var(--text-main); font-weight:600; margin:0 0 12px 10px; line-height:1.5;
+        }
+        .lp-upsra-pills { display:flex; flex-wrap:wrap; gap:6px; margin-left:10px; }
+        .lp-pill {
+            background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.18);
+            border-radius:50px; padding:4px 11px; font-size:0.72rem; font-weight:700;
+            color:var(--accent); display:flex; align-items:center; gap:5px;
+        }
+
+        /* ── STATS ── */
+        .lp-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+        .lp-stat {
+            background:rgba(30,41,59,0.6); border:1px solid rgba(56,189,248,0.12);
+            border-radius:14px; padding:14px 8px; text-align:center; backdrop-filter:blur(6px);
+        }
+        .lp-stat-num { font-size:1.6rem; font-weight:900; color:var(--accent); display:block; line-height:1; }
+        .lp-stat-lbl { font-size:0.65rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; display:block; line-height:1.3; }
+
+        /* ── FEATURES ── */
+        .features-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+        .feature-card {
+            background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.07);
+            padding:14px 16px; border-radius:14px;
+            display:flex; align-items:center; gap:14px; text-align:left;
+            backdrop-filter:blur(8px); transition:.2s;
+            border-left:3px solid rgba(56,189,248,0.3);
+        }
+        .feat-icon { font-size:1.4rem; flex-shrink:0; width:38px; text-align:center; }
+        .feat-text h4 { margin:0 0 2px; color:var(--text-main); font-size:0.88rem; font-weight:800; }
+        .feat-text p { margin:0; font-size:0.76rem; color:var(--text-dim); line-height:1.4; }
+
+        /* ── SEPARADOR ── */
+        .lp-divider {
+            display:flex; align-items:center; gap:12px; margin:24px 0 20px; color:var(--text-dim);
+            font-size:0.75rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+        }
+        .lp-divider::before, .lp-divider::after {
+            content:''; flex:1; height:1px;
+            background:linear-gradient(90deg, transparent, rgba(56,189,248,0.2), transparent);
+        }
         
         .auth-box { background: var(--card-bg); padding: 30px 25px; border-radius: 20px; border: 1px solid var(--accent); width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; }
         .auth-box h3 { margin-top: 0; margin-bottom: 20px; color: var(--text-main); font-size: 1.3rem; }
@@ -327,19 +456,88 @@
 </div>
 
 <div id="landing-page">
-    <h1 class="hero-title">CONTROL VIGÍA</h1>
-    <p class="hero-subtitle">La herramienta definitiva para el <b>personal de seguridad privada</b>. Llevá el control exacto de tus horas y cuidá tu recibo de sueldo mes a mes.</p>
-    
-    <div class="upsra-badge">
-        ⚖️ Configurado según Paritaria UPSRA 2026
+  <!-- Capas decorativas de fondo -->
+  <div class="lp-grid"></div>
+  <div class="lp-scan"></div>
+  <div class="lp-glow-top"></div>
+
+  <div class="landing-inner">
+
+    <!-- LOGO -->
+    <div class="lp-logo-wrap">
+      <div class="lp-logo-ring2"></div>
+      <div class="lp-logo-ring"></div>
+      <div class="lp-logo">🛡️</div>
     </div>
 
+    <!-- CHIP -->
+    <div class="lp-chip"><span class="lp-chip-dot"></span>Personal de Seguridad</div>
+
+    <!-- TÍTULO -->
+    <h1 class="lp-title">CONTROL<br>VIGÍA</h1>
+    <p class="lp-sub">Sistema de Gestión de Guardia</p>
+
+    <!-- DESCRIPCIÓN -->
+    <p class="lp-desc">
+      Controlá tus horas, calculá tu sueldo y verificá cada centavo de tu recibo.<br>
+      <strong>Con la escala salarial vigente según Paritarias UPSRA 2026.</strong>
+    </p>
+
+    <!-- BANNER UPSRA -->
+    <div class="lp-upsra-banner">
+      <p class="lp-upsra-banner-title">⚖️ Escala Salarial UPSRA 2026</p>
+      <p class="lp-upsra-banner-body">Valores paritarios cargados automáticamente. Solo ingresá tus años de antigüedad y el sistema calcula todo.</p>
+      <div class="lp-upsra-pills">
+        <span class="lp-pill">💵 Básico</span>
+        <span class="lp-pill">🌙 Nocturno</span>
+        <span class="lp-pill">📅 Feriados</span>
+        <span class="lp-pill">⏱️ Horas Extra</span>
+        <span class="lp-pill">🏅 Antigüedad</span>
+        <span class="lp-pill">🎁 Presentismo</span>
+        <span class="lp-pill">🚗 Viático</span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="lp-stats">
+      <div class="lp-stat">
+        <span class="lp-stat-num">100%</span>
+        <span class="lp-stat-lbl">Gratis para usar</span>
+      </div>
+      <div class="lp-stat">
+        <span class="lp-stat-num">☁️</span>
+        <span class="lp-stat-lbl">Datos en la nube</span>
+      </div>
+      <div class="lp-stat">
+        <span class="lp-stat-num">📲</span>
+        <span class="lp-stat-lbl">Reporte WhatsApp</span>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
     <div class="features-grid">
-        <div class="feature-card"><span class="feat-icon">☁️</span><div class="feat-text"><h4>Nube Segura</h4><p>Historial guardado de forma 100% privada y segura.</p></div></div>
-        <div class="feature-card"><span class="feat-icon">💰</span><div class="feat-text"><h4>Sueldo Exacto</h4><p>Calculadora automática de neto, bruto, extras y feriados.</p></div></div>
-        <div class="feature-card"><span class="feat-icon">📲</span><div class="feat-text"><h4>Reportes Express</h4><p>Generá un comprobante mensual y envialo por WhatsApp.</p></div></div>
+      <div class="feature-card">
+        <span class="feat-icon">🔐</span>
+        <div class="feat-text"><h4>Cuenta privada y segura</h4><p>Tus datos solo los ves vos. Acceso con usuario y contraseña.</p></div>
+      </div>
+      <div class="feature-card">
+        <span class="feat-icon">💰</span>
+        <div class="feat-text"><h4>Sueldo calculado al instante</h4><p>Bruto, neto, extras, feriados y antigüedad en un solo lugar.</p></div>
+      </div>
+      <div class="feature-card">
+        <span class="feat-icon">📋</span>
+        <div class="feat-text"><h4>Historial mensual completo</h4><p>Todos tus turnos organizados mes a mes, siempre disponibles.</p></div>
+      </div>
+      <div class="feature-card">
+        <span class="feat-icon">📤</span>
+        <div class="feat-text"><h4>Exportá por WhatsApp</h4><p>Generá un reporte y mandáselo al delegado o guardalo para vos.</p></div>
+      </div>
     </div>
 
+    <!-- DIVIDER -->
+    <div class="lp-divider">Ingresá a tu cuenta</div>
+
+    <!-- AUTH BOX -->
     <div class="auth-box">
         <h3 id="auth-title">Iniciar Sesión</h3>
         
@@ -360,8 +558,10 @@
             <button type="submit" id="btn-action-auth" class="auth-btn">INGRESAR</button>
         </form>
 
-        <button id="btn-toggle-auth" class="auth-switch" onclick="toggleAuthMode()">¿No tenés cuenta? <b>Registrate acá</b></button>
+        <button id="btn-toggle-auth" class="auth-switch" onclick="toggleAuthMode()">¿No tenés cuenta? <b>Registrate gratis</b></button>
     </div>
+
+  </div>
 </div>
 
 <div id="app-container">
