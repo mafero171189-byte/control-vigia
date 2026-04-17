@@ -324,7 +324,7 @@
     border-radius: 16px; 
     box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
     border: 1px solid var(--accent); 
-    z-index: 6000; 
+    z-index: 99999; 
     transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     opacity: 0; 
     pointer-events: none; 
@@ -386,9 +386,9 @@
         <h2 style="color: var(--accent); margin-top: 0; font-size: 1.5rem;">¡Bienvenido a Control Vigía! 🛡️</h2>
         <p style="font-size: 0.95rem; color: var(--text-main); line-height: 1.5; margin-bottom: 15px;">Tu cuenta fue creada con éxito.</p>
         <div style="background: rgba(56, 189, 248, 0.1); border-left: 4px solid var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left;">
-            <p style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0;"><b>Dato importante:</b> El sistema está configurado con la paritaria UPSRA 2026 por defecto. <br><br>Si tu empresa paga diferente, podés ir al botón <b>"Configurar Valores"</b> y poner los números exactos de tu recibo. ¡El sistema se adapta a vos! Solo tenes que poner tus años de antiguedad</p>
+            <p style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0;"><b>Dato importante:</b> El sistema está configurado con la paritaria UPSRA 2026 por defecto. <br><br>Si tu empresa paga diferente, podés editar los valores. ¡El sistema se adapta a vos! <b>Para empezar, configuremos tus años de antigüedad.</b></p>
         </div>
-        <button onclick="document.getElementById('modal-bienvenida').style.display='none'" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase;">¡ENTENDIDO, A TRABAJAR!</button>
+        <button onclick="document.getElementById('modal-bienvenida').style.display='none'; abrirModalConfig();" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase;">¡CONFIGURAR MI ANTIGÜEDAD!</button>
     </div>
 </div>
 
@@ -420,9 +420,17 @@
         <h3 style="color: var(--accent); margin-top:0; margin-bottom: 15px;">Valores de Cobro</h3>
         
         <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-main); text-align: left; line-height: 1.4;">
-            <b>💡 ¡Personalizá tu sueldo!</b> El sistema sugiere valores de UPSRA, SOLO TENES QUE PONER TUS AÑOS DE ANTIGÜEDAD, el sistema hará el resto. (Podés ingresar tus propios montos si cobrás distinto)
+            <b>💡 ¡Personalizá tu sueldo!</b> Elegí tu categoría y poné tus años de antigüedad. El sistema cargará los valores de UPSRA automáticamente.
         </div>
         
+        <div style="margin-bottom: 10px; text-align: left;">
+            <label style="color: var(--accent);">Categoría de Vigilador</label>
+            <select id="valCategoria" class="auth-input" style="margin-bottom: 5px; padding: 10px; font-weight: bold; color: var(--accent);" onchange="cambiarCategoriaConfig()">
+                <option value="general">Vigilador General</option>
+                <option value="arma">Vigilador con Arma</option>
+            </select>
+        </div>
+
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
             <div><label>Sueldo Básico ($)</label><input type="text" inputmode="decimal" id="valBasico" oninput="formatearMiles(this)"></div>
             <div><label style="color: var(--accent);">Antigüedad (Años)</label><input type="number" id="valAntiguedad"></div>
@@ -473,7 +481,70 @@
     </div>
 </div>
 
+<div id="modal-modificar-dias" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="border-color: var(--warning); box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);">
+        <h3 style="margin-top:0; color: var(--warning);">⏳ Modificar Licencia</h3>
+        <p style="color:var(--text-dim); font-size: 0.9rem; margin-bottom: 20px;">Ajustá los días que querés sumar (o restar) al usuario.</p>
+        
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px;">
+            <button onclick="ajustarDiasInput(-5)" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 45px; height: 45px; border-radius: 12px; font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: 0.2s;">-</button>
+            
+            <input type="number" id="input-dias-mod" value="30" style="width: 80px; text-align: center; font-size: 1.5rem; font-weight: bold; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px; color: var(--text-main); margin: 0;">
+            
+            <button onclick="ajustarDiasInput(5)" style="background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid var(--success); width: 45px; height: 45px; border-radius: 12px; font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: 0.2s;">+</button>
+        </div>
+
+        <button onclick="hacerLicenciaIlimitada()" style="width: 100%; background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px dashed var(--accent); padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: 0.2s;">♾️ Establecer como ILIMITADA</button>
+
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="cerrarModalModificarDias()">Cancelar</button>
+            <button class="btn-send" style="background: var(--warning); color: white;" onclick="confirmarModificarDias()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-pago-licencia" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.95); z-index: 8000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; backdrop-filter: blur(8px);">
+    <div class="bloqueo-card" style="background: var(--card-bg); padding: 30px 20px; border-radius: 20px; border: 1px solid var(--warning); max-width: 380px; width: 100%; position: relative; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+        <button id="btn-cerrar-pago" onclick="cerrarPagoLicencia()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer; display: none;">✕</button>
+        <h2 id="titulo-pago" style="color: var(--warning); margin-top: 0;">💳 Activar Licencia</h2>
+        <p id="texto-pago" style="color: var(--text-dim); margin-bottom: 20px; font-size: 0.9rem;">Pagá tu licencia para asegurar tu acceso al sistema.</p>
+        
+        <div style="background: rgba(56,189,248,0.1); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+            <b style="color: var(--accent); display:block; margin-bottom: 10px; font-size: 1.05rem;">Costo de renovación: <span id="ui-precio-lic">...</span></b>
+            
+            <div id="ui-cbu-bloque">
+                <span style="font-size: 0.85rem; color: var(--text-main); display: block; margin-bottom: 5px;">Transferencia al CBU / Alias:</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <b id="ui-cbu-lic" style="font-size: 1rem; user-select: all; background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent); flex: 1; word-break: break-all; text-align: center;">...</b>
+                    <button onclick="copiarCBU(this)" style="background: var(--accent); border: none; color: white; border-radius: 8px; padding: 0 15px; height: 42px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.2s;" title="Copiar Alias/CBU">📋</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="ui-btn-mp" onclick="abrirLinkPago()" class="auth-btn" style="margin-bottom: 10px; background: #009EE3; font-size: 0.9rem;">💳 PAGAR CON MERCADO PAGO</button>
+        <button onclick="enviarComprobanteWA()" class="btn-whatsapp" style="margin-bottom: 20px; font-size: 0.9rem;">💬 ENVIAR COMPROBANTE AL ADMIN</button>
+        
+        <button id="btn-logout-pago" class="btn-logout" style="width: 100%; display: none;" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+</div>
+
+<div id="modal-perfil" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 350px; text-align: left;">
+        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; text-align: center;">👤 Mi Perfil</h3>
+        
+        <div style="background: var(--input-bg); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center;">
+            <span style="display: block; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px;">Estado de Licencia:</span>
+            <b id="perfil-estado-licencia" style="color: var(--warning); font-size: 1.1rem;">Verificando...</b>
+        </div>
+        
+        <button class="btn-config-main" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning);" onclick="cerrarModalPerfil(); mostrarPagoLicencia(false)">💳 Pagar / Renovar Licencia</button>
+        <button class="btn-config-main" onclick="cerrarModalPerfil(); abrirModalCambiarClave()">🔑 Cambiar Contraseña</button>
+        <button class="btn-logout" style="width: 100%; padding: 14px; font-size: 1rem; margin-top: 5px;" onclick="cerrarModalPerfil()">Cerrar</button>
+    </div>
+</div>
+
 <div id="landing-page">
+
   <!-- Capas decorativas de fondo -->
   <div class="lp-grid"></div>
   <div class="lp-scan"></div>
@@ -518,19 +589,20 @@
 
     <!-- STATS -->
     <div class="lp-stats">
-      <div class="lp-stat">
-        <span class="lp-stat-num">100%</span>
-        <span class="lp-stat-lbl">Gratis para usar</span>
+      <div class="lp-stat" style="border-color: var(--warning);">
+        <span class="lp-stat-num" id="lp-dias-num" style="color: var(--warning);">30</span>
+        <span class="lp-stat-lbl">Días Gratis</span>
       </div>
       <div class="lp-stat">
         <span class="lp-stat-num">☁️</span>
         <span class="lp-stat-lbl">Datos en la nube</span>
       </div>
       <div class="lp-stat">
-        <span class="lp-stat-num">📲</span>
-        <span class="lp-stat-lbl">Reporte WhatsApp</span>
+        <span class="lp-stat-num" style="font-size: 1.1rem; padding-top: 5px;" id="lp-precio-text">...</span>
+        <span class="lp-stat-lbl">Mensuales luego</span>
       </div>
     </div>
+
 
     <!-- FEATURES -->
     <div class="features-grid">
@@ -591,12 +663,20 @@
         <div class="header-actions">
             <button id="btn-admin-access" onclick="abrirAdmin()">⭐ Admin</button>
             <button class="mode-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
-            <button class="btn-logout" style="border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1);" onclick="abrirModalCambiarClave()" title="Cambiar Contraseña">🔑</button>
+            <button class="btn-logout" style="border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1);" onclick="abrirModalPerfil()" title="Mi Perfil">👤</button>
+
             <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
         </div>
     </header>
 
+    <div id="banner-licencia" style="position: relative; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1)); border: 1px solid var(--warning); padding: 12px; border-radius: 12px; margin-bottom: 20px; display: none; text-align: center; cursor: pointer; transition: 0.3s;" onclick="mostrarPagoLicencia(false)">
+        <button onclick="cerrarBannerLicencia(event)" style="position: absolute; top: 5px; right: 8px; background: transparent; border: none; color: var(--warning); font-size: 1rem; cursor: pointer; padding: 5px;">✕</button>
+        <h4 style="margin: 0 0 5px; color: var(--warning); font-size: 0.9rem; text-transform: uppercase;">⚠️ Licencia de Prueba</h4>
+        <p style="margin: 0; font-size: 0.8rem; color: var(--text-main);">Te quedan <b id="dias-restantes-banner">X</b> días. Tocá acá para activar.</p>
+    </div>
+
     <div id="aviso-global" class="global-alert">
+
         <div class="global-alert-header">
             <h4>📢 Aviso</h4>
             <button class="btn-cerrar-aviso" onclick="cerrarAviso()" title="Cerrar aviso">✕</button>
@@ -683,6 +763,32 @@
         <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Este mensaje aparecerá en la pantalla principal de todos los usuarios registrados.</p>
         <textarea id="admin-mensaje-texto" placeholder="Escribí el aviso acá... (Dejá el texto vacío y publicá para borrar el aviso)"></textarea>
         <button class="btn-msg" id="btn-publicar" onclick="publicarMensaje()">Publicar a Todos</button>
+    </div>
+
+<div class="admin-msg-box" style="border-color: var(--warning);">
+        <h3 style="margin-top:0; font-size: 1.1rem; color: var(--warning);">💳 Configuración de Licencias</h3>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Ajustá el link, precio y prueba para nuevos registros.</p>
+        
+        <div class="form-row" style="margin-bottom: 10px;">
+            <div><label>Días Gratis (Nuevos)</label><input type="number" id="admin-lic-dias" class="auth-input" style="margin-bottom:0; font-weight: 800; color: var(--warning);"></div>
+            <div><label>Precio Mensual ($)</label><input type="text" id="admin-lic-precio" class="auth-input" style="margin-bottom:0; font-weight: 800; color: var(--warning);" oninput="formatearMiles(this)" placeholder="Ej: 1500"></div>
+        </div>
+        <input type="text" id="admin-lic-link" class="auth-input" placeholder="Link de Mercado Pago" style="margin-bottom: 10px; font-weight: 800; color: var(--warning);">
+        <input type="text" id="admin-lic-cbu" class="auth-input" placeholder="CBU / CVU / Alias para transferencias" style="margin-bottom: 10px; font-weight: 800; color: var(--warning);">
+        
+<div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); padding: 12px; border-radius: 10px; margin-bottom: 15px;">
+            <label style="color: var(--text-main); font-size: 0.85rem; display: block; margin-bottom: 10px; font-weight: 800;">🔘 Método predeterminado para mostrar:</label>
+            <div style="display: flex; gap: 15px;">
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem; color: white;">
+                    <input type="radio" name="metodo-pago" id="admin-metodo-mp" value="mp" checked style="width: auto; margin:0;" onchange="previsualizarMetodoPago()"> Link (Botón Azul)
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem; color: white;">
+                    <input type="radio" name="metodo-pago" id="admin-metodo-cbu" value="cbu" style="width: auto; margin:0;" onchange="previsualizarMetodoPago()"> CBU / Alias
+                </label>
+            </div>
+        </div>
+
+        <button class="btn-msg" id="btn-guardar-licencias" style="background: var(--warning);" onclick="guardarLicenciasGlobal()">💾 Guardar Sistema Pagos</button>
     </div>
 
     <div class="admin-msg-box">
@@ -776,6 +882,51 @@
     
     const INICIO_NOCHE = 21, FIN_NOCHE = 6;
 
+    window.globalLicencias = { dias_prueba: 30, precio: "Consultar", link_pago: "https://mpago.li/1Mj6TU2", cbu: "No configurado" };
+
+// Escuchar configuración de pagos en tiempo real
+    onSnapshot(doc(db, "global", "licencias"), (docSnap) => {
+        if (docSnap.exists()) window.globalLicencias = docSnap.data();
+        
+        let precioMostrado = String(window.globalLicencias.precio || "");
+        if (precioMostrado && !precioMostrado.includes("$") && precioMostrado.toLowerCase() !== "consultar") {
+            precioMostrado = "$ " + precioMostrado;
+        }
+        
+        // Textos del usuario
+        if(document.getElementById('lp-dias-num')) document.getElementById('lp-dias-num').innerText = window.globalLicencias.dias_prueba;
+        if(document.getElementById('lp-precio-text')) document.getElementById('lp-precio-text').innerText = precioMostrado;
+        if(document.getElementById('ui-precio-lic')) document.getElementById('ui-precio-lic').innerText = precioMostrado;
+        if(document.getElementById('ui-cbu-lic')) document.getElementById('ui-cbu-lic').innerText = window.globalLicencias.cbu;
+        
+        // Inputs del panel admin
+        if(document.getElementById('admin-lic-dias')) document.getElementById('admin-lic-dias').value = window.globalLicencias.dias_prueba;
+        if(document.getElementById('admin-lic-precio')) document.getElementById('admin-lic-precio').value = window.globalLicencias.precio;
+        if(document.getElementById('admin-lic-link')) document.getElementById('admin-lic-link').value = window.globalLicencias.link_pago;
+        if(document.getElementById('admin-lic-cbu')) document.getElementById('admin-lic-cbu').value = window.globalLicencias.cbu;
+
+        // 🔴 LÓGICA MANUAL DE VISIBILIDAD (OBEDECE AL TILDE)
+        const metodoActivo = window.globalLicencias.metodo_pago || 'mp'; // 'mp' por defecto si es cuenta nueva
+        
+        // Mantener el tilde correcto en el panel de administrador
+        if(document.getElementById('admin-metodo-mp')) document.getElementById('admin-metodo-mp').checked = (metodoActivo === 'mp');
+        if(document.getElementById('admin-metodo-cbu')) document.getElementById('admin-metodo-cbu').checked = (metodoActivo === 'cbu');
+
+        // Mostrar/Ocultar los recuadros al usuario final (¡Instantáneo!)
+        const btnMp = document.getElementById('ui-btn-mp');
+        const boxCbu = document.getElementById('ui-cbu-bloque');
+
+        if (btnMp && boxCbu) {
+            if (metodoActivo === 'mp') {
+                btnMp.style.display = 'block';
+                boxCbu.style.display = 'none';
+            } else {
+                btnMp.style.display = 'none';
+                boxCbu.style.display = 'block';
+            }
+        }
+    });
+
     // --- LÓGICA DE INTERFAZ PARA VACACIONES Y FERIADOS ---
     document.addEventListener('DOMContentLoaded', () => {
         const chkVacaciones = document.getElementById('esVacaciones');
@@ -783,32 +934,11 @@
         const chkLicencia = document.getElementById('esLicencia');
         const inputEntrada = document.getElementById('entrada');
         const inputSalida = document.getElementById('salida');
-        if(chkVacaciones && chkFeriado) {
-            chkVacaciones.addEventListener('change', function() {
-                if(this.checked) {
-                    chkFeriado.checked = false; // Desmarca feriado
-                    chkLicencia.checked = false; // Desmarca licencia
-                    inputEntrada.disabled = true; // Bloquea horas
-                    inputSalida.disabled = true;
-                    inputEntrada.value = "";
-                    inputSalida.value = "";
-                } else {
-                    inputEntrada.disabled = false; // Desbloquea horas
-                    inputSalida.disabled = false;
-                }
-            });
-            chkFeriado.addEventListener('change', function() {
-                if(this.checked) {
-                    chkVacaciones.checked = false; // Desmarca vacaciones
-                    chkLicencia.checked = false; // Desmarca licencia
-                    inputEntrada.disabled = false;
-                    inputSalida.disabled = false;
-                }
-            });
-            chkLicencia.addEventListener('change', function() {
-                if(this.checked) {
-                    chkFeriado.checked = false;
-                    chkVacaciones.checked = false;
+
+        if(chkVacaciones && chkFeriado && chkLicencia) {
+            // Función centralizada que evalúa el estado general
+            const actualizarEstadoHoras = () => {
+                if (chkVacaciones.checked || chkLicencia.checked) {
                     inputEntrada.disabled = true;
                     inputSalida.disabled = true;
                     inputEntrada.value = "";
@@ -817,6 +947,30 @@
                     inputEntrada.disabled = false;
                     inputSalida.disabled = false;
                 }
+            };
+
+            chkVacaciones.addEventListener('change', function() {
+                if(this.checked) {
+                    chkFeriado.checked = false; 
+                    chkLicencia.checked = false; 
+                }
+                actualizarEstadoHoras();
+            });
+
+            chkFeriado.addEventListener('change', function() {
+                if(this.checked) {
+                    chkVacaciones.checked = false; 
+                    chkLicencia.checked = false; 
+                }
+                actualizarEstadoHoras();
+            });
+
+            chkLicencia.addEventListener('change', function() {
+                if(this.checked) {
+                    chkFeriado.checked = false;
+                    chkVacaciones.checked = false;
+                }
+                actualizarEstadoHoras();
             });
         }
     });
@@ -855,13 +1009,17 @@
 
     const limpiar = (str) => { if(!str || str.trim() === "") return ""; return str.toString().replace(/\./g, "").replace(",", "."); };
 
-    window.valoresUPSRA = window.valoresUPSRA || {}; // Inicializar por las dudas
-    window.obtenerValoresMes = function(fObj) {
+    window.valoresUPSRA = window.valoresUPSRA || {}; 
+    window.obtenerValoresMes = function(fObj, categoriaForzada = null) {
         if (!fObj) fObj = new Date();
         const año = fObj.getFullYear();
         const mes = fObj.getMonth();
         const p = window.preciosGuardados || {};
+        
+        const categoria = categoriaForzada || p.categoria || 'general'; 
+
         let v = {
+            categoria: categoria,
             basico: parseFloat(p.basico),
             antiguedadAños: parseInt(p.antiguedad) || 0,
             hora: parseFloat(p.hora),
@@ -875,18 +1033,28 @@
             horasBase: parseFloat(p.horasBase) || 200
         };
         if (isNaN(v.descuentos)) v.descuentos = 17;
-        // Buscamos si el Admin cargó valores en Firebase para este mes (Ej: "2027-0" para Enero 2027)
+        
         const claveMes = `${año}-${mes}`;
         let auto = window.valoresUPSRA[claveMes];
-        // "Plan B" de seguridad: los de este año quedan fijos si la base de datos está vacía
+
         if (!auto && año === 2026) {
-            if (mes === 0) auto = { b: 867200, p: 165000, v: 473800, nr: 10000, vac: 18552 };
-            else if (mes === 1) auto = { b: 876000, p: 165000, v: 473800, nr: 25000, vac: 18952 };
-            else if (mes === 2) auto = { b: 884800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
-            else if (mes === 3) auto = { b: 893650, p: 165000, v: 480500, nr: 25000, vac: 19220 };
-            else if (mes === 4) auto = { b: 902600, p: 165000, v: 487000, nr: 30000, vac: 19480 };
-            else auto = { b: 911650, p: 165000, v: 498000, nr: 70000, vac: 19920 }; 
+            if (categoria === 'arma') {
+                if (mes === 0) auto = { b: 887200, p: 165000, v: 473800, nr: 10000, vac: 18552 };
+                else if (mes === 1) auto = { b: 896000, p: 165000, v: 473800, nr: 25000, vac: 18952 };
+                else if (mes === 2) auto = { b: 904800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
+                else if (mes === 3) auto = { b: 913650, p: 165000, v: 480500, nr: 25000, vac: 19220 };
+                else if (mes === 4) auto = { b: 922600, p: 165000, v: 487000, nr: 30000, vac: 19480 };
+                else auto = { b: 931650, p: 165000, v: 498000, nr: 70000, vac: 19920 }; 
+            } else {
+                if (mes === 0) auto = { b: 867200, p: 165000, v: 473800, nr: 10000, vac: 18552 };
+                else if (mes === 1) auto = { b: 876000, p: 165000, v: 473800, nr: 25000, vac: 18952 };
+                else if (mes === 2) auto = { b: 884800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
+                else if (mes === 3) auto = { b: 893650, p: 165000, v: 480500, nr: 25000, vac: 19220 };
+                else if (mes === 4) auto = { b: 902600, p: 165000, v: 487000, nr: 30000, vac: 19480 };
+                else auto = { b: 911650, p: 165000, v: 498000, nr: 70000, vac: 19920 }; 
+            }
         }
+        
         if (auto) {
             if (isNaN(v.basico)) v.basico = auto.b;
             if (isNaN(v.presentismo)) v.presentismo = auto.p;
@@ -934,10 +1102,27 @@
         }
     }
 
-    window.abrirModalConfig = function() {
+    window.cambiarCategoriaConfig = function() {
+        const selectCat = document.getElementById('valCategoria').value;
+        document.getElementById('valBasico').value = "";
+        document.getElementById('valViatico').value = "";
+        document.getElementById('valPresentismo').value = "";
+        document.getElementById('valNoRem').value = "";
+        document.getElementById('valPlusVacManual').value = "";
+        
+        window.abrirModalConfig(selectCat);
+    }
+
+    window.abrirModalConfig = function(categoriaForzada = null) {
         const p = window.preciosGuardados || {};
+        const categoriaActual = categoriaForzada || p.categoria || 'general';
+        
+        if(document.getElementById('valCategoria')) {
+            document.getElementById('valCategoria').value = categoriaActual;
+        }
+
         const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
-        const auto = window.obtenerValoresMes(window.fechaFiltro);
+        const auto = window.obtenerValoresMes(window.fechaFiltro, categoriaActual);
         const fmtAuto = (num) => "Auto: $" + num.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 2});
         
         if(document.getElementById('valBasico')) {
@@ -1052,12 +1237,27 @@
             if (esModoRegistro) {
                 window.isRegistering = true; // Frenamos a onAuthStateChanged
                 const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                await setDoc(doc(db, "directorio_usuarios", cred.user.uid), { email: email, nombre: nombre, fecha: new Date().toISOString() });
+                
+                let diasPrueba = window.globalLicencias.dias_prueba || 30;
+                let fechaExp = new Date();
+                fechaExp.setDate(fechaExp.getDate() + parseInt(diasPrueba));
+
+                await setDoc(doc(db, "directorio_usuarios", cred.user.uid), { 
+                    email: email, 
+                    nombre: nombre, 
+                    fecha: new Date().toISOString(),
+                    licencia_expira: fechaExp.toISOString()
+                });
                 
                 let partesNombre = nombre.trim().split(" ");
                 let nom = partesNombre[0] || "";
                 let ape = partesNombre.slice(1).join(" ") || "";
-                await setDoc(doc(db, "usuarios", cred.user.uid, "config", "datos"), { perfil: { nombre: nom, apellido: ape }, precios: {} });
+                
+                await setDoc(doc(db, "usuarios", cred.user.uid, "config", "datos"), { 
+                    perfil: { nombre: nom, apellido: ape }, 
+                    precios: {},
+                    licencia_expira: fechaExp.toISOString()
+                });
 
                 window.isRegistering = false; // Ya guardamos todo
                 window.currentUser = cred.user; // Set manual rápido
@@ -1113,6 +1313,27 @@
             await cargarDatosNube(); 
         } else {
             window.currentUser = null;
+            // 🔴 FIX: Limpiar datos de usuario anterior para evitar que se vean por un instante
+            window.preciosGuardados = {};
+            window.turnos = [];
+            window.turnoEnEdicion = null;
+            if (window.unsubTurnos) { window.unsubTurnos(); window.unsubTurnos = null; }
+            // Limpiar campos de UI
+            const ids = ['vigiNombre','vigiApellido','lista'];
+            ids.forEach(id => { const el = document.getElementById(id); if(el) el.value !== undefined ? el.value = '' : el.innerHTML = ''; });
+            const totales = ['totH','totN','totF','totalBruto','totalNeto'];
+            totales.forEach(id => { const el = document.getElementById(id); if(el) el.innerText = id.startsWith('total') ? '$ 0,00' : '0'; });
+            // Ocultar banner de licencia
+            const banner = document.getElementById('banner-licencia');
+            if(banner) banner.style.display = 'none';
+            // Ocultar aviso global
+            const aviso = document.getElementById('aviso-global');
+            if(aviso) aviso.style.display = 'none';
+            // Cerrar modales abiertos
+            ['modal-pago-licencia','modal-perfil','modal-config','custom-modal'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.style.display = 'none';
+            });
             document.getElementById('landing-page').style.display = 'flex';
             document.getElementById('app-container').style.display = 'none';
             document.getElementById('admin-container').style.display = 'none';
@@ -1173,6 +1394,15 @@
                     const d = new Date(data.fecha);
                     fechaRegistro = d.toLocaleDateString('es-AR') + ' - ' + d.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
                 }
+                let expiraTexto = "Sin límite / Prueba no iniciada";
+                let colorExpira = "var(--success)";
+                if (data.licencia_expira) {
+                    const exp = new Date(data.licencia_expira);
+                    const diffDias = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+                    if (diffDias > 0) { expiraTexto = `Vence en ${diffDias} días`; colorExpira = "var(--warning)"; } 
+                    else { expiraTexto = "⚠️ Licencia Vencida"; colorExpira = "var(--danger)"; }
+                }
+
                 const card = document.createElement('div');
                 card.className = 'user-list-card';
                 card.innerHTML = `
@@ -1181,8 +1411,12 @@
                             <b>${data.nombre || 'Sin Nombre'}</b>
                             <span style="color: var(--text-dim); display: block;">${data.email}</span>
                             <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
+                            <span style="color: ${colorExpira}; font-size: 0.75rem; display: block; font-weight: bold; margin-top: 2px;">⏳ ${expiraTexto}</span>
                         </div>
-                        <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0;" title="Eliminar usuario">🗑️</button>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <button onclick="abrirModalModificarDias('${docSnap.id}', '${data.licencia_expira || ''}')" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
+                            <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Eliminar usuario">🗑️</button>
+                        </div>
                     </div>`;
                 lista.appendChild(card);
             });
@@ -1231,6 +1465,15 @@
                     const d = new Date(data.fecha);
                     fechaRegistro = d.toLocaleDateString('es-AR') + ' - ' + d.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
                 }
+                let expiraTexto = "Sin límite / Prueba no iniciada";
+                let colorExpira = "var(--success)";
+                if (data.licencia_expira) {
+                    const exp = new Date(data.licencia_expira);
+                    const diffDias = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+                    if (diffDias > 0) { expiraTexto = `Vence en ${diffDias} días`; colorExpira = "var(--warning)"; } 
+                    else { expiraTexto = "⚠️ Licencia Vencida"; colorExpira = "var(--danger)"; }
+                }
+
                 const card = document.createElement('div');
                 card.className = 'user-list-card';
                 card.innerHTML = `
@@ -1240,8 +1483,12 @@
                             <span style="color: var(--text-dim); display: block;">${data.email}</span>
                             <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
                             <span style="color: var(--success); font-size: 0.75rem; font-weight: bold; margin-top: 4px; display: inline-block;">🔍 Resultado de búsqueda</span>
+                            <span style="color: ${colorExpira}; font-size: 0.75rem; display: block; font-weight: bold; margin-top: 4px;">⏳ ${expiraTexto}</span>
                         </div>
-                        <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 40px; border-radius: 12px; cursor: pointer;">🗑️</button>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <button onclick="abrirModalModificarDias('${docSnap.id}', '${data.licencia_expira || ''}')" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
+                            <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Eliminar usuario">🗑️</button>
+                        </div>
                     </div>`;
                 lista.appendChild(card);
             });
@@ -1438,8 +1685,10 @@ window.formatearEnlaces = function(texto) {
         });
     }
 
-    async function cargarDatosNube() {
+async function cargarDatosNube() {
         if (!window.currentUser) return;
+        
+        // 1. Cargamos el aviso global (Aislado por si falla)
         try {
             onSnapshot(doc(db, "global", "aviso"), (docSnap) => {
                 if (docSnap.exists() && docSnap.data().texto.trim() !== "") {
@@ -1452,35 +1701,304 @@ window.formatearEnlaces = function(texto) {
                 } else { 
                     document.getElementById('aviso-global').style.display = 'none'; 
                 }
-            });
+            }, (err) => { console.warn("Avisos inaccesibles:", err); });
+        } catch(e) {}
 
+        // 2. Cargamos los datos personales del usuario
+        try {
             const docSnap = await getDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"));
             if (docSnap.exists()) {
-                const p = docSnap.data().precios || {}; 
-                const u = docSnap.data().perfil || {};
+                const configData = docSnap.data();
+                const p = configData.precios || {}; 
+                const u = configData.perfil || {};
                 window.preciosGuardados = p; 
                 document.getElementById('vigiNombre').value = u.nombre || ""; 
                 document.getElementById('vigiApellido').value = u.apellido || "";
+
+                const expira = configData.licencia_expira;
+                const esAdmin = window.currentUser.email.toLowerCase() === 'mafero171189@gmail.com';
+                const perfilTxt = document.getElementById('perfil-estado-licencia');
+
+                if (esAdmin) {
+                    if(perfilTxt) { perfilTxt.innerText = "⭐ Cuenta Administrador"; perfilTxt.style.color = "var(--admin)"; }
+                    document.getElementById('banner-licencia').style.display = 'none';
+                } else if (expira) {
+                    const expDate = new Date(expira);
+                    const hoy = new Date();
+                    const diffDias = Math.ceil((expDate - hoy) / (1000 * 60 * 60 * 24));
+                    
+                    if(perfilTxt) {
+                        if (diffDias > 0) {
+                            perfilTxt.innerText = `Activa (${diffDias} días restantes)`;
+                            perfilTxt.style.color = "var(--success)";
+                        } else {
+                            perfilTxt.innerText = `Vencida`;
+                            perfilTxt.style.color = "var(--danger)";
+                        }
+                    }
+
+                    if (diffDias <= 0) {
+                        mostrarPagoLicencia(true); 
+                    } else {
+                        const bannerCerrado = localStorage.getItem('banner_licencia_cerrado');
+                        if (!bannerCerrado || diffDias <= 7) {
+                            const banner = document.getElementById('banner-licencia');
+                            banner.style.display = 'block';
+                            document.getElementById('dias-restantes-banner').innerText = diffDias;
+                            
+                            if (diffDias <= 7) {
+                                banner.style.background = "linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.2))";
+                                banner.style.borderColor = "var(--danger)";
+                                banner.querySelector('h4').style.color = "var(--danger)";
+                                banner.querySelector('h4').innerText = "⚠️ ¡LICENCIA POR VENCER!";
+                            } else {
+                                banner.style.background = "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1))";
+                                banner.style.borderColor = "var(--warning)";
+                                banner.querySelector('h4').style.color = "var(--warning)";
+                                banner.querySelector('h4').innerText = "⚠️ Licencia de Prueba";
+                            }
+                        }
+                    }
+                } else {
+                    if(perfilTxt) { 
+                        perfilTxt.innerText = "♾️ Ilimitada"; 
+                        perfilTxt.style.color = "var(--success)"; 
+                    }
+                    document.getElementById('banner-licencia').style.display = 'none';
+                }
             } else { window.preciosGuardados = {}; }
+        } catch (e) {
+            console.error("Error cargando perfil:", e);
+            window.preciosGuardados = {};
+        }
             
-            // NUEVO: Cargar tabla de UPSRA global (Gasta solo 1 lectura)
+        // 3. Cargamos tabla UPSRA (Aislado por si Firebase lo bloquea por Reglas)
+        try {
             const upsraSnap = await getDoc(doc(db, "global", "upsra"));
             if (upsraSnap.exists()) {
                 window.valoresUPSRA = upsraSnap.data();
             } else {
                 window.valoresUPSRA = {};
             }
-            // Suscribimos solo a los turnos del mes seleccionado
-            suscribirTurnosMes(window.fechaFiltro);
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.warn("No se pudo leer UPSRA global:", e);
+            window.valoresUPSRA = {};
+        }
+
+        // 4. SUSCRIPCIÓN DE TURNOS (Esto ahora se ejecuta siempre, garantizando que la UI cargue)
+        suscribirTurnosMes(window.fechaFiltro);
+    }
+
+    window.mostrarPagoLicencia = function(bloquear = false) {
+        document.getElementById('modal-pago-licencia').style.display = 'flex';
+        if (bloquear) {
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('btn-cerrar-pago').style.display = 'none';
+            document.getElementById('btn-logout-pago').style.display = 'block';
+            document.getElementById('titulo-pago').innerText = "🔒 Acceso Bloqueado";
+            document.getElementById('titulo-pago').style.color = "var(--danger)";
+            document.getElementById('texto-pago').innerText = "Tu periodo de prueba ha finalizado. Activá tu licencia para no perder tus datos.";
+        } else {
+            document.getElementById('btn-cerrar-pago').style.display = 'block';
+            document.getElementById('btn-logout-pago').style.display = 'none';
+            document.getElementById('titulo-pago').innerText = "💳 Activar Licencia";
+            document.getElementById('titulo-pago').style.color = "var(--warning)";
+            document.getElementById('texto-pago').innerText = "Asegurá tu acceso continuo abonando la licencia mensual.";
+        }
+    }
+
+    window.cerrarBannerLicencia = function(event) {
+        event.stopPropagation(); // Evita que se abra la pasarela de pago al tocar la X
+        document.getElementById('banner-licencia').style.display = 'none';
+        localStorage.setItem('banner_licencia_cerrado', 'true');
+    }
+
+    window.abrirModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'flex'; }
+    window.cerrarModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'none'; }
+
+    window.cerrarBannerLicencia = function(event) {
+        event.stopPropagation(); // Evita que se abra la pasarela de pago al tocar la X
+        document.getElementById('banner-licencia').style.display = 'none';
+        localStorage.setItem('banner_licencia_cerrado', 'true');
+    }
+
+    window.abrirModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'flex'; }
+    window.cerrarModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'none'; }
+
+    window.cerrarPagoLicencia = function() { document.getElementById('modal-pago-licencia').style.display = 'none'; }
+    window.abrirLinkPago = function() { window.open(window.globalLicencias.link_pago, '_blank'); }
+    
+// Nueva función para copiar el CBU/Alias ultra rápida
+    window.copiarCBU = function(btnElement) {
+        const cbu = document.getElementById('ui-cbu-lic').innerText;
+        if (!cbu || cbu === "..." || cbu === "No configurado") return;
+
+        // 1. Feedback visual INSTANTÁNEO en el botón
+        const iconoOriginal = btnElement.innerText;
+        btnElement.innerText = "✅";
+        btnElement.style.background = "var(--success)";
+        setTimeout(() => {
+            btnElement.innerText = iconoOriginal;
+            btnElement.style.background = "var(--accent)";
+        }, 2000);
+
+        // 2. Copiado síncrono (funciona al instante en todos los celulares)
+        const textArea = document.createElement("textarea");
+        textArea.value = cbu;
+        textArea.style.position = "fixed";
+        textArea.style.top = "-9999px"; // Lo ocultamos de la pantalla
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            window.showToast("✅ Alias copiado. ¡Abrí Mercado Pago!", "success");
+        } catch (err) {
+            window.showToast("⚠️ Error al copiar", "danger");
+        }
+        
+        document.body.removeChild(textArea);
+    }
+
+    window.enviarComprobanteWA = function() {
+        const email = window.currentUser.email;
+        const msj = `Hola! Quiero activar mi licencia de Control Vigía.\nMi usuario registrado es: *${email}*\n\nAdjunto mi comprobante de pago:`;
+        window.open(`https://wa.me/5491135654094?text=${encodeURIComponent(msj)}`, '_blank');
+    }
+
+// Función para que el Admin vea el cambio al instante incluso antes de guardar
+    window.previsualizarMetodoPago = function() {
+        const esMp = document.getElementById('admin-metodo-mp').checked;
+        const btnMp = document.getElementById('ui-btn-mp');
+        const boxCbu = document.getElementById('ui-cbu-bloque');
+        
+        if (btnMp && boxCbu) {
+            if (esMp) {
+                btnMp.style.display = 'block';
+                boxCbu.style.display = 'none';
+            } else {
+                btnMp.style.display = 'none';
+                boxCbu.style.display = 'block';
+            }
+        }
+    }
+
+window.guardarLicenciasGlobal = async function() {
+        const btn = document.getElementById('btn-guardar-licencias');
+        const txtOriginal = btn.innerText;
+        btn.innerText = "⏳ Guardando..."; 
+        
+        const dias = parseInt(document.getElementById('admin-lic-dias').value) || 30;
+        const precio = document.getElementById('admin-lic-precio').value;
+        const link = document.getElementById('admin-lic-link').value;
+        const cbu = document.getElementById('admin-lic-cbu').value;
+        
+        // Leemos cuál tilde elegiste
+        const metodoElegido = document.getElementById('admin-metodo-mp').checked ? 'mp' : 'cbu';
+
+        try {
+            await setDoc(doc(db, "global", "licencias"), { 
+                dias_prueba: dias, 
+                precio: precio, 
+                link_pago: link, 
+                cbu: cbu,
+                metodo_pago: metodoElegido 
+            }, { merge: true });
+            
+            window.showToast("✅ Sistema de cobros actualizado", "success");
+        } catch(e) { 
+            window.showToast("⚠️ Error al guardar", "danger"); 
+        } finally {
+            btn.innerText = txtOriginal;
+        }
+    }
+
+    window.usuarioModificarUID = null;
+    window.usuarioModificarExpira = null;
+
+    window.abrirModalModificarDias = function(uid, expiraActual) {
+        window.usuarioModificarUID = uid;
+        window.usuarioModificarExpira = expiraActual;
+        document.getElementById('input-dias-mod').value = "30"; // Arranca en 30 por defecto
+        document.getElementById('modal-modificar-dias').style.display = 'flex';
+    }
+
+    window.cerrarModalModificarDias = function() {
+        document.getElementById('modal-modificar-dias').style.display = 'none';
+        window.usuarioModificarUID = null;
+        window.usuarioModificarExpira = null;
+    }
+
+    window.ajustarDiasInput = function(cantidad) {
+        const input = document.getElementById('input-dias-mod');
+        let valorActual = parseInt(input.value) || 0;
+        input.value = valorActual + cantidad;
+    }
+
+    window.confirmarModificarDias = function() {
+        if (!window.usuarioModificarUID) return;
+        
+        const nDias = parseInt(document.getElementById('input-dias-mod').value);
+        if (isNaN(nDias)) {
+            window.showToast("⚠️ Ingresá un número válido", "danger");
+            return;
+        }
+
+        const hoy = new Date();
+        let expDate = window.usuarioModificarExpira ? new Date(window.usuarioModificarExpira) : hoy;
+        if (expDate < hoy) expDate = hoy;
+
+        let nuevaFecha = new Date(expDate);
+        nuevaFecha.setDate(nuevaFecha.getDate() + nDias);
+        
+        actualizarDiasUsuario(window.usuarioModificarUID, nuevaFecha.toISOString());
+        cerrarModalModificarDias();
+    }
+
+    window.hacerLicenciaIlimitada = function() {
+        if (!window.usuarioModificarUID) return;
+        actualizarDiasUsuario(window.usuarioModificarUID, "");
+        cerrarModalModificarDias();
+    }
+
+window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
+        try {
+            await setDoc(doc(db, "usuarios", uid, "config", "datos"), { licencia_expira: nuevaFechaIso }, { merge: true });
+            await setDoc(doc(db, "directorio_usuarios", uid), { licencia_expira: nuevaFechaIso }, { merge: true });
+            window.showToast("✅ Días actualizados correctamente", "success");
+            
+            // Recargar la lista según dónde estemos (búsqueda específica o lista general)
+            if (document.getElementById('admin-buscar-usuario').value.trim() !== "") {
+                window.buscarUsuarioPorEmail();
+            } else {
+                window.ultimoUsuarioDoc = null; // Reiniciamos la paginación
+                buscarUsuariosEnNube(); // Sin el "window." para que no tire error
+            }
+        } catch (e) { 
+            console.error(e);
+            window.showToast("⚠️ Error al modificar la licencia", "danger"); 
+        }
     }
 
     window.guardarConfig = async function() {
         if (!window.currentUser) return;
         const getVal = (id) => { const el = document.getElementById(id); if (!el || el.value.trim() === "") return ""; return limpiar(el.value); };
+        
         const p = { 
-            basico: getVal('valBasico'), antiguedad: document.getElementById('valAntiguedad') ? document.getElementById('valAntiguedad').value : "", hora: getVal('valHora'), noct: getVal('valNoct'), viatico: getVal('valViatico'), presentismo: getVal('valPresentismo'), noRem: getVal('valNoRem'), plusVacManual: getVal('valPlusVacManual'), descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "" 
+            categoria: document.getElementById('valCategoria') ? document.getElementById('valCategoria').value : "general",
+            basico: getVal('valBasico'), 
+            antiguedad: document.getElementById('valAntiguedad') ? document.getElementById('valAntiguedad').value : "", 
+            hora: getVal('valHora'), 
+            noct: getVal('valNoct'), 
+            viatico: getVal('valViatico'), 
+            presentismo: getVal('valPresentismo'), 
+            noRem: getVal('valNoRem'), 
+            plusVacManual: getVal('valPlusVacManual'), 
+            descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", 
+            horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "" 
         };
+        
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
         try { 
             await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }, {merge: true}); 
@@ -1750,7 +2268,10 @@ window.formatearEnlaces = function(texto) {
         const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
         let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
         let antiguedadTexto = window.totalStats.antiguedad > 0 ? `🏅 *Antigüedad:* ${window.totalStats.antiguedad} Años\n` : "";
-        const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n--------------------------\n📈 *Sueldo Bruto:* $${window.totalStats.bruto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n💰 *NETO EN Mano:* $${window.totalStats.neto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n_Generado por Control Vigía_`;
+        
+        // Mensaje limpio: Solo se envían los datos de personal y el desglose de horas.
+        const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n\n_Generado por Control Vigía_`;
+        
         window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
     }
 
@@ -1775,12 +2296,14 @@ window.formatearEnlaces = function(texto) {
     const blobManifest = new Blob([stringManifest], {type: 'application/json'});
     const manifestURL = URL.createObjectURL(blobManifest);
     document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
-    // 2. Crear y registrar el Service Worker dinámicamente (Obligatorio para Chrome)
+// 2. Crear y registrar el Service Worker (Con filtro para evitar bloqueo en la PC)
     const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('fetch', (e) => {});";
     const blobSW = new Blob([swCode], {type: 'application/javascript'});
     const swURL = URL.createObjectURL(blobSW);
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
         navigator.serviceWorker.register(swURL).then(() => console.log('SW inyectado')).catch(console.error);
+    } else if (window.location.protocol === 'file:') {
+        console.warn("Ejecutando en modo local (doble clic). Se omite el Service Worker para evitar pantalla en blanco.");
     }
     // 3. Crear el modal flotante centrado
     const bannerInstalar = document.createElement('div');
@@ -1849,6 +2372,11 @@ window.formatearEnlaces = function(texto) {
             || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
     }
 
+    function esIos() {
+        return /iPhone|iPad|iPod/i.test(navigator.userAgent) 
+            || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+    }
+
     function yaEstaInstalada() {
         return window.matchMedia('(display-mode: standalone)').matches
             || window.navigator.standalone === true;
@@ -1862,14 +2390,46 @@ window.formatearEnlaces = function(texto) {
     }
 
     let eventoInstalacion = null;
+
+    // --- LÓGICA PARA ANDROID ---
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         eventoInstalacion = e;
-        if (debeMostrarModal()) {
+        if (debeMostrarModal() && !esIos()) {
             bannerInstalar.style.display = 'flex';
         }
     });
 
+    // --- LÓGICA PARA IPHONE (iOS) ---
+    // Como Apple bloquea el cartel automático, lo forzamos con un mensaje personalizado
+    if (esIos() && debeMostrarModal()) {
+        setTimeout(() => {
+            const modalInner = document.getElementById('modal-instalar-inner');
+            modalInner.innerHTML = `
+                <button id="btn-instalar-no" title="Cerrar">✕</button>
+                <div style="font-size:3rem;margin-bottom:10px;">🍏</div>
+                <h3 style="margin:0 0 8px 0;color:#38bdf8;font-size:1.2rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;">Instalar en iPhone</h3>
+                <p style="margin:0 0 20px 0;font-size:0.92rem;color:#cbd5e1;line-height:1.5;">Para instalar la app, tocá el botón <b>Compartir</b> <span style="font-size:1.3rem;">⍐</span> abajo en el menú de Safari y elegí <b>"Agregar a inicio"</b> <span style="font-size:1.3rem;">⊞</span>.</p>
+                <button id="btn-instalar-entendido" style="display:block;width:100%;background:rgba(56, 189, 248, 0.1);color:#38bdf8;border:1px solid #38bdf8;padding:14px;border-radius:14px;font-weight:900;cursor:pointer;font-size:1rem;">¡Entendido!</button>
+            `;
+            
+            document.getElementById('btn-instalar-no').style.cssText = 'position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.08);color:#94a3b8;border:none;font-size:1rem;cursor:pointer;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;';
+            
+            document.getElementById('btn-instalar-no').addEventListener('click', () => {
+                bannerInstalar.style.display = 'none';
+                localStorage.setItem(PWA_KEY, 'descartada');
+            });
+            
+            document.getElementById('btn-instalar-entendido').addEventListener('click', () => {
+                bannerInstalar.style.display = 'none';
+                localStorage.setItem(PWA_KEY, 'descartada'); 
+            });
+
+            bannerInstalar.style.display = 'flex';
+        }, 2000); // 2 segundos de demora para que cargue la app primero
+    }
+
+    // Eventos para el botón original de Android
     btnSi.addEventListener('click', async () => {
         if (!eventoInstalacion) return;
         eventoInstalacion.prompt();
@@ -1886,7 +2446,6 @@ window.formatearEnlaces = function(texto) {
         localStorage.setItem(PWA_KEY, 'descartada');
     });
 
-    // Si el usuario instala desde el banner del navegador (sin tocar el botón)
     window.addEventListener('appinstalled', () => {
         bannerInstalar.style.display = 'none';
         localStorage.setItem(PWA_KEY, 'instalada');
