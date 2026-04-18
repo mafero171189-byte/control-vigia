@@ -772,6 +772,16 @@
         <div class="stat-card" style="border-bottom: 3px solid var(--warning)"><span>Feriados</span><b id="totF">0.0</b></div>
     </div>
 
+    <div id="progress-container" style="background: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.75rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase;">Progreso del Mes</span>
+            <b id="progress-text" style="font-size: 0.85rem; color: var(--accent);">0 / 200 hs</b>
+        </div>
+        <div style="width: 100%; height: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+            <div id="progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), #818cf8); transition: width 0.5s ease-in-out;"></div>
+        </div>
+        <p id="progress-status" style="font-size: 0.65rem; color: var(--text-dim); margin: 8px 0 0 0; text-align: center; font-style: italic;">Cargá turnos para ver tu avance</p>
+    </div>
     <button class="btn-whatsapp" onclick="enviarWhatsapp()"><span>📲 REPORTE DE <span id="mesBtnLabel">...</span></span></button>
 
     <div class="glass-form" id="main-form">
@@ -2421,6 +2431,40 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
         window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
+
+        // --- LÓGICA DE LA BARRA DE PROGRESO (CON EFECTO GLOW) ---
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const progressStatus = document.getElementById('progress-status');
+        if (progressBar && progressText) {
+            // Calculamos el porcentaje (tope 100%)
+            const porcentaje = Math.min((st / valMes.horasBase) * 100, 100);
+            progressBar.style.width = porcentaje + "%";
+            progressText.innerText = `${st.toFixed(1)} / ${valMes.horasBase} hs`;
+            // Reseteamos estilos por defecto (quitamos glow si existía)
+            progressBar.style.boxShadow = "none";
+            progressBar.style.animation = "none";
+            // Cambiamos el mensaje y estilo según cuánto falte
+            if (st === 0) {
+                progressStatus.innerText = "Todavía no registraste horas este mes.";
+            } else if (st < valMes.horasBase) {
+                // MODO NORMAL (Azul, sin brillo)
+                const faltan = (valMes.horasBase - st).toFixed(1);
+                progressStatus.innerText = `Te faltan ${faltan} hs para cumplir tu base mensual.`;
+                progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
+            } else {
+                // MODO OBJETIVO CUMPLIDO (Verde, con brillo/glow)
+                const extra = (st - valMes.horasBase).toFixed(1);
+                progressStatus.innerText = `¡Objetivo cumplido! Tenés ${extra} hs extras acumuladas. 💰`;
+                progressBar.style.background = "linear-gradient(90deg, var(--success), #4ade80)";
+                // >>> NUEVO EFECTO DE BRILLO/GLOW INTENSO <<<
+                // Aplicamos sombras múltiples verdes para simular un neón/glow
+                progressBar.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.8), 0 0 20px rgba(74, 222, 128, 0.6), 0 0 30px rgba(74, 222, 128, 0.4)";
+                
+                // Opcional: Agregamos una animación de pulso suave (necesita definirse en CSS, si no la tenés, ignora esta línea)
+                // progressBar.style.animation = "glow-pulse 2s infinite ease-in-out";
+            }
+        }
     }
 
     window.toggleHistorial = function() {
