@@ -905,8 +905,8 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    // 🔴 IMPORTANTE: Se agregó 'where' a la importación
-    import { initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    // 🔴 IMPORTANTE: Se agregó 'getFirestore' a la importación
+    import { getFirestore, initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -920,10 +920,15 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    // Esto activa el caché en el disco del celular/PC
-    const db = initializeFirestore(app, {
-      localCache: persistentLocalCache()
-    });
+    
+    // Fallback: Si el modo incógnito bloquea el caché persistente, usamos la DB estándar
+    let db;
+    try {
+        db = initializeFirestore(app, { localCache: persistentLocalCache() });
+    } catch (e) {
+        db = getFirestore(app);
+    }
+    
     const auth = getAuth(app);
 
     window.currentUser = null;
@@ -941,20 +946,16 @@
     window.globalLicencias = { dias_prueba: 30, precio: "Consultar", link_pago: "https://mpago.li/1Mj6TU2", cbu: "No configurado" };
 
 // Escuchar configuración de pagos en tiempo real
-    onSnapshot(doc(db, "global", "licencias"), (docSnap) => {
-        if (docSnap.exists()) {
-            window.globalLicencias = { ...window.globalLicencias, ...docSnap.data() };
-        }
-        
+    const aplicarTextosLicencia = () => {
         let precioMostrado = String(window.globalLicencias.precio || "");
         if (precioMostrado && !precioMostrado.includes("$") && precioMostrado.toLowerCase() !== "consultar") {
             precioMostrado = "$ " + precioMostrado;
         }
         
-        // Textos del usuario
+        // Textos del usuario (Se pone "Consultar" en vez de "..." si falla la base de datos)
         if(document.getElementById('lp-dias-num')) document.getElementById('lp-dias-num').innerText = window.globalLicencias.dias_prueba || 30;
-        if(document.getElementById('lp-precio-text')) document.getElementById('lp-precio-text').innerText = precioMostrado || "...";
-        if(document.getElementById('ui-precio-lic')) document.getElementById('ui-precio-lic').innerText = precioMostrado || "...";
+        if(document.getElementById('lp-precio-text')) document.getElementById('lp-precio-text').innerText = precioMostrado || "Consultar";
+        if(document.getElementById('ui-precio-lic')) document.getElementById('ui-precio-lic').innerText = precioMostrado || "Consultar";
         if(document.getElementById('ui-cbu-lic')) document.getElementById('ui-cbu-lic').innerText = window.globalLicencias.cbu || "No configurado";
         
         // Inputs del panel admin
@@ -963,17 +964,13 @@
         if(document.getElementById('admin-lic-link')) document.getElementById('admin-lic-link').value = window.globalLicencias.link_pago || "";
         if(document.getElementById('admin-lic-cbu')) document.getElementById('admin-lic-cbu').value = window.globalLicencias.cbu || "";
 
-        // 🔴 LÓGICA MANUAL DE VISIBILIDAD (OBEDECE AL TILDE)
+        // LÓGICA MANUAL DE VISIBILIDAD (OBEDECE AL TILDE)
         const metodoActivo = window.globalLicencias.metodo_pago || 'mp'; 
-        
-        // Mantener el tilde correcto en el panel de administrador
         if(document.getElementById('admin-metodo-mp')) document.getElementById('admin-metodo-mp').checked = (metodoActivo === 'mp');
         if(document.getElementById('admin-metodo-cbu')) document.getElementById('admin-metodo-cbu').checked = (metodoActivo === 'cbu');
 
-        // Mostrar/Ocultar los recuadros al usuario final (¡Instantáneo!)
         const btnMp = document.getElementById('ui-btn-mp');
         const boxCbu = document.getElementById('ui-cbu-bloque');
-
         if (btnMp && boxCbu) {
             if (metodoActivo === 'mp') {
                 btnMp.style.display = 'block';
@@ -983,7 +980,21 @@
                 boxCbu.style.display = 'block';
             }
         }
-    });
+    };
+
+    onSnapshot(doc(db, "global", "licencias"), 
+        (docSnap) => {
+            if (docSnap.exists()) {
+                window.globalLicencias = { ...window.globalLicencias, ...docSnap.data() };
+            }
+            aplicarTextosLicencia();
+        },
+        (error) => {
+            // Manejo de error si Firebase bloquea la lectura por estar deslogueado en incógnito
+            console.warn("Lectura bloqueada o sin sesión. Cargando valores por defecto seguros.");
+            aplicarTextosLicencia(); 
+        }
+    );
 
     // --- LÓGICA DE INTERFAZ PARA VACACIONES Y FERIADOS ---
     document.addEventListener('DOMContentLoaded', () => {
