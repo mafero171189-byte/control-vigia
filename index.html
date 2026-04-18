@@ -422,6 +422,11 @@
         <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-main); text-align: left; line-height: 1.4;">
             <b>💡 ¡Personalizá tu sueldo!</b> Elegí tu categoría y poné tus años de antigüedad. El sistema cargará los valores de UPSRA automáticamente.
         </div>
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-main); text-align: left; line-height: 1.4;">
+    <b style="color: var(--warning);">⚙️ Ajustes Universales:</b><br>
+    • <b>Viáticos:</b> Elegí <b>"Mes Completo"</b> si tu empresa te paga el viático entero de UPSRA todos los meses. Elegí <b>"Proporcional"</b> si te pagan por día trabajado.<br>
+    • <b>Feriados:</b> Seleccioná <b>"Doble (100%)"</b> según la ley, o <b>"50%"</b> si tu empresa los paga como hora extra común.
+</div>
         
         <div style="margin-bottom: 10px; text-align: left;">
             <label style="color: var(--accent);">Categoría de Vigilador</label>
@@ -450,6 +455,23 @@
         <div class="form-row" style="text-align: left; margin-bottom: 15px;">
             <div><label>Horas Base Mes</label><input type="number" id="valHorasBase"></div>
             <div><label>Plus Vacacional ($)</label><input type="text" inputmode="decimal" id="valPlusVacManual" oninput="formatearMiles(this)"></div>
+        </div>
+
+        <div class="form-row" style="text-align: left; margin-bottom: 15px;">
+            <div>
+                <label>Cálculo de Viático</label>
+                <select id="valTipoViatico" class="auth-input" style="padding: 10px;">
+                    <option value="fijo" selected>Mes Completo (UPSRA)</option>
+                    <option value="proporcional">Por día trabajado</option>
+                </select>
+            </div>
+            <div>
+                <label>Pago Feriado</label>
+                <select id="valTipoFeriado" class="auth-input" style="padding: 10px;">
+                    <option value="100" selected>Doble 100% (Ley LCT)</option>
+                    <option value="50">Hora y media (50%)</option>
+                </select>
+            </div>
         </div>
 
         <div class="modal-btns">
@@ -540,6 +562,38 @@
         <button class="btn-config-main" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning);" onclick="cerrarModalPerfil(); mostrarPagoLicencia(false)">💳 Pagar / Renovar Licencia</button>
         <button class="btn-config-main" onclick="cerrarModalPerfil(); abrirModalCambiarClave()">🔑 Cambiar Contraseña</button>
         <button class="btn-logout" style="width: 100%; padding: 14px; font-size: 1rem; margin-top: 5px;" onclick="cerrarModalPerfil()">Cerrar</button>
+    </div>
+</div>
+
+<div id="modal-ayuda" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9500; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 400px; text-align: left; max-height: 85vh; overflow-y: auto;">
+        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">📖 Guía de Uso</h3>
+        
+        <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
+            <p><b style="color: var(--accent);">1. Registro de Turnos:</b> Ingresá la fecha y horarios. El sistema calcula las horas nocturnas (de 21 a 06 hs) automáticamente.</p>
+
+            <div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 10px; margin: 10px 0;">
+                <b style="color: var(--warning); font-size: 0.75rem; text-transform: uppercase;">Importante para la exactitud:</b><br>
+                • <b>Feriados:</b> Si el día es feriado, marcalo como tal para que se aplique el pago doble o el recargo que configuraste.<br>
+                • <b>Licencias:</b> Si te tomaste licencia o carpeta médica, marcalo como licencia. El sistema lo contabiliza para el básico pero ajusta los viáticos.<br>
+                • <b>Vacaciones:</b> Usá este tilde para que el sistema sume el Plus Vacacional por cada día agendado.<br>
+                <i style="font-size: 0.8rem; display: block; margin-top: 5px;">Usar estos tildes correctamente hace que el cálculo sea exacto o casi exacto al de tu recibo.</i>
+            </div>
+            
+            <p><b style="color: var(--accent);">2. Configuración de Valores:</b> Entrá a "Configurar valores de cobro" para cargar solo tu antigüedad. El sistema ya está cargado automáticamente con la escala salarial de UPSRA. Si cobrás diferente, podés modificar los valores.</p>
+            
+            <div style="background: rgba(56, 189, 248, 0.05); border-left: 3px solid var(--accent); padding: 10px; margin: 10px 0;">
+                <b style="color: var(--accent); font-size: 0.75rem; text-transform: uppercase;">Ajustes Universales:</b><br>
+                • <b>Viáticos:</b> Elegí <b>"Mes Completo"</b> si tu empresa te paga el viático entero de UPSRA todos los meses. Elegí <b>"Proporcional"</b> si tu empresa te lo divide y te paga por día trabajado.<br>
+                • <b>Feriados:</b> Seleccioná "Doble (100%)" según marca la ley, o "50%" si tu empresa los paga como extra común.
+            </div>
+
+            <p><b style="color: var(--accent);">3. Reporte de Horas:</b> Usá el botón verde "Reporte" para generar un resumen y enviarlo por WhatsApp a tu delegado o guardarlo como control personal.</p>
+            
+            <p style="font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 15px; padding-top: 10px;">* Los cálculos son estimativos y sirven como herramienta de control frente al recibo oficial.</p>
+        </div>
+        
+        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalAyuda()">ENTENDIDO</button>
     </div>
 </div>
 
@@ -664,6 +718,7 @@
             <button id="btn-admin-access" onclick="abrirAdmin()">⭐ Admin</button>
             <button class="mode-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
             <button class="btn-logout" style="border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1);" onclick="abrirModalPerfil()" title="Mi Perfil">👤</button>
+            <button class="btn-logout" style="border-color: var(--warning); color: var(--warning); background: rgba(245, 158, 11, 0.1);" onclick="abrirModalAyuda()" title="Ayuda">❓</button>
 
             <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
         </div>
@@ -693,7 +748,8 @@
     <div class="salary-card">
         <div class="bruto-text">Bruto Estimado: <b id="totalBruto">$ 0,00</b></div>
         <span class="neto-title">NETO EN MANO (Estimado)</span>
-        <h2 id="totalNeto">$ 0,00</h2>
+        <h2 id="totalNeto" style="margin-bottom: 5px;">$ 0,00</h2>
+        <p style="font-size: 0.65rem; color: var(--text-dim); margin: 0; line-height: 1.2;">*Puede variar levemente por redondeos contables o acuerdos específicos de tu empresa.</p>
     </div>
 
     <div class="stats-panel">
@@ -1030,7 +1086,9 @@
             plusVac: parseFloat(p.plusVacManual),
             descuentos: parseFloat(p.descuentos),
             feriadoPct: parseFloat(p.feriadoPct) || 100,
-            horasBase: parseFloat(p.horasBase) || 200
+            horasBase: parseFloat(p.horasBase) || 200,
+            tipoViatico: p.tipoViatico || "fijo",
+            tipoFeriado: p.tipoFeriado || "100"
         };
         if (isNaN(v.descuentos)) v.descuentos = 17;
         
@@ -1176,6 +1234,13 @@
         if (inputVac) {
             inputVac.placeholder = (window.fechaFiltro.getFullYear() === 2026) ? fmtAuto(auto.plusVac) : "Monto Manual";
             inputVac.value = formatearAUI(p.plusVacManual);
+        }
+        
+        if(document.getElementById('valTipoViatico')) {
+            document.getElementById('valTipoViatico').value = p.tipoViatico || "fijo";
+        }
+        if(document.getElementById('valTipoFeriado')) {
+            document.getElementById('valTipoFeriado').value = p.tipoFeriado || "100";
         }
         
         if (document.getElementById('modal-config')) document.getElementById('modal-config').style.display = 'flex';
@@ -1825,6 +1890,9 @@ async function cargarDatosNube() {
     window.abrirModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'flex'; }
     window.cerrarModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'none'; }
 
+    window.abrirModalAyuda = function() { document.getElementById('modal-ayuda').style.display = 'flex'; }
+    window.cerrarModalAyuda = function() { document.getElementById('modal-ayuda').style.display = 'none'; }
+
     window.cerrarPagoLicencia = function() { document.getElementById('modal-pago-licencia').style.display = 'none'; }
     window.abrirLinkPago = function() { window.open(window.globalLicencias.link_pago, '_blank'); }
     
@@ -1996,7 +2064,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             noRem: getVal('valNoRem'), 
             plusVacManual: getVal('valPlusVacManual'), 
             descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", 
-            horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "" 
+            horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "",
+            tipoViatico: document.getElementById('valTipoViatico') ? document.getElementById('valTipoViatico').value : "fijo",
+            tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "100"
         };
         
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
@@ -2227,7 +2297,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
         let horaExtraVal = valMes.hora > 0 ? valMes.hora : (valorHoraNormal * 1.5);
 
-        let pagoFeriados = sf * horaExtraVal;
+        // ========== AJUSTE A: PAGO DE FERIADOS ==========
+        let recargoFeriado = valMes.tipoFeriado === "50" ? 1.5 : 1; // Si es 100%, paga una hora extra "limpia" porque la otra ya está en el básico.
+        let horaFeriadoVal = valMes.hora > 0 ? valMes.hora : (valorHoraNormal * recargoFeriado);
+        let pagoFeriados = sf * horaFeriadoVal;
+        
         let pagoHorasTotales = 0, hsExtra = 0;
         // Calculamos horas extras excluyendo las que ya cobraron recargo por feriado
         let horasNormalesTrabajadas = st - sf; 
@@ -2236,9 +2310,13 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             pagoHorasTotales = hsExtra * horaExtraVal; 
         }
 
-        // El cálculo ahora usa el tamaño del Set
+        // ========== AJUSTE B: CÁLCULO DE VIÁTICOS ==========
         const diasTrabajados = diasUnicosTrabajados.size;
-        const viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
+        let viaticoFinal = valMes.viatico; // Por defecto arranca tomando el mes completo (como hace tu empresa)
+        // Si el usuario eligió el modo proporcional de la otra empresa:
+        if (valMes.tipoViatico === "proporcional") {
+            viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
+        }
 
         const sumaRemunerativa = valMes.basico + valMes.presentismo + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal);
         const descuentosLey = sumaRemunerativa * (valMes.descuentos / 100);
