@@ -534,7 +534,7 @@
         <div style="background: rgba(56,189,248,0.1); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
             <b style="color: var(--accent); display:block; margin-bottom: 10px; font-size: 1.05rem;">Costo de renovación: <span id="ui-precio-lic">...</span></b>
             
-            <div id="ui-cbu-bloque">
+            <div id="ui-cbu-bloque" style="display: none;">
                 <span style="font-size: 0.85rem; color: var(--text-main); display: block; margin-bottom: 5px;">Transferencia al CBU / Alias:</span>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <b id="ui-cbu-lic" style="font-size: 1rem; user-select: all; background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent); flex: 1; word-break: break-all; text-align: center;">...</b>
@@ -942,7 +942,9 @@
 
 // Escuchar configuración de pagos en tiempo real
     onSnapshot(doc(db, "global", "licencias"), (docSnap) => {
-        if (docSnap.exists()) window.globalLicencias = docSnap.data();
+        if (docSnap.exists()) {
+            window.globalLicencias = { ...window.globalLicencias, ...docSnap.data() };
+        }
         
         let precioMostrado = String(window.globalLicencias.precio || "");
         if (precioMostrado && !precioMostrado.includes("$") && precioMostrado.toLowerCase() !== "consultar") {
@@ -950,19 +952,19 @@
         }
         
         // Textos del usuario
-        if(document.getElementById('lp-dias-num')) document.getElementById('lp-dias-num').innerText = window.globalLicencias.dias_prueba;
-        if(document.getElementById('lp-precio-text')) document.getElementById('lp-precio-text').innerText = precioMostrado;
-        if(document.getElementById('ui-precio-lic')) document.getElementById('ui-precio-lic').innerText = precioMostrado;
-        if(document.getElementById('ui-cbu-lic')) document.getElementById('ui-cbu-lic').innerText = window.globalLicencias.cbu;
+        if(document.getElementById('lp-dias-num')) document.getElementById('lp-dias-num').innerText = window.globalLicencias.dias_prueba || 30;
+        if(document.getElementById('lp-precio-text')) document.getElementById('lp-precio-text').innerText = precioMostrado || "...";
+        if(document.getElementById('ui-precio-lic')) document.getElementById('ui-precio-lic').innerText = precioMostrado || "...";
+        if(document.getElementById('ui-cbu-lic')) document.getElementById('ui-cbu-lic').innerText = window.globalLicencias.cbu || "No configurado";
         
         // Inputs del panel admin
-        if(document.getElementById('admin-lic-dias')) document.getElementById('admin-lic-dias').value = window.globalLicencias.dias_prueba;
-        if(document.getElementById('admin-lic-precio')) document.getElementById('admin-lic-precio').value = window.globalLicencias.precio;
-        if(document.getElementById('admin-lic-link')) document.getElementById('admin-lic-link').value = window.globalLicencias.link_pago;
-        if(document.getElementById('admin-lic-cbu')) document.getElementById('admin-lic-cbu').value = window.globalLicencias.cbu;
+        if(document.getElementById('admin-lic-dias')) document.getElementById('admin-lic-dias').value = window.globalLicencias.dias_prueba || "";
+        if(document.getElementById('admin-lic-precio')) document.getElementById('admin-lic-precio').value = window.globalLicencias.precio || "";
+        if(document.getElementById('admin-lic-link')) document.getElementById('admin-lic-link').value = window.globalLicencias.link_pago || "";
+        if(document.getElementById('admin-lic-cbu')) document.getElementById('admin-lic-cbu').value = window.globalLicencias.cbu || "";
 
         // 🔴 LÓGICA MANUAL DE VISIBILIDAD (OBEDECE AL TILDE)
-        const metodoActivo = window.globalLicencias.metodo_pago || 'mp'; // 'mp' por defecto si es cuenta nueva
+        const metodoActivo = window.globalLicencias.metodo_pago || 'mp'; 
         
         // Mantener el tilde correcto en el panel de administrador
         if(document.getElementById('admin-metodo-mp')) document.getElementById('admin-metodo-mp').checked = (metodoActivo === 'mp');
