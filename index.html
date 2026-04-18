@@ -261,6 +261,20 @@
         }
         .licencia-full input { width: auto; margin: 0; cursor: pointer; }
         .licencia-full span { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+
+        .falta-full { 
+            grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; 
+            border-radius: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); 
+            margin-top: 5px; cursor: pointer; width: 100%; box-sizing: border-box; 
+        }
+        .falta-full input { width: auto; margin: 0; cursor: pointer; }
+        .falta-full span { font-size: 0.85rem; color: var(--danger); font-weight: 600; }
+        /* Estilo para la tarjeta en el historial */
+        .shift-card.falta { 
+            border-color: var(--danger); 
+            background: linear-gradient(135deg, var(--card-bg), rgba(239, 68, 68, 0.08)); 
+        }
+        .falta-badge { font-size: 0.65rem; font-weight: 700; color: var(--danger); background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; }
         /* Estilo para la tarjeta en el historial */
         .shift-card.licencia { 
             border-color: var(--accent); 
@@ -794,6 +808,15 @@
                 <input type="checkbox" id="esLicencia">
                 <span>🏥 Marcar si es LICENCIA / CARPETA</span>
             </label>
+
+            <label class="falta-full" id="label-falta">
+                <input type="checkbox" id="esFalta">
+                <span>⚠️ Marcar solo si es FALTA SIN AVISO</span>
+            </label>
+            <div id="msj-falta" style="display: none; grid-column: span 2; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: var(--text-main); padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 0.85rem; line-height: 1.4;">
+                <b>⚠️ ¡OJO!</b> Faltar sin aviso te hace perder el <b>Presentismo completo</b> y el cobro del <b>día no trabajado</b>.<br>
+                El descuento total estimado será de: <b id="monto-descuento-dia" style="color: var(--danger); font-size: 1.05rem; display: block; margin-top: 5px;">-$0,00</b>
+            </div>
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -1001,13 +1024,16 @@
         const chkVacaciones = document.getElementById('esVacaciones');
         const chkFeriado = document.getElementById('esFeriado');
         const chkLicencia = document.getElementById('esLicencia');
+        const chkFalta = document.getElementById('esFalta');
         const inputEntrada = document.getElementById('entrada');
         const inputSalida = document.getElementById('salida');
+        const msjFalta = document.getElementById('msj-falta');
+        const montoTxt = document.getElementById('monto-descuento-dia');
 
         if(chkVacaciones && chkFeriado && chkLicencia) {
             // Función centralizada que evalúa el estado general
             const actualizarEstadoHoras = () => {
-                if (chkVacaciones.checked || chkLicencia.checked) {
+                if (chkVacaciones.checked || chkLicencia.checked || (chkFalta && chkFalta.checked)) {
                     inputEntrada.disabled = true;
                     inputSalida.disabled = true;
                     inputEntrada.value = "";
@@ -1021,7 +1047,8 @@
             chkVacaciones.addEventListener('change', function() {
                 if(this.checked) {
                     chkFeriado.checked = false; 
-                    chkLicencia.checked = false; 
+                    chkLicencia.checked = false;
+                    if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
             });
@@ -1029,7 +1056,8 @@
             chkFeriado.addEventListener('change', function() {
                 if(this.checked) {
                     chkVacaciones.checked = false; 
-                    chkLicencia.checked = false; 
+                    chkLicencia.checked = false;
+                    if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
             });
@@ -1038,9 +1066,29 @@
                 if(this.checked) {
                     chkFeriado.checked = false;
                     chkVacaciones.checked = false;
+                    if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
             });
+
+            if(chkFalta) {
+                chkFalta.addEventListener('change', function() {
+                    if(this.checked) {
+                        chkFeriado.checked = false;
+                        chkVacaciones.checked = false;
+                        chkLicencia.checked = false;
+                        // Calcular y mostrar el mensaje de "Ojo"
+                        const v = window.obtenerValoresMes(window.fechaFiltro);
+                        const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
+                        const totalPerdido = descuentoDia + v.presentismo;
+                        if(montoTxt) montoTxt.innerText = "- $ " + totalPerdido.toLocaleString('es-AR', {maximumFractionDigits: 2});
+                        if(msjFalta) msjFalta.style.display = 'block';
+                    } else {
+                        if(msjFalta) msjFalta.style.display = 'none';
+                    }
+                    actualizarEstadoHoras();
+                });
+            }
         }
     });
 
@@ -2125,12 +2173,14 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = turno.fer || false;
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = turno.vac || false;
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = turno.lic || false;
+        if(document.getElementById('esFalta')) document.getElementById('esFalta').checked = turno.falta || false;
         
         // Disparar los eventos para que la interfaz se bloquee/desbloquee sola
         const ev = new Event('change');
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
+        if(document.getElementById('esFalta')) document.getElementById('esFalta').dispatchEvent(ev);
         
         window.turnoEnEdicion = id;
         document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO TURNO";
@@ -2155,6 +2205,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
+        if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
         const ev = new Event('change');
         if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
@@ -2177,11 +2228,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false;
         const vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
         const lic = document.getElementById('esLicencia') ? document.getElementById('esLicencia').checked : false;
+        const falta = document.getElementById('esFalta') ? document.getElementById('esFalta').checked : false;
               
         let diff = 0;
         let noct = 0;
-        // Si NO son vacaciones ni licencia, calculamos las horas normales
-        if (!vac && !lic) {
+        // Si NO son vacaciones ni licencia ni falta, calculamos las horas normales
+        if (!vac && !lic && !falta) {
             if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
             
             let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
@@ -2195,12 +2247,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }
             noct = Number((noctMinutos / 60).toFixed(2));
         } else {
-            // Si son vacaciones o licencia, limpiamos los horarios para que no queden guardados en la base
+            // Si son vacaciones, licencia o falta, limpiamos los horarios para que no queden guardados en la base
             e = "";
             s = "";
         }
         
-        const nuevoTurno = { f, l, e, s, fer, vac, lic, t: diff, n: noct };
+        const nuevoTurno = { f, l, e, s, fer, vac, lic, falta, t: diff, n: noct };
         
         try {
             if (window.turnoEnEdicion) {
@@ -2213,6 +2265,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
+                if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
                 // Reactivamos los inputs de hora por si estaban bloqueados
                 document.getElementById('entrada').disabled = false;
                 document.getElementById('salida').disabled = false;
@@ -2267,7 +2320,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     // 🔴 CORRECCIÓN LÓGICA: Viáticos calculados por días únicos
     function render() {
         const lista = document.getElementById('lista'); 
-        let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0; 
+        let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0;
+        let hayFaltaSinAviso = false;
         let diasUnicosTrabajados = new Set(); // El nuevo Set para contar días reales
         lista.innerHTML = '';
         
@@ -2281,6 +2335,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 plusVacacionalTotal += valMes.plusVac; 
             } else if (t.lic) {
                 // No suma viático ni plus vacacional, pero se cuenta para el básico (ya implícito)
+            } else if (t.falta) {
+                hayFaltaSinAviso = true;
             } else { 
                 diasUnicosTrabajados.add(t.f); // Guarda la fecha, si se repite en el mismo día no suma doble
             }
@@ -2293,6 +2349,14 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 card.innerHTML = `
                     <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
                     <div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div>
+                    <div style="display:flex; align-items:center;">
+                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
+                    </div>`;
+            } else if (t.falta) {
+                card.className = 'shift-card falta';
+                card.innerHTML = `
+                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
+                    <div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div>
                     <div style="display:flex; align-items:center;">
                         <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
                     </div>`;
@@ -2341,7 +2405,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
         }
 
-        const sumaRemunerativa = valMes.basico + valMes.presentismo + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal);
+        // Si hay falta, el presentismo es 0. Si no, se usa el de la configuración.
+        const presentismoReal = hayFaltaSinAviso ? 0 : valMes.presentismo;
+        // El descuento del día por la falta (Básico + Antigüedad) / 30
+        const descuentoFalta = hayFaltaSinAviso ? ((valMes.basico + montoAntiguedad) / 30) : 0;
+        const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFalta;
         const descuentosLey = sumaRemunerativa * (valMes.descuentos / 100);
         
         const sumaNoRemunerativa = viaticoFinal + valMes.noRem;
