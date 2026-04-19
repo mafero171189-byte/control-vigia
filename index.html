@@ -587,7 +587,7 @@
 
             <div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 10px; margin: 10px 0;">
                 <b style="color: var(--warning); font-size: 0.75rem; text-transform: uppercase;">Importante para la exactitud:</b><br>
-                • <b>Feriados:</b> Si el día es feriado, marcalo como tal para que se aplique el pago doble o el recargo que configuraste.<br>
+                • <b>Feriados:</b> Usá el menú desplegable para indicar si el feriado cae el día que entraste, el día que saliste, o en ambos. El sistema aplicará el recargo cortando exactamente a la medianoche.<br>
                 • <b>Licencias:</b> Si te tomaste licencia o carpeta médica, marcalo como licencia. El sistema lo contabiliza para el básico pero ajusta los viáticos.<br>
                 • <b>Vacaciones:</b> Usá este tilde para que el sistema sume el Plus Vacacional por cada día agendado.<br>
                 • <b>Falta sin aviso:</b> Si faltaste sin justificación, registralo con este tilde. El sistema descuenta el valor del día del básico y elimina el presentismo del mes.<br>
@@ -613,9 +613,11 @@
 
             <div style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid var(--warning); padding: 10px; margin: 10px 0;">
                 <b style="color: var(--warning); font-size: 0.75rem; text-transform: uppercase;">🚩 Cálculo inteligente de feriados:</b><br>
-                El sistema detecta automáticamente cuando un turno cruza la medianoche hacia un día feriado.<br><br>
-                <b>Ejemplo:</b> Trabajás el <b>23/3 de 19:00 a 07:00</b> y el <b>24/3 es feriado</b>. Aunque el turno del 23 no esté marcado como feriado, el sistema detecta que <b>7 horas</b> (de 00:00 a 07:00) caen dentro del feriado y las cobra con el recargo correspondiente.<br><br>
-                Del mismo modo, si el turno del <b>24/3 (feriado) es de 19:00 a 07:00</b>, solo las <b>5 horas hasta medianoche</b> se pagan como feriado. Las de después ya son el 25/3, un día normal.
+                El sistema divide tus horas a la medianoche (00:00) y solo te paga con recargo las horas que caen dentro del día que marcaste en el menú desplegable.<br><br>
+                <b>Ejemplo 1 (Entrás normal, salís en feriado):</b><br>
+                Trabajás el 23/3 de 19:00 a 07:00 y el 24/3 es feriado. Elegís <b>"Feriado el día que SALÍ"</b>. El sistema cobra normal las 5 hs hasta medianoche, y te paga doble las <b>7 horas</b> de madrugada.<br><br>
+                <b>Ejemplo 2 (Entrás en feriado, salís normal):</b><br>
+                Trabajás el 24/3 de 19:00 a 07:00. Elegís <b>"Feriado el día que ENTRÉ"</b>. El sistema paga doble solo las <b>5 horas</b> hasta la medianoche, y el resto lo calcula como un día normal.
             </div>
             
             <p style="font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 15px; padding-top: 10px;">* Los cálculos son estimativos y sirven como herramienta de control frente al recibo oficial.</p>
