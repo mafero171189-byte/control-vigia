@@ -2405,7 +2405,18 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         window.turnos.forEach((t) => {
             const fObj = new Date(t.f + "T00:00:00");
             
-            st += t.t; sn += t.n; if (t.fer) sf += t.t;
+            st += t.t; sn += t.n;
+            if (t.fer) {
+                // Si el turno cruza medianoche, solo cuentan las horas hasta las 00:00 como feriado
+                if (t.e) {
+                    const [hh, mm] = t.e.split(':').map(Number);
+                    const minutosHastaMedianoche = (24 * 60) - (hh * 60 + mm);
+                    const horasHastaMedianoche = minutosHastaMedianoche / 60;
+                    sf += Math.min(t.t, horasHastaMedianoche);
+                } else {
+                    sf += t.t; // Sin hora de entrada, suma todo (fallback)
+                }
+            }
             if (t.vac) { 
                 plusVacacionalTotal += valMes.plusVac; 
                 diasVacaciones++;
@@ -2419,7 +2430,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
             const card = document.createElement('div'); 
             const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
-
+            // Definimos el texto del horario (si existe)
+            const horarioTexto = (t.e && t.s) ? `(${t.e} a ${t.s})` : "";
             if (t.lic) {
                 card.className = 'shift-card licencia';
                 card.innerHTML = `
@@ -2439,7 +2451,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             } else {
                 card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
                 card.innerHTML = `
-                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
+                    <div>
+                        <span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span>
+                        <span class="shift-location">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span>
+                    </div>
                     ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
                     ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
                     <div style="display:flex; align-items:center;">
