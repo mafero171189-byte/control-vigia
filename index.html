@@ -444,7 +444,7 @@
         </div>
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-main); text-align: left; line-height: 1.4;">
     <b style="color: var(--warning);">⚙️ Ajustes Universales:</b><br>
-    • <b>Viáticos:</b> Elegí <b>"Mes Completo"</b> si tu empresa te paga el viático entero de UPSRA todos los meses. Elegí <b>"Proporcional"</b> si te pagan por día trabajado.<br>
+    • <b>Viáticos (Automático):</b> Si no alcanzás las horas base por falta de servicios asignados, la empresa está obligada por ley a abonar el viático mensual completo. Una vez que cubrís las horas base, el sistema liquida proporcional por día trabajado.<br>
     • <b>Feriados:</b> Seleccioná <b>"Doble (100%)"</b> según la ley, o <b>"50%"</b> si tu empresa los paga como hora extra común.
 </div>
         
@@ -478,14 +478,7 @@
         </div>
 
         <div class="form-row" style="text-align: left; margin-bottom: 15px;">
-            <div>
-                <label>Cálculo de Viático</label>
-                <select id="valTipoViatico" class="auth-input" style="padding: 10px;">
-                    <option value="fijo" selected>Mes Completo (UPSRA)</option>
-                    <option value="proporcional">Por día trabajado</option>
-                </select>
-            </div>
-            <div>
+            <div style="grid-column: span 2;">
                 <label>Pago Feriado</label>
                 <select id="valTipoFeriado" class="auth-input" style="padding: 10px;">
                     <option value="100" selected>Doble 100% (Ley LCT)</option>
@@ -597,6 +590,7 @@
                 • <b>Feriados:</b> Si el día es feriado, marcalo como tal para que se aplique el pago doble o el recargo que configuraste.<br>
                 • <b>Licencias:</b> Si te tomaste licencia o carpeta médica, marcalo como licencia. El sistema lo contabiliza para el básico pero ajusta los viáticos.<br>
                 • <b>Vacaciones:</b> Usá este tilde para que el sistema sume el Plus Vacacional por cada día agendado.<br>
+                • <b>Falta sin aviso:</b> Si faltaste sin justificación, registralo con este tilde. El sistema descuenta el valor del día del básico y elimina el presentismo del mes.<br>
                 <i style="font-size: 0.8rem; display: block; margin-top: 5px;">Usar estos tildes correctamente hace que el cálculo sea exacto o casi exacto al de tu recibo.</i>
             </div>
             
@@ -604,7 +598,7 @@
             
             <div style="background: rgba(56, 189, 248, 0.05); border-left: 3px solid var(--accent); padding: 10px; margin: 10px 0;">
                 <b style="color: var(--accent); font-size: 0.75rem; text-transform: uppercase;">Ajustes Universales:</b><br>
-                • <b>Viáticos:</b> Elegí <b>"Mes Completo"</b> si tu empresa te paga el viático entero de UPSRA todos los meses. Elegí <b>"Proporcional"</b> si tu empresa te lo divide y te paga por día trabajado.<br>
+                • <b>Viáticos (Automático):</b> Si no alcanzás las horas base por falta de servicios asignados, la empresa está obligada por ley a abonar el viático mensual completo. Una vez que cubrís las horas base, el sistema liquida proporcional por día trabajado.<br>
                 • <b>Feriados:</b> Seleccioná "Doble (100%)" según marca la ley, o "50%" si tu empresa los paga como extra común.
             </div>
 
@@ -1167,7 +1161,6 @@
             descuentos: parseFloat(p.descuentos),
             feriadoPct: parseFloat(p.feriadoPct) || 100,
             horasBase: parseFloat(p.horasBase) || 200,
-            tipoViatico: p.tipoViatico || "fijo",
             tipoFeriado: p.tipoFeriado || "100"
         };
         if (isNaN(v.descuentos)) v.descuentos = 17;
@@ -1316,9 +1309,6 @@
             inputVac.value = formatearAUI(p.plusVacManual);
         }
         
-        if(document.getElementById('valTipoViatico')) {
-            document.getElementById('valTipoViatico').value = p.tipoViatico || "fijo";
-        }
         if(document.getElementById('valTipoFeriado')) {
             document.getElementById('valTipoFeriado').value = p.tipoFeriado || "100";
         }
@@ -2218,7 +2208,6 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             plusVacManual: getVal('valPlusVacManual'), 
             descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", 
             horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "",
-            tipoViatico: document.getElementById('valTipoViatico') ? document.getElementById('valTipoViatico').value : "fijo",
             tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "100"
         };
         
@@ -2483,9 +2472,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
         // ========== AJUSTE B: CÁLCULO DE VIÁTICOS ==========
         const diasTrabajados = diasUnicosTrabajados.size;
-        let viaticoFinal = valMes.viatico; // Por defecto arranca tomando el mes completo (como hace tu empresa)
-        // Si el usuario eligió el modo proporcional de la otra empresa:
-        if (valMes.tipoViatico === "proporcional") {
+        let viaticoFinal; 
+        // MODO AUTOMÁTICO FIJO:
+        // Si no llega a las horas base, cobra el mes completo. Si llega o se pasa, proporcional por día.
+        if (st < valMes.horasBase) {
+            viaticoFinal = valMes.viatico;
+        } else {
             viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
         }
 
@@ -2511,28 +2503,22 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const progressText = document.getElementById('progress-text');
         const progressStatus = document.getElementById('progress-status');
         if (progressBar && progressText) {
-            // 1. Calculamos el porcentaje de horas
             const porcentaje = Math.min((st / valMes.horasBase) * 100, 100);
             progressBar.style.width = porcentaje + "%";
             progressText.innerText = `${st.toFixed(1)} / ${valMes.horasBase} hs`;
-            // --- LÓGICA DE PROGRESO CLARA ---
-            const acumuladoPlata = (totalNeto / valMes.horasBase) * st;
-            const plataFmt = acumuladoPlata.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             if (st === 0) {
                 progressStatus.innerHTML = "Todavía no registraste horas este mes.";
+                progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
+                progressBar.style.boxShadow = "none";
+                progressBar.style.animation = "";
             } else if (st < valMes.horasBase) {
-                // MENSAJE CLARO: Estás cubriendo tu sueldo
-                progressStatus.innerHTML = `Llevás cubiertos <b>$ ${plataFmt}</b> de tu sueldo base.`;
+                progressStatus.innerHTML = "";
                 progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
                 progressBar.style.boxShadow = "none";
                 progressBar.style.animation = "";
             } else {
-                // MENSAJE DE ÉXITO: Ya cubriste el básico, ahora sumás extras
-                // FIX Bug 9: calcular extras con el valor neto real de la hora extra
-                const extraPlataReal = hsExtra * horaExtraVal * (1 - valMes.descuentos / 100);
-                progressStatus.innerHTML = `¡Sueldo base cubierto! Llevás <b>$ ${extraPlataReal.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> en extras. 💰`;
+                progressStatus.innerHTML = "¡Sueldo base cubierto! 💰";
                 progressBar.style.background = "linear-gradient(90deg, var(--success), #4ade80)";
-                // FIX Bug "Brillo Mudo": aplicar animación de neón pulsante
                 progressBar.style.animation = "glow-pulse 1.8s ease-in-out infinite";
             }
         }
@@ -2540,7 +2526,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         // --- SALARY-CARD: título y nota según modo de viático ---
         const txtNotaSueldo = document.getElementById('txt-nota-sueldo');
         const netoTitleLabel = document.getElementById('neto-title-label');
-        if (valMes.tipoViatico === 'proporcional') {
+        if (st >= valMes.horasBase) {
             if (netoTitleLabel) netoTitleLabel.innerText = 'NETO EN MANO (Estimado)';
             if (txtNotaSueldo) {
                 txtNotaSueldo.style.display = '';
