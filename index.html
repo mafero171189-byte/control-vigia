@@ -992,7 +992,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     // 🔴 IMPORTANTE: Se agregó 'getFirestore' a la importación
-    import { getFirestore, initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter, writeBatch, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -1058,17 +1058,7 @@
         const select = document.getElementById('estadoFeriado');
         if (!fStr || !select) return;
 
-        // --- LÓGICA DE FERIADOS PUENTE ---
-        const p = window.preciosGuardados || {};
-        const pagaPuentes = p.pagaPuentes || "si";
-        // Las tres fechas puente del 2026:
-        const puentesOficiales = ["2026-03-23", "2026-07-10", "2026-12-07"];
-        const esPuente = (f) => puentesOficiales.includes(f);
-
         let esFerEntrada = window.feriadosGlobales.includes(fStr);
-        // Si la empresa NO los paga y el día es un puente, anulamos la detección:
-        if (pagaPuentes === "no" && esPuente(fStr)) esFerEntrada = false;
-
         let esFerSalida = false;
 
         if (eStr && sStr) {
@@ -1084,8 +1074,6 @@
                 const fSalidaStr = `${yyyy}-${mm}-${dd}`;
                 
                 esFerSalida = window.feriadosGlobales.includes(fSalidaStr);
-                // Si la empresa NO los paga y el día de salida es puente, lo anulamos:
-                if (pagaPuentes === "no" && esPuente(fSalidaStr)) esFerSalida = false;
             }
         }
 
@@ -1220,8 +1208,18 @@
         }
     });
 
+    // 🚀 FIX: Clavamos el día en 1 para evitar el "Bucle del Día 31" de JavaScript
     window.fechaFiltro = new Date();
+    window.fechaFiltro.setDate(1); 
+    
     window.meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    // 🚀 FIX: Le enseñamos a la app a arrancar mostrando el Mes y el Año actual apenas abris
+    window.actualizarTituloMes = () => {
+        const mesNombre = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
+        const anio = window.fechaFiltro.getFullYear();
+        const mesVisual = document.getElementById('mesVisual');
+        if (mesVisual) mesVisual.innerText = `${mesNombre} ${anio}`;
+    };
     window.totalStats = { t: 0, n: 0, f: 0, extra: 0, bruto: 0, neto: 0 };
 
     window.showToast = function(msg, type = 'success') {
@@ -1307,7 +1305,6 @@
             if (isNaN(v.presentismo)) v.presentismo = auto.p;
             if (isNaN(v.viatico)) v.viatico = auto.v;
             if (isNaN(v.noRem)) v.noRem = auto.nr;
-            if (isNaN(v.plusVac)) v.plusVac = auto.vac; 
         } else {
             if (isNaN(v.basico)) v.basico = 0;
             if (isNaN(v.presentismo)) v.presentismo = 0;
@@ -1448,7 +1445,8 @@
     window.cerrarModalRecuperar = function() { document.getElementById('modal-recuperar').style.display = 'none'; }
     
     window.ejecutarRecuperacion = async function() {
-        const email = document.getElementById('recuperar-email').value;
+        // FIX: Eliminamos espacios accidentales del teclado del celular
+        const email = document.getElementById('recuperar-email').value.trim().toLowerCase();
         if (!email) return window.showToast("⚠️ Por favor, ingresá un correo válido", "danger");
         const btnEnviar = document.getElementById('btn-enviar-recupero');
         btnEnviar.innerText = "Enviando...";
@@ -1630,12 +1628,12 @@
         document.getElementById('admin-buscar-usuario').value = '';
         document.getElementById('btn-volver-admin').style.display = 'none';
         
-        // Contador de usuarios totales actualizado
+        // Contador de usuarios totales actualizado (OPTIMIZADO PARA CUOTA)
         const txtContador = document.getElementById('admin-txt-contador');
         txtContador.innerText = "👥 Contando personal...";
         try {
-            const snapshotTotal = await getDocs(collection(db, "directorio_usuarios"));
-            txtContador.innerText = `👥 TOTAL USUARIOS: ${snapshotTotal.size}`;
+            const snapshotTotal = await getCountFromServer(collection(db, "directorio_usuarios"));
+            txtContador.innerText = `👥 TOTAL USUARIOS: ${snapshotTotal.data().count}`;
         } catch (e) {
             txtContador.innerText = `👥 Error al contar`;
         }
@@ -2032,6 +2030,7 @@ window.formatearEnlaces = function(texto) {
         window.unsubTurnos = onSnapshot(q, (querySnapshot) => {
             window.turnos = [];
             querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
+            if (window.actualizarTituloMes) window.actualizarTituloMes(); // 🚀 FIX: Borra el "ABRIL" del HTML y pone el mes/año real al instante
             actualizarUI(); // Actualiza pantalla al instante
         });
     }
@@ -2326,8 +2325,8 @@ window.guardarLicenciasGlobal = async function() {
     window.ajustarDiasInput = function(cantidad) {
         const input = document.getElementById('input-dias-mod');
         let valorActual = parseInt(input.value) || 0;
-        // FIX Bug 7: no permitir días negativos
-        input.value = Math.max(0, valorActual + cantidad);
+        // FIX: Permitimos números negativos para que el Admin pueda RESTAR días si se equivoca
+        input.value = valorActual + cantidad;
     }
 
     window.confirmarModificarDias = function() {
@@ -2346,13 +2345,13 @@ window.guardarLicenciasGlobal = async function() {
         let nuevaFecha = new Date(expDate);
         nuevaFecha.setDate(nuevaFecha.getDate() + nDias);
         
-        actualizarDiasUsuario(window.usuarioModificarUID, nuevaFecha.toISOString());
+        window.actualizarDiasUsuario(window.usuarioModificarUID, nuevaFecha.toISOString());
         cerrarModalModificarDias();
     }
 
     window.hacerLicenciaIlimitada = function() {
         if (!window.usuarioModificarUID) return;
-        actualizarDiasUsuario(window.usuarioModificarUID, "");
+        window.actualizarDiasUsuario(window.usuarioModificarUID, "");
         cerrarModalModificarDias();
     }
 
@@ -2479,12 +2478,20 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('main-form').classList.remove('edit-mode');
     }
 
-    // 🔴 CORRECCIÓN: Precisión de coma flotante en horas nocturnas
+    // 🔴 CORRECCIÓN: Precisión de coma flotante en horas nocturnas y Bloqueo de Doble Toque
     window.guardar = async function() {
         if (!window.currentUser) return;
         
-        // Forzamos un último cálculo inteligente justo antes de guardar
-        window.detectarFeriadoAutomatico();
+        const btnSubmit = document.getElementById('btn-submit-turno');
+        if (btnSubmit.disabled) return; // Evita el doble toque accidental
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "⏳ GUARDANDO...";
+        
+        // Solo forzamos el cálculo si el menú sigue en "Automático" (respeta cambios manuales)
+        const selectFeriadoUI = document.getElementById('estadoFeriado');
+        if (selectFeriadoUI && selectFeriadoUI.value === 'auto') {
+            window.detectarFeriadoAutomatico();
+        }
 
         const f = document.getElementById('fecha').value;
         // FIX Bug 3: validar que la fecha no esté vacía antes de continuar
@@ -2538,9 +2545,18 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 // Reactivamos los inputs de hora por si estaban bloqueados
                 document.getElementById('entrada').disabled = false;
                 document.getElementById('salida').disabled = false;
+                // Vaciamos las horas para arrancar limpio el próximo turno
+                document.getElementById('entrada').value = '';
+                document.getElementById('salida').value = '';
                 window.showToast("✅ Turno guardado"); 
             }
-        } catch (error) { window.showToast("⚠️ Error al guardar", "danger"); }
+        } catch (error) { 
+            window.showToast("⚠️ Error al guardar", "danger"); 
+        } finally {
+            // Liberamos el botón sea cual sea el resultado
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
+        }
     }
 
     let confirmCallback = null;
@@ -2570,8 +2586,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         window.fechaFiltro.setMonth(window.fechaFiltro.getMonth() + delta); 
         
+        window.actualizarTituloMes(); // Actualiza mostrando mes y año
         const mesNom = window.meses[window.fechaFiltro.getMonth()];
-        document.getElementById('mesVisual').innerText = `${mesNom.toUpperCase()} ${window.fechaFiltro.getFullYear()}`;
         document.getElementById('mesBtnLabel').innerText = mesNom.toUpperCase();
         
         // Sincronizar el input de fecha con el mes navegado
@@ -2618,8 +2634,20 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const pagaPuentes = valMes.pagaPuentes || "si";
         const puentesOficiales = ["2026-03-23", "2026-07-10", "2026-12-07"];
 
+        // 🚀 FIX LEY LCT ART 155: El cálculo de vacaciones debe incluir Antigüedad y Presentismo
+        const montoAntiguedad = valMes.basico * (valMes.antiguedadAños / 100);
+        const baseHabitual = valMes.basico + valMes.presentismo + montoAntiguedad;
+        const valorPlusLeyCorrecto = (baseHabitual / 25) - (baseHabitual / 30);
+
         window.turnos.forEach((t) => {
             const fObj = new Date(t.f + "T00:00:00");
+            
+            // 🚀 FIX EXTREMO: El patovica del Mes (Evita el Bug del Sueldo Infinito)
+            // Si el turno no es del mes y año que estamos mirando en pantalla, lo ignoramos por completo
+            if (fObj.getMonth() !== window.fechaFiltro.getMonth() || fObj.getFullYear() !== window.fechaFiltro.getFullYear()) {
+                return; // Corta acá y pasa al siguiente turno sin sumar nada
+            }
+
             st += t.t; sn += t.n;
 
             let esFerEntrada = t.ferE || t.fer;
@@ -2630,7 +2658,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 
                 let dSalida = new Date(t.f + "T12:00:00");
                 dSalida.setDate(dSalida.getDate() + 1);
-                const fSalidaStr = dSalida.toISOString().split('T')[0];
+                const yyyy = dSalida.getFullYear();
+                const mm = String(dSalida.getMonth() + 1).padStart(2, '0');
+                const dd = String(dSalida.getDate()).padStart(2, '0');
+                const fSalidaStr = `${yyyy}-${mm}-${dd}`;
+                
                 if (puentesOficiales.includes(fSalidaStr)) esFerSalida = false;
             }
 
@@ -2648,17 +2680,19 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                     if (esFerEntrada) minFeriado += minHastaMedianoche;
                     if (esFerSalida) minFeriado += minDesdeMedianoche;
                 } else {
-                    if (esFerEntrada) minFeriado += (minSalida - minEntrada);
+                    if (esFerEntrada || esFerSalida) minFeriado += (minSalida - minEntrada);
                 }
                 horasFeriadoTurno = Number((minFeriado / 60).toFixed(2));
-            } else if (esFerEntrada) { 
+            } else if (esFerEntrada || esFerSalida) { 
                 horasFeriadoTurno = t.t; 
             }
 
             sf += horasFeriadoTurno;
 
             if (t.vac) { 
-                plusVacacionalTotal += valMes.plusVac; 
+                // FIX LCT ART 155: Se usa la base habitual calculada arriba (con antigüedad)
+                const plusV = valMes.plusVac ? Number(valMes.plusVac) : valorPlusLeyCorrecto;
+                plusVacacionalTotal += plusV; 
                 diasVacaciones++;
             } else if (t.lic) {
                 diasLicencia++;
@@ -2669,7 +2703,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }
 
             const card = document.createElement('div'); 
-            const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
+            // FIX: Protegemos contra comillas simples y dobles para no romper el botón borrar
+            const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const horarioTexto = (t.e && t.s) ? `(${t.e} a ${t.s})` : "";
             const esAlgunFeriadoCalculado = (horasFeriadoTurno > 0);
 
@@ -2710,36 +2745,63 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('totN').innerText = fmtH(sn); 
         document.getElementById('totF').innerText = fmtH(sf);
         
-        const montoAntiguedad = valMes.basico * (valMes.antiguedadAños / 100);
+        // (La variable montoAntiguedad ya fue calculada arriba para las vacaciones)
+        // 🚀 FIX: Respetamos el "0" si la empresa lo estafa. Solo aplicamos ley si está vacío (NaN).
         let valorNocturnoFinal = valMes.noct;
-        if (isNaN(valorNocturnoFinal) || valorNocturnoFinal <= 0) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
+        if (isNaN(valorNocturnoFinal)) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
 
         let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
-        let horaExtraVal = valMes.hora > 0 ? valMes.hora : (valorHoraNormal * 1.5);
+
+        // 🚀 FIX: Misma lógica para las horas extras. Si tipeó explícitamente "0", el valor es 0.
+        let horaExtraVal = (valMes.hora !== undefined && valMes.hora !== "") ? Number(valMes.hora) : (valorHoraNormal * 1.5);
 
         let recargoFeriado = valMes.tipoFeriado === "50" ? 0.5 : 1;
         let horaFeriadoVal = valorHoraNormal * recargoFeriado;
         let pagoFeriados = sf * horaFeriadoVal;
         
+        const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones;
+        
+        // 🚀 FIX EXTREMO: Ajuste de horas base SOLO por ausencias justificadas
+        const diasAusenciaJustificada = diasLicencia + diasVacaciones;
+        const horasBaseDiarias = valMes.horasBase / 30; 
+        
+        // La falta sin aviso NO te baja la meta (no te regala horas extras)
+        let horasBaseAjustada = Math.max(0, valMes.horasBase - (horasBaseDiarias * diasAusenciaJustificada));
+        
+        // Redondeamos para que la meta visual no tenga mil decimales
+        horasBaseAjustada = Math.round(horasBaseAjustada);
+
         let pagoHorasTotales = 0, hsExtra = 0;
-        if (st > valMes.horasBase) { 
-            hsExtra = st - valMes.horasBase; 
+        // Ahora el sistema calcula las extras basándose en la meta real ajustada
+        if (st > horasBaseAjustada) { 
+            hsExtra = st - horasBaseAjustada; 
             pagoHorasTotales = hsExtra * horaExtraVal; 
         }
 
         const diasTrabajados = diasUnicosTrabajados.size;
         let viaticoFinal; 
-        const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones;
-        if (st < valMes.horasBase && totalDiasAusente === 0) {
-            viaticoFinal = valMes.viatico;
+        
+        // 🚀 FIX EXTREMO: Fin del viático "fantasma" en vacaciones o licencias
+        if (totalDiasAusente === 0) {
+            // Mes completo y perfecto: rige la garantía de viático al 100%
+            if (st >= valMes.horasBase) {
+                viaticoFinal = Math.max(valMes.viatico, (valMes.viatico / 22) * diasTrabajados);
+            } else {
+                viaticoFinal = valMes.viatico; // Garantizado porque la empresa no dio horas
+            }
         } else {
+            // Si hubo vacaciones, licencia o falta, se anula la garantía de mes completo.
+            // Se cobra el viático ESTRICTAMENTE por la cantidad de días que viajó.
             viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
         }
 
         const presentismoReal = diasFaltaSinAviso > 0 ? 0 : valMes.presentismo;
         const descuentoFalta = ((valMes.basico + montoAntiguedad) / 30) * diasFaltaSinAviso;
         const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFalta;
-        const descuentosLey = sumaRemunerativa * (valMes.descuentos / 100);
+        
+        // 🚀 FIX: Salvavidas para usuarios nuevos. Si no configuraron descuento, asume 17% de ley.
+        const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
+        const descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
         
         const sumaNoRemunerativa = viaticoFinal + valMes.noRem;
 
@@ -2755,21 +2817,25 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const progressText = document.getElementById('progress-text');
         const progressStatus = document.getElementById('progress-status');
         if (progressBar && progressText) {
-            const porcentaje = Math.min((st / valMes.horasBase) * 100, 100);
+            // La barra visual ahora se llena en base a la meta ajustada del trabajador
+            const metaVisual = horasBaseAjustada > 0 ? horasBaseAjustada : valMes.horasBase;
+            const porcentaje = Math.min((st / metaVisual) * 100, 100);
+            
             progressBar.style.width = porcentaje + "%";
-            progressText.innerText = `${st.toFixed(1)} / ${valMes.horasBase} hs`;
+            progressText.innerText = `${st.toFixed(1)} / ${metaVisual} hs`;
+            
             if (st === 0) {
                 progressStatus.innerHTML = "Todavía no registraste horas este mes.";
                 progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
                 progressBar.style.boxShadow = "none";
                 progressBar.style.animation = "";
-            } else if (st < valMes.horasBase) {
-                progressStatus.innerHTML = "";
+            } else if (st < metaVisual) {
+                progressStatus.innerHTML = totalDiasAusente > 0 ? `Meta ajustada por ausencias/vacaciones.` : "";
                 progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
                 progressBar.style.boxShadow = "none";
                 progressBar.style.animation = "";
             } else {
-                progressStatus.innerHTML = "¡Sueldo base cubierto! 💰";
+                progressStatus.innerHTML = "¡Objetivo cubierto! 💰";
                 progressBar.style.background = "linear-gradient(90deg, var(--success), #4ade80)";
                 progressBar.style.animation = "glow-pulse 1.8s ease-in-out infinite";
             }
