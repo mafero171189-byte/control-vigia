@@ -2394,8 +2394,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     function render() {
         const lista = document.getElementById('lista'); 
         let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0;
-        let diasFaltaSinAviso = 0; // Contador de días de falta (reemplaza el booleano)
-        let diasUnicosTrabajados = new Set(); // El nuevo Set para contar días reales
+        let diasFaltaSinAviso = 0; 
+        let diasLicencia = 0;      // NUEVO: Cuenta días de carpeta médica/licencia
+        let diasVacaciones = 0;    // NUEVO: Cuenta días de vacaciones
+        let diasUnicosTrabajados = new Set();
         lista.innerHTML = '';
         
         const valMes = window.obtenerValoresMes(window.fechaFiltro);
@@ -2406,12 +2408,13 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             st += t.t; sn += t.n; if (t.fer) sf += t.t;
             if (t.vac) { 
                 plusVacacionalTotal += valMes.plusVac; 
+                diasVacaciones++;
             } else if (t.lic) {
-                // No suma viático ni plus vacacional, pero se cuenta para el básico (ya implícito)
+                diasLicencia++;
             } else if (t.falta) {
-                diasFaltaSinAviso++; // Sumamos 1 por cada día que faltó
+                diasFaltaSinAviso++;
             } else { 
-                diasUnicosTrabajados.add(t.f); // Guarda la fecha, si se repite en el mismo día no suma doble
+                diasUnicosTrabajados.add(t.f); 
             }
 
             const card = document.createElement('div'); 
@@ -2473,9 +2476,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         // ========== AJUSTE B: CÁLCULO DE VIÁTICOS ==========
         const diasTrabajados = diasUnicosTrabajados.size;
         let viaticoFinal; 
-        // MODO AUTOMÁTICO FIJO:
-        // Si no llega a las horas base, cobra el mes completo. Si llega o se pasa, proporcional por día.
-        if (st < valMes.horasBase) {
+        // Cuenta el total de días que el vigilador NO fue a trabajar por razones propias
+        const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones;
+        // MODO AUTOMÁTICO INTELIGENTE:
+        // Para cobrar el viático completo sin llegar a las horas base, el vigilador NO debe tener ausencias en el mes.
+        if (st < valMes.horasBase && totalDiasAusente === 0) {
             viaticoFinal = valMes.viatico;
         } else {
             viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
