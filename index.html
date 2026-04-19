@@ -358,6 +358,12 @@
     animation: pulse 2s infinite ease-in-out;
 }
 
+/* === Animación de neón para la barra de progreso al superar las horas base === */
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(74, 222, 128, 0.4), 0 0 20px rgba(74, 222, 128, 0.2); }
+    50%       { box-shadow: 0 0 18px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.4); }
+}
+
 @keyframes pulse {
     0% {
         transform: scale(1);
@@ -573,7 +579,7 @@
             <b id="perfil-estado-licencia" style="color: var(--warning); font-size: 1.1rem;">Verificando...</b>
         </div>
         
-        <button class="btn-config-main" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning);" onclick="cerrarModalPerfil(); mostrarPagoLicencia(false)">💳 Pagar / Renovar Licencia</button>
+        <button id="btn-pagar-licencia" class="btn-config-main" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: var(--warning);" onclick="cerrarModalPerfil(); mostrarPagoLicencia(false)">💳 Pagar / Renovar Licencia</button>
         <button class="btn-config-main" onclick="cerrarModalPerfil(); abrirModalCambiarClave()">🔑 Cambiar Contraseña</button>
         <button class="btn-logout" style="width: 100%; padding: 14px; font-size: 1rem; margin-top: 5px;" onclick="cerrarModalPerfil()">Cerrar</button>
     </div>
@@ -761,9 +767,12 @@
 
     <div class="salary-card">
         <div class="bruto-text">Bruto Estimado: <b id="totalBruto">$ 0,00</b></div>
-        <span class="neto-title">NETO EN MANO (Estimado)</span>
+        <span id="neto-title-label" class="neto-title">SUELDO GARANTIZADO (MES COMPLETO)</span>
         <h2 id="totalNeto" style="margin-bottom: 5px;">$ 0,00</h2>
-        <p style="font-size: 0.65rem; color: var(--text-dim); margin: 0; line-height: 1.2;">*Puede variar levemente por redondeos contables o acuerdos específicos de tu empresa.</p>
+        <p id="txt-nota-sueldo" style="font-size: 0.65rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+            <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
+            <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>
+        </p>
     </div>
 
     <div class="stats-panel">
@@ -795,7 +804,7 @@
             </div>
         </div>
         
-        <label id="form-titulo-modo">➕ REGISTRAR TURNO</label>
+        <label id="form-titulo-modo">➕ REGISTRAR GUARDIA</label>
         <div class="form-row">
             <div><label>Fecha</label><input type="date" id="fecha"></div>
             <div><label>Objetivo</label><input type="text" id="lugar" placeholder="Puesto"></div>
@@ -830,7 +839,7 @@
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button id="btn-submit-turno" class="btn-submit" onclick="guardar()">AGENDAR TURNO</button>
+            <button id="btn-submit-turno" class="btn-submit" onclick="guardar()">AGENDAR GUARDIA</button>
             <button id="btn-cancel-edit" class="btn-submit" style="display: none; background: var(--danger); flex: 0.5;" onclick="cancelarEdicion()">✕</button>
         </div>
     </div>
@@ -1361,7 +1370,7 @@
 
     // 🔴 CORRECCIÓN: Manejo de Race Condition al registrar
     window.procesarAuth = async function() {
-        const email = document.getElementById('auth-email').value;
+        const email = document.getElementById('auth-email').value.trim().toLowerCase();
         const pass = document.getElementById('auth-password').value;
         const nombre = document.getElementById('auth-nombre').value;
         const recordar = document.getElementById('chk-recordar').checked;
@@ -1427,6 +1436,17 @@
         }
     }
     
+    // FIX Bug 2 y 4: helper para escapar HTML y evitar XSS en el panel admin
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     window.cerrarSesion = async function() { 
         if (window.unsubTurnos) window.unsubTurnos(); 
         await signOut(auth); 
@@ -1459,7 +1479,12 @@
             window.preciosGuardados = {};
             window.turnos = [];
             window.turnoEnEdicion = null;
+            // FIX Bug 5: limpiar banner_licencia_cerrado para que el próximo usuario lo vea
+            localStorage.removeItem('banner_licencia_cerrado');
             if (window.unsubTurnos) { window.unsubTurnos(); window.unsubTurnos = null; }
+            if (window.unsubConfig) { window.unsubConfig(); window.unsubConfig = null; }
+            if (window.unsubAviso) { window.unsubAviso(); window.unsubAviso = null; }
+            window._configCargado = false;
             // Limpiar campos de UI
             const ids = ['vigiNombre','vigiApellido','lista'];
             ids.forEach(id => { const el = document.getElementById(id); if(el) el.value !== undefined ? el.value = '' : el.innerHTML = ''; });
@@ -1551,19 +1576,32 @@
 
                 const card = document.createElement('div');
                 card.className = 'user-list-card';
+                // FIX Bug 2+4: usar escapeHtml para prevenir XSS y usar data-attributes
+                // en los botones para evitar inyección de comillas en onclick.
+                const safeNombre = escapeHtml(data.nombre || 'Sin Nombre');
+                const safeEmail  = escapeHtml(data.email || '');
+                const safeUid    = escapeHtml(docSnap.id);
+                const safeExpira = escapeHtml(data.licencia_expira || '');
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div class="user-info">
-                            <b>${data.nombre || 'Sin Nombre'}</b>
-                            <span style="color: var(--text-dim); display: block;">${data.email}</span>
+                            <b>${safeNombre}</b>
+                            <span style="color: var(--text-dim); display: block;">${safeEmail}</span>
                             <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
                             <span style="color: ${colorExpira}; font-size: 0.75rem; display: block; font-weight: bold; margin-top: 2px;">⏳ ${expiraTexto}</span>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 5px;">
-                            <button onclick="abrirModalModificarDias('${docSnap.id}', '${data.licencia_expira || ''}')" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
-                            <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Eliminar usuario">🗑️</button>
+                            <button data-uid="${safeUid}" data-expira="${safeExpira}" class="btn-admin-mod-dias" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
+                            <button data-uid="${safeUid}" data-nombre="${safeNombre}" data-email="${safeEmail}" class="btn-admin-del-user" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Eliminar usuario">🗑️</button>
                         </div>
                     </div>`;
+                // Asignar listeners seguros vía JS en vez de onclick inline
+                card.querySelector('.btn-admin-mod-dias').addEventListener('click', function() {
+                    abrirModalModificarDias(this.dataset.uid, this.dataset.expira);
+                });
+                card.querySelector('.btn-admin-del-user').addEventListener('click', function() {
+                    abrirModalEliminarUsuario(this.dataset.uid, this.dataset.nombre, this.dataset.email);
+                });
                 lista.appendChild(card);
             });
             renderizarBotonCargarMas(querySnapshot.size === 20);
@@ -1622,20 +1660,31 @@
 
                 const card = document.createElement('div');
                 card.className = 'user-list-card';
+                // FIX Bug 2+4: usar escapeHtml y data-attributes
+                const safeNombre = escapeHtml(data.nombre || 'Sin Nombre');
+                const safeEmail  = escapeHtml(data.email || '');
+                const safeUid    = escapeHtml(docSnap.id);
+                const safeExpira = escapeHtml(data.licencia_expira || '');
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div class="user-info">
-                            <b>${data.nombre || 'Sin Nombre'}</b>
-                            <span style="color: var(--text-dim); display: block;">${data.email}</span>
+                            <b>${safeNombre}</b>
+                            <span style="color: var(--text-dim); display: block;">${safeEmail}</span>
                             <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
                             <span style="color: var(--success); font-size: 0.75rem; font-weight: bold; margin-top: 4px; display: inline-block;">🔍 Resultado de búsqueda</span>
                             <span style="color: ${colorExpira}; font-size: 0.75rem; display: block; font-weight: bold; margin-top: 4px;">⏳ ${expiraTexto}</span>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 5px;">
-                            <button onclick="abrirModalModificarDias('${docSnap.id}', '${data.licencia_expira || ''}')" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
-                            <button onclick="abrirModalEliminarUsuario('${docSnap.id}', '${data.nombre || 'Sin Nombre'}', '${data.email}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Eliminar usuario">🗑️</button>
+                            <button data-uid="${safeUid}" data-expira="${safeExpira}" class="btn-admin-mod-dias" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
+                            <button data-uid="${safeUid}" data-nombre="${safeNombre}" data-email="${safeEmail}" class="btn-admin-del-user" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Eliminar usuario">🗑️</button>
                         </div>
                     </div>`;
+                card.querySelector('.btn-admin-mod-dias').addEventListener('click', function() {
+                    abrirModalModificarDias(this.dataset.uid, this.dataset.expira);
+                });
+                card.querySelector('.btn-admin-del-user').addEventListener('click', function() {
+                    abrirModalEliminarUsuario(this.dataset.uid, this.dataset.nombre, this.dataset.email);
+                });
                 lista.appendChild(card);
             });
             const viejoBtn = document.getElementById('btn-cargar-mas-admin');
@@ -1674,16 +1723,17 @@
             let batch = writeBatch(db);
             let count = 0;
             
-            turnosSnapshot.forEach((docSnap) => {
+            // FIX Bug "Borrado Incompleto": usar for...of con await para garantizar
+            // que cada batch se confirme antes de crear el siguiente.
+            for (const docSnap of turnosSnapshot.docs) {
                 batch.delete(docSnap.ref);
                 count++;
-                // Firestore permite hasta 500 operaciones por lote
                 if (count === 490) { 
-                    batch.commit();
+                    await batch.commit();
                     batch = writeBatch(db);
                     count = 0;
                 }
-            });
+            }
             
             batch.delete(doc(db, "usuarios", uid, "config", "datos"));
             batch.delete(doc(db, "directorio_usuarios", uid));
@@ -1813,7 +1863,8 @@ window.formatearEnlaces = function(texto) {
         const año = fechaObj.getFullYear();
         const mesStr = String(fechaObj.getMonth() + 1).padStart(2, '0');
         const inicioMes = `${año}-${mesStr}-01`;
-        const finMes = `${año}-${mesStr}-31`;
+        const ultimoDia = new Date(año, fechaObj.getMonth() + 1, 0).getDate();
+        const finMes = `${año}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
 
         const q = query(
             collection(db, "usuarios", window.currentUser.uid, "turnos"),
@@ -1833,10 +1884,14 @@ window.formatearEnlaces = function(texto) {
 
 async function cargarDatosNube() {
         if (!window.currentUser) return;
+
+        // Cancelamos listeners anteriores para evitar duplicados (ej: registro + onAuthStateChanged)
+        if (window.unsubAviso) { window.unsubAviso(); window.unsubAviso = null; }
+        if (window.unsubConfig) { window.unsubConfig(); window.unsubConfig = null; }
         
         // 1. Cargamos el aviso global (Aislado por si falla)
         try {
-            onSnapshot(doc(db, "global", "aviso"), (docSnap) => {
+            window.unsubAviso = onSnapshot(doc(db, "global", "aviso"), (docSnap) => {
                 if (docSnap.exists() && docSnap.data().texto.trim() !== "") {
                     const data = docSnap.data();
                     document.getElementById('texto-aviso-global').innerHTML = window.formatearEnlaces(data.texto);
@@ -1850,69 +1905,87 @@ async function cargarDatosNube() {
             }, (err) => { console.warn("Avisos inaccesibles:", err); });
         } catch(e) {}
 
-        // 2. Cargamos los datos personales del usuario
+        // 2. Suscripción en tiempo real a datos del usuario (licencia se actualiza sin recargar)
         try {
-            const docSnap = await getDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"));
-            if (docSnap.exists()) {
-                const configData = docSnap.data();
-                const p = configData.precios || {}; 
-                const u = configData.perfil || {};
-                window.preciosGuardados = p; 
-                document.getElementById('vigiNombre').value = u.nombre || ""; 
-                document.getElementById('vigiApellido').value = u.apellido || "";
+            window.unsubConfig = onSnapshot(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), (docSnap) => {
+                if (docSnap.exists()) {
+                    const configData = docSnap.data();
+                    const p = configData.precios || {}; 
+                    const u = configData.perfil || {};
+                    window.preciosGuardados = p; 
 
-                const expira = configData.licencia_expira;
-                const esAdmin = window.currentUser.email.toLowerCase() === 'mafero171189@gmail.com';
-                const perfilTxt = document.getElementById('perfil-estado-licencia');
-
-                if (esAdmin) {
-                    if(perfilTxt) { perfilTxt.innerText = "⭐ Cuenta Administrador"; perfilTxt.style.color = "var(--admin)"; }
-                    document.getElementById('banner-licencia').style.display = 'none';
-                } else if (expira) {
-                    const expDate = new Date(expira);
-                    const hoy = new Date();
-                    const diffDias = Math.ceil((expDate - hoy) / (1000 * 60 * 60 * 24));
-                    
-                    if(perfilTxt) {
-                        if (diffDias > 0) {
-                            perfilTxt.innerText = `Activa (${diffDias} días restantes)`;
-                            perfilTxt.style.color = "var(--success)";
-                        } else {
-                            perfilTxt.innerText = `Vencida`;
-                            perfilTxt.style.color = "var(--danger)";
-                        }
+                    // Nombre y apellido solo se cargan la primera vez para no pisar lo que el usuario esté editando
+                    if (!window._configCargado) {
+                        document.getElementById('vigiNombre').value = u.nombre || ""; 
+                        document.getElementById('vigiApellido').value = u.apellido || "";
+                        window._configCargado = true;
                     }
 
-                    if (diffDias <= 0) {
-                        mostrarPagoLicencia(true); 
-                    } else {
-                        const bannerCerrado = localStorage.getItem('banner_licencia_cerrado');
-                        if (!bannerCerrado || diffDias <= 7) {
-                            const banner = document.getElementById('banner-licencia');
-                            banner.style.display = 'block';
-                            document.getElementById('dias-restantes-banner').innerText = diffDias;
-                            
-                            if (diffDias <= 7) {
-                                banner.style.background = "linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.2))";
-                                banner.style.borderColor = "var(--danger)";
-                                banner.querySelector('h4').style.color = "var(--danger)";
-                                banner.querySelector('h4').innerText = "⚠️ ¡LICENCIA POR VENCER!";
+                    const expira = configData.licencia_expira;
+                    const esAdmin = window.currentUser.email.toLowerCase() === 'mafero171189@gmail.com';
+                    const perfilTxt = document.getElementById('perfil-estado-licencia');
+
+                    if (esAdmin) {
+                        if(perfilTxt) { perfilTxt.innerText = "⭐ Cuenta Administrador"; perfilTxt.style.color = "var(--admin)"; }
+                        document.getElementById('banner-licencia').style.display = 'none';
+                        document.getElementById('btn-pagar-licencia').style.display = 'none';
+                    } else if (expira) {
+                        const expDate = new Date(expira);
+                        const hoy = new Date();
+                        const diffDias = Math.ceil((expDate - hoy) / (1000 * 60 * 60 * 24));
+                        document.getElementById('btn-pagar-licencia').style.display = '';
+                        
+                        if(perfilTxt) {
+                            if (diffDias > 0) {
+                                perfilTxt.innerText = `Activa (${diffDias} días restantes)`;
+                                perfilTxt.style.color = "var(--success)";
                             } else {
-                                banner.style.background = "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1))";
-                                banner.style.borderColor = "var(--warning)";
-                                banner.querySelector('h4').style.color = "var(--warning)";
-                                banner.querySelector('h4').innerText = "⚠️ Licencia de Prueba";
+                                perfilTxt.innerText = `Vencida`;
+                                perfilTxt.style.color = "var(--danger)";
                             }
                         }
+
+                        if (diffDias <= 0) {
+                            mostrarPagoLicencia(true); 
+                        } else {
+                            // Licencia válida: si el modal de bloqueo estaba abierto, lo cerramos
+                            document.getElementById('modal-pago-licencia').style.display = 'none';
+                            document.getElementById('app-container').style.display = 'block';
+                            const bannerCerrado = localStorage.getItem('banner_licencia_cerrado');
+                            if (!bannerCerrado || diffDias <= 7) {
+                                const banner = document.getElementById('banner-licencia');
+                                banner.style.display = 'block';
+                                document.getElementById('dias-restantes-banner').innerText = diffDias;
+                                
+                                if (diffDias <= 7) {
+                                    banner.style.background = "linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.2))";
+                                    banner.style.borderColor = "var(--danger)";
+                                    banner.querySelector('h4').style.color = "var(--danger)";
+                                    banner.querySelector('h4').innerText = "⚠️ ¡LICENCIA POR VENCER!";
+                                } else {
+                                    banner.style.background = "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1))";
+                                    banner.style.borderColor = "var(--warning)";
+                                    banner.querySelector('h4').style.color = "var(--warning)";
+                                    banner.querySelector('h4').innerText = "⚠️ Licencia de Prueba";
+                                }
+                            }
+                        }
+                    } else {
+                        if(perfilTxt) { 
+                            perfilTxt.innerText = "♾️ Ilimitada"; 
+                            perfilTxt.style.color = "var(--success)"; 
+                        }
+                        // Licencia ilimitada: cerrar modal de bloqueo si estaba abierto y mostrar app
+                        document.getElementById('modal-pago-licencia').style.display = 'none';
+                        document.getElementById('app-container').style.display = 'block';
+                        document.getElementById('banner-licencia').style.display = 'none';
+                        document.getElementById('btn-pagar-licencia').style.display = 'none';
                     }
-                } else {
-                    if(perfilTxt) { 
-                        perfilTxt.innerText = "♾️ Ilimitada"; 
-                        perfilTxt.style.color = "var(--success)"; 
-                    }
-                    document.getElementById('banner-licencia').style.display = 'none';
-                }
-            } else { window.preciosGuardados = {}; }
+                } else { window.preciosGuardados = {}; }
+            }, (e) => {
+                console.error("Error suscribiendo perfil:", e);
+                window.preciosGuardados = {};
+            });
         } catch (e) {
             console.error("Error cargando perfil:", e);
             window.preciosGuardados = {};
@@ -1962,15 +2035,6 @@ async function cargarDatosNube() {
     window.abrirModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'flex'; }
     window.cerrarModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'none'; }
 
-    window.cerrarBannerLicencia = function(event) {
-        event.stopPropagation(); // Evita que se abra la pasarela de pago al tocar la X
-        document.getElementById('banner-licencia').style.display = 'none';
-        localStorage.setItem('banner_licencia_cerrado', 'true');
-    }
-
-    window.abrirModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'flex'; }
-    window.cerrarModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'none'; }
-
     window.abrirModalAyuda = function() { document.getElementById('modal-ayuda').style.display = 'flex'; }
     window.cerrarModalAyuda = function() { document.getElementById('modal-ayuda').style.display = 'none'; }
 
@@ -1991,23 +2055,30 @@ async function cargarDatosNube() {
             btnElement.style.background = "var(--accent)";
         }, 2000);
 
-        // 2. Copiado síncrono (funciona al instante en todos los celulares)
-        const textArea = document.createElement("textarea");
-        textArea.value = cbu;
-        textArea.style.position = "fixed";
-        textArea.style.top = "-9999px"; // Lo ocultamos de la pantalla
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-            document.execCommand('copy');
-            window.showToast("✅ Alias copiado. ¡Abrí Mercado Pago!", "success");
-        } catch (err) {
-            window.showToast("⚠️ Error al copiar", "danger");
+        // FIX Bug 8: usar Clipboard API moderna en vez del execCommand obsoleto
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(cbu).then(() => {
+                window.showToast("✅ Alias copiado. ¡Abrí Mercado Pago!", "success");
+            }).catch(() => {
+                window.showToast("⚠️ Error al copiar", "danger");
+            });
+        } else {
+            // Fallback para navegadores muy antiguos
+            const textArea = document.createElement("textarea");
+            textArea.value = cbu;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                window.showToast("✅ Alias copiado. ¡Abrí Mercado Pago!", "success");
+            } catch (err) {
+                window.showToast("⚠️ Error al copiar", "danger");
+            }
+            document.body.removeChild(textArea);
         }
-        
-        document.body.removeChild(textArea);
     }
 
     window.enviarComprobanteWA = function() {
@@ -2082,7 +2153,8 @@ window.guardarLicenciasGlobal = async function() {
     window.ajustarDiasInput = function(cantidad) {
         const input = document.getElementById('input-dias-mod');
         let valorActual = parseInt(input.value) || 0;
-        input.value = valorActual + cantidad;
+        // FIX Bug 7: no permitir días negativos
+        input.value = Math.max(0, valorActual + cantidad);
     }
 
     window.confirmarModificarDias = function() {
@@ -2193,7 +2265,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esFalta')) document.getElementById('esFalta').dispatchEvent(ev);
         
         window.turnoEnEdicion = id;
-        document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO TURNO";
+        document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO GUARDIA";
         document.getElementById('btn-submit-turno').innerText = "GUARDAR CAMBIOS";
         document.getElementById('btn-submit-turno').style.background = "var(--warning)";
         document.getElementById('btn-cancel-edit').style.display = "block";
@@ -2221,8 +2293,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         
-        document.getElementById('form-titulo-modo').innerHTML = "➕ REGISTRAR TURNO";
-        document.getElementById('btn-submit-turno').innerText = "AGENDAR TURNO";
+        document.getElementById('form-titulo-modo').innerHTML = "➕ REGISTRAR GUARDIA";
+        document.getElementById('btn-submit-turno').innerText = "AGENDAR GUARDIA";
         document.getElementById('btn-submit-turno').style.background = "var(--accent)";
         document.getElementById('btn-cancel-edit').style.display = "none";
         document.getElementById('main-form').classList.remove('edit-mode');
@@ -2232,6 +2304,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     window.guardar = async function() {
         if (!window.currentUser) return;
         const f = document.getElementById('fecha').value;
+        // FIX Bug 3: validar que la fecha no esté vacía antes de continuar
+        if (!f) return window.showToast("⚠️ Completá la fecha del turno", "danger");
         const l = document.getElementById('lugar').value || "Puesto General";
         let e = document.getElementById('entrada').value;
         let s = document.getElementById('salida').value;
@@ -2331,7 +2405,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     function render() {
         const lista = document.getElementById('lista'); 
         let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0;
-        let hayFaltaSinAviso = false;
+        let diasFaltaSinAviso = 0; // Contador de días de falta (reemplaza el booleano)
         let diasUnicosTrabajados = new Set(); // El nuevo Set para contar días reales
         lista.innerHTML = '';
         
@@ -2346,7 +2420,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             } else if (t.lic) {
                 // No suma viático ni plus vacacional, pero se cuenta para el básico (ya implícito)
             } else if (t.falta) {
-                hayFaltaSinAviso = true;
+                diasFaltaSinAviso++; // Sumamos 1 por cada día que faltó
             } else { 
                 diasUnicosTrabajados.add(t.f); // Guarda la fecha, si se repite en el mismo día no suma doble
             }
@@ -2395,15 +2469,15 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         let horaExtraVal = valMes.hora > 0 ? valMes.hora : (valorHoraNormal * 1.5);
 
         // ========== AJUSTE A: PAGO DE FERIADOS ==========
-        let recargoFeriado = valMes.tipoFeriado === "50" ? 1.5 : 1; // Si es 100%, paga una hora extra "limpia" porque la otra ya está en el básico.
-        let horaFeriadoVal = valMes.hora > 0 ? valMes.hora : (valorHoraNormal * recargoFeriado);
+        let recargoFeriado = valMes.tipoFeriado === "50" ? 0.5 : 1; // Si es 100%, paga una hora extra "limpia" porque la otra ya está en el básico.
+        let horaFeriadoVal = valorHoraNormal * recargoFeriado; // El feriado siempre usa la hora normal pura
         let pagoFeriados = sf * horaFeriadoVal;
         
         let pagoHorasTotales = 0, hsExtra = 0;
-        // Calculamos horas extras excluyendo las que ya cobraron recargo por feriado
-        let horasNormalesTrabajadas = st - sf; 
-        if (horasNormalesTrabajadas > valMes.horasBase) { 
-            hsExtra = horasNormalesTrabajadas - valMes.horasBase; 
+        // FIX: Las horas de feriado ya se pagan aparte, pero TODAS las horas físicas
+        // deben contar para alcanzar el límite de la base. Comparamos st directamente.
+        if (st > valMes.horasBase) { 
+            hsExtra = st - valMes.horasBase; 
             pagoHorasTotales = hsExtra * horaExtraVal; 
         }
 
@@ -2416,9 +2490,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         }
 
         // Si hay falta, el presentismo es 0. Si no, se usa el de la configuración.
-        const presentismoReal = hayFaltaSinAviso ? 0 : valMes.presentismo;
-        // El descuento del día por la falta (Básico + Antigüedad) / 30
-        const descuentoFalta = hayFaltaSinAviso ? ((valMes.basico + montoAntiguedad) / 30) : 0;
+        const presentismoReal = diasFaltaSinAviso > 0 ? 0 : valMes.presentismo;
+        // Descuenta el valor del día MULTIPLICADO por la cantidad de faltas reales
+        const descuentoFalta = ((valMes.basico + montoAntiguedad) / 30) * diasFaltaSinAviso;
         const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFalta;
         const descuentosLey = sumaRemunerativa * (valMes.descuentos / 100);
         
@@ -2432,37 +2506,57 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
 
-        // --- LÓGICA DE LA BARRA DE PROGRESO (CON EFECTO GLOW) ---
+        // --- LÓGICA DE PROGRESO INTEGRADA (HORAS + PLATA) ---
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
         const progressStatus = document.getElementById('progress-status');
         if (progressBar && progressText) {
-            // Calculamos el porcentaje (tope 100%)
+            // 1. Calculamos el porcentaje de horas
             const porcentaje = Math.min((st / valMes.horasBase) * 100, 100);
             progressBar.style.width = porcentaje + "%";
             progressText.innerText = `${st.toFixed(1)} / ${valMes.horasBase} hs`;
-            // Reseteamos estilos por defecto (quitamos glow si existía)
-            progressBar.style.boxShadow = "none";
-            progressBar.style.animation = "none";
-            // Cambiamos el mensaje y estilo según cuánto falte
+            // --- LÓGICA DE PROGRESO CLARA ---
+            const acumuladoPlata = (totalNeto / valMes.horasBase) * st;
+            const plataFmt = acumuladoPlata.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             if (st === 0) {
-                progressStatus.innerText = "Todavía no registraste horas este mes.";
+                progressStatus.innerHTML = "Todavía no registraste horas este mes.";
             } else if (st < valMes.horasBase) {
-                // MODO NORMAL (Azul, sin brillo)
-                const faltan = (valMes.horasBase - st).toFixed(1);
-                progressStatus.innerText = `Te faltan ${faltan} hs para cumplir tu base mensual.`;
+                // MENSAJE CLARO: Estás cubriendo tu sueldo
+                progressStatus.innerHTML = `Llevás cubiertos <b>$ ${plataFmt}</b> de tu sueldo base.`;
                 progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
+                progressBar.style.boxShadow = "none";
+                progressBar.style.animation = "";
             } else {
-                // MODO OBJETIVO CUMPLIDO (Verde, con brillo/glow)
-                const extra = (st - valMes.horasBase).toFixed(1);
-                progressStatus.innerText = `¡Objetivo cumplido! Tenés ${extra} hs extras acumuladas. 💰`;
+                // MENSAJE DE ÉXITO: Ya cubriste el básico, ahora sumás extras
+                // FIX Bug 9: calcular extras con el valor neto real de la hora extra
+                const extraPlataReal = hsExtra * horaExtraVal * (1 - valMes.descuentos / 100);
+                progressStatus.innerHTML = `¡Sueldo base cubierto! Llevás <b>$ ${extraPlataReal.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> en extras. 💰`;
                 progressBar.style.background = "linear-gradient(90deg, var(--success), #4ade80)";
-                // >>> NUEVO EFECTO DE BRILLO/GLOW INTENSO <<<
-                // Aplicamos sombras múltiples verdes para simular un neón/glow
-                progressBar.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.8), 0 0 20px rgba(74, 222, 128, 0.6), 0 0 30px rgba(74, 222, 128, 0.4)";
-                
-                // Opcional: Agregamos una animación de pulso suave (necesita definirse en CSS, si no la tenés, ignora esta línea)
-                // progressBar.style.animation = "glow-pulse 2s infinite ease-in-out";
+                // FIX Bug "Brillo Mudo": aplicar animación de neón pulsante
+                progressBar.style.animation = "glow-pulse 1.8s ease-in-out infinite";
+            }
+        }
+
+        // --- SALARY-CARD: título y nota según modo de viático ---
+        const txtNotaSueldo = document.getElementById('txt-nota-sueldo');
+        const netoTitleLabel = document.getElementById('neto-title-label');
+        if (valMes.tipoViatico === 'proporcional') {
+            if (netoTitleLabel) netoTitleLabel.innerText = 'NETO EN MANO (Estimado)';
+            if (txtNotaSueldo) {
+                txtNotaSueldo.style.display = '';
+                txtNotaSueldo.innerHTML = '*Puede variar levemente por redondeos contables o acuerdos específicos de tu empresa.';
+            }
+        } else {
+            if (netoTitleLabel) netoTitleLabel.innerText = 'SUELDO GARANTIZADO (MES COMPLETO)';
+            if (txtNotaSueldo) {
+                txtNotaSueldo.style.display = '';
+                // FIX Bug "Salto de Nota": preservar el estado abierto/cerrado del acordeón.
+                // Solo restauramos la estructura si los elementos internos no existen aún.
+                if (!txtNotaSueldo.querySelector('#txt-nota-corta') && !txtNotaSueldo.querySelector('#txt-nota-larga')) {
+                    txtNotaSueldo.innerHTML = `
+                        <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
+                        <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>`;
+                }
             }
         }
     }
