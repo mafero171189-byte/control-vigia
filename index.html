@@ -607,8 +607,8 @@
             <div style="background: rgba(56, 189, 248, 0.05); border-left: 3px solid var(--accent); padding: 10px; margin: 10px 0;">
                 <b style="color: var(--accent); font-size: 0.75rem; text-transform: uppercase;">¿Qué significa cada ícono en la tarjeta?</b><br>
                 • <b>Las horas grandes</b> (ej. <b>12hs</b>) son el total físico del turno.<br>
-                • <b>🌙 </b> son las horas nocturnas dentro de ese turno (de 21:00 a 06:00). Se usan para calcular el plus nocturno.<br>
-                • <b>🚩 </b> son las horas que caen dentro del día feriado en ese turno. Solo aparece cuando hay horas de feriado que cobrar.
+                • <b>🌙 Xh</b> son las horas nocturnas dentro de ese turno (de 21:00 a 06:00). Se usan para calcular el plus nocturno.<br>
+                • <b>🚩 Xh</b> son las horas que caen dentro del día feriado en ese turno. Solo aparece cuando hay horas de feriado que cobrar.
             </div>
 
             <div style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid var(--warning); padding: 10px; margin: 10px 0;">
@@ -821,10 +821,15 @@
             <div><label>Entrada</label><input type="time" id="entrada"></div>
             <div><label>Salida</label><input type="time" id="salida"></div>
             
-            <label class="feriado-full">
-                <input type="checkbox" id="esFeriado">
-                <span>🚩 Marcar solo si es Feriado</span>
-            </label>
+            <div id="box-feriado" style="grid-column: span 2; margin-top: 5px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 12px; box-sizing: border-box;">
+                <label style="color: var(--warning); font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block;">🚩 Estado del Feriado</label>
+                <select id="estadoFeriado" class="auth-input" style="margin-bottom: 0; padding: 10px; border-color: rgba(245, 158, 11, 0.4); font-weight: bold; color: var(--text-main);">
+                    <option value="normal">Ninguno (No es Feriado)</option>
+                    <option value="entrada">Feriado el día que ENTRÉ</option>
+                    <option value="salida">Feriado el día que SALÍ</option>
+                    <option value="ambos">Ambos días son Feriado</option>
+                </select>
+            </div>
             
             <label class="vacaciones-full">
                 <input type="checkbox" id="esVacaciones">
@@ -1049,7 +1054,7 @@
     // --- LÓGICA DE INTERFAZ PARA VACACIONES Y FERIADOS ---
     document.addEventListener('DOMContentLoaded', () => {
         const chkVacaciones = document.getElementById('esVacaciones');
-        const chkFeriado = document.getElementById('esFeriado');
+        const selectFeriado = document.getElementById('estadoFeriado');
         const chkLicencia = document.getElementById('esLicencia');
         const chkFalta = document.getElementById('esFalta');
         const inputEntrada = document.getElementById('entrada');
@@ -1057,33 +1062,27 @@
         const msjFalta = document.getElementById('msj-falta');
         const montoTxt = document.getElementById('monto-descuento-dia');
 
-        if(chkVacaciones && chkFeriado && chkLicencia) {
-            // Función centralizada que evalúa el estado general
+        if(chkVacaciones && selectFeriado && chkLicencia) {
             const actualizarEstadoHoras = () => {
                 if (chkVacaciones.checked || chkLicencia.checked || (chkFalta && chkFalta.checked)) {
-                    inputEntrada.disabled = true;
-                    inputSalida.disabled = true;
-                    inputEntrada.value = "";
-                    inputSalida.value = "";
+                    inputEntrada.disabled = true; inputSalida.disabled = true;
+                    inputEntrada.value = ""; inputSalida.value = "";
                 } else {
-                    inputEntrada.disabled = false;
-                    inputSalida.disabled = false;
+                    inputEntrada.disabled = false; inputSalida.disabled = false;
                 }
             };
 
             chkVacaciones.addEventListener('change', function() {
                 if(this.checked) {
-                    chkFeriado.checked = false; 
-                    chkLicencia.checked = false;
+                    selectFeriado.value = 'normal'; chkLicencia.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
             });
 
-            chkFeriado.addEventListener('change', function() {
-                if(this.checked) {
-                    chkVacaciones.checked = false; 
-                    chkLicencia.checked = false;
+            selectFeriado.addEventListener('change', function() {
+                if(this.value !== 'normal') {
+                    chkVacaciones.checked = false; chkLicencia.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
@@ -1091,8 +1090,7 @@
 
             chkLicencia.addEventListener('change', function() {
                 if(this.checked) {
-                    chkFeriado.checked = false;
-                    chkVacaciones.checked = false;
+                    selectFeriado.value = 'normal'; chkVacaciones.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
@@ -1101,10 +1099,7 @@
             if(chkFalta) {
                 chkFalta.addEventListener('change', function() {
                     if(this.checked) {
-                        chkFeriado.checked = false;
-                        chkVacaciones.checked = false;
-                        chkLicencia.checked = false;
-                        // Calcular y mostrar el mensaje de "Ojo"
+                        selectFeriado.value = 'normal'; chkVacaciones.checked = false; chkLicencia.checked = false;
                         const v = window.obtenerValoresMes(window.fechaFiltro);
                         const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
                         const totalPerdido = descuentoDia + v.presentismo;
@@ -2255,14 +2250,19 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('lugar').value = turno.l || "";
         document.getElementById('entrada').value = turno.e;
         document.getElementById('salida').value = turno.s;
-        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = turno.fer || false;
+        if (document.getElementById('estadoFeriado')) {
+            if (turno.ferE && turno.ferS) document.getElementById('estadoFeriado').value = 'ambos';
+            else if (turno.ferS) document.getElementById('estadoFeriado').value = 'salida';
+            else if (turno.ferE || turno.fer) document.getElementById('estadoFeriado').value = 'entrada';
+            else document.getElementById('estadoFeriado').value = 'normal';
+        }
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = turno.vac || false;
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = turno.lic || false;
         if(document.getElementById('esFalta')) document.getElementById('esFalta').checked = turno.falta || false;
         
         // Disparar los eventos para que la interfaz se bloquee/desbloquee sola
         const ev = new Event('change');
-        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
+        if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         if(document.getElementById('esFalta')) document.getElementById('esFalta').dispatchEvent(ev);
@@ -2287,12 +2287,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('lugar').value = '';
         document.getElementById('entrada').value = '';
         document.getElementById('salida').value = '';
-        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
+        if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'normal';
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
         if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
         const ev = new Event('change');
-        if(document.getElementById('esFeriado')) document.getElementById('esFeriado').dispatchEvent(ev);
+        if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         
@@ -2312,7 +2312,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const l = document.getElementById('lugar').value || "Puesto General";
         let e = document.getElementById('entrada').value;
         let s = document.getElementById('salida').value;
-        const fer = document.getElementById('esFeriado') ? document.getElementById('esFeriado').checked : false;
+        const estFeriado = document.getElementById('estadoFeriado') ? document.getElementById('estadoFeriado').value : 'normal';
+        const ferE = (estFeriado === 'entrada' || estFeriado === 'ambos');
+        const ferS = (estFeriado === 'salida' || estFeriado === 'ambos');
         const vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
         const lic = document.getElementById('esLicencia') ? document.getElementById('esLicencia').checked : false;
         const falta = document.getElementById('esFalta') ? document.getElementById('esFalta').checked : false;
@@ -2339,7 +2341,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             s = "";
         }
         
-        const nuevoTurno = { f, l, e, s, fer, vac, lic, falta, t: diff, n: noct };
+        const nuevoTurno = { f, l, e, s, ferE, ferS, vac, lic, falta, t: diff, n: noct };
         
         try {
             if (window.turnoEnEdicion) {
@@ -2349,7 +2351,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             } else {
                 await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
                 document.getElementById('lugar').value = ''; 
-                if(document.getElementById('esFeriado')) document.getElementById('esFeriado').checked = false;
+                if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'normal';
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
                 if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
@@ -2416,39 +2418,39 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         const valMes = window.obtenerValoresMes(window.fechaFiltro);
 
-        // Pre-armamos un Set con todas las fechas que son feriado para detectar cruces de medianoche
-        const feriadoDates = new Set(window.turnos.filter(x => x.fer).map(x => x.f));
-
         window.turnos.forEach((t) => {
             const fObj = new Date(t.f + "T00:00:00");
             
             st += t.t; sn += t.n;
 
-            // Cálculo de horas feriado con soporte de turnos que cruzan medianoche
+            // Compatibilidad hacia atrás: si existe 't.fer', lo tratamos como entrada
+            const esFerEntrada = t.ferE || t.fer;
+            const esFerSalida = t.ferS;
+            let horasFeriadoTurno = 0;
+
+            // Cálculo inteligente separado
             if (t.e) {
                 const [hh, mm] = t.e.split(':').map(Number);
                 const horasHastaMedianoche = ((24 * 60) - (hh * 60 + mm)) / 60;
                 const horasAntesMedianoche = Math.min(t.t, horasHastaMedianoche);
                 const horasDespuesMedianoche = Math.max(0, t.t - horasHastaMedianoche);
 
-                // Caso 1: este turno está marcado como feriado → las horas ANTES de medianoche son feriado
-                if (t.fer) {
+                if (esFerEntrada) {
                     sf += horasAntesMedianoche;
+                    horasFeriadoTurno += horasAntesMedianoche;
                 }
-
-                // Caso 2: el turno cruza medianoche y el DÍA SIGUIENTE es feriado → las horas DESPUÉS de medianoche son feriado
-                if (horasDespuesMedianoche > 0) {
-                    const partes = t.f.split('-');
-                    const dSig = new Date(+partes[0], +partes[1] - 1, +partes[2] + 1);
-                    const fSig = `${dSig.getFullYear()}-${String(dSig.getMonth()+1).padStart(2,'0')}-${String(dSig.getDate()).padStart(2,'0')}`;
-                    if (feriadoDates.has(fSig)) {
-                        sf += horasDespuesMedianoche;
-                    }
+                if (horasDespuesMedianoche > 0 && esFerSalida) {
+                    sf += horasDespuesMedianoche;
+                    horasFeriadoTurno += horasDespuesMedianoche;
                 }
             } else {
-                // Sin hora de entrada: fallback al comportamiento original
-                if (t.fer) sf += t.t;
+                // Fallback para turnos sin horarios guardados
+                if (esFerEntrada) {
+                    sf += t.t;
+                    horasFeriadoTurno = t.t;
+                }
             }
+
             if (t.vac) { 
                 plusVacacionalTotal += valMes.plusVac; 
                 diasVacaciones++;
@@ -2462,25 +2464,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
             const card = document.createElement('div'); 
             const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'");
-            // Definimos el texto del horario (si existe)
             const horarioTexto = (t.e && t.s) ? `(${t.e} a ${t.s})` : "";
+            const esAlgunFeriado = (esFerEntrada || esFerSalida);
 
-            // Calculamos las horas feriado de este turno para mostrarlas en la tarjeta
-            let horasFeriadoTurno = 0;
-            if (t.e) {
-                const [_hh, _mm] = t.e.split(':').map(Number);
-                const _hastaMedia = ((24 * 60) - (_hh * 60 + _mm)) / 60;
-                if (t.fer) horasFeriadoTurno += Math.min(t.t, _hastaMedia);
-                const _despues = Math.max(0, t.t - _hastaMedia);
-                if (_despues > 0) {
-                    const _p = t.f.split('-');
-                    const _ds = new Date(+_p[0], +_p[1]-1, +_p[2]+1);
-                    const _fs = `${_ds.getFullYear()}-${String(_ds.getMonth()+1).padStart(2,'0')}-${String(_ds.getDate()).padStart(2,'0')}`;
-                    if (feriadoDates.has(_fs)) horasFeriadoTurno += _despues;
-                }
-            } else if (t.fer) {
-                horasFeriadoTurno = t.t;
-            }
             if (t.lic) {
                 card.className = 'shift-card licencia';
                 card.innerHTML = `
@@ -2498,13 +2484,13 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                         <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
                     </div>`;
             } else {
-                card.className = t.vac ? 'shift-card vacaciones' : (t.fer ? 'shift-card feriado' : 'shift-card');
+                card.className = t.vac ? 'shift-card vacaciones' : (esAlgunFeriado ? 'shift-card feriado' : 'shift-card');
                 card.innerHTML = `
                     <div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;">
                         <span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span>
                         <span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span>
                     </div>
-                    ${t.fer ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
+                    ${esAlgunFeriado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
                     ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
                     <div style="display:flex; align-items:center;">
                         <div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div>
