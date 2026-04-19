@@ -816,16 +816,17 @@
         
         <label id="form-titulo-modo">➕ REGISTRAR GUARDIA</label>
         <div class="form-row">
-            <div><label>Fecha</label><input type="date" id="fecha"></div>
+            <div><label>Fecha</label><input type="date" id="fecha" onchange="detectarFeriadoAutomatico()"></div>
             <div><label>Objetivo</label><input type="text" id="lugar" placeholder="Puesto"></div>
         </div>
         <div class="form-row">
-            <div><label>Entrada</label><input type="time" id="entrada"></div>
-            <div><label>Salida</label><input type="time" id="salida"></div>
+            <div><label>Entrada</label><input type="time" id="entrada" onchange="detectarFeriadoAutomatico()"></div>
+            <div><label>Salida</label><input type="time" id="salida" onchange="detectarFeriadoAutomatico()"></div>
             
             <div id="box-feriado" style="grid-column: span 2; margin-top: 5px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 12px; box-sizing: border-box;">
                 <label style="color: var(--warning); font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block;">🚩 Estado del Feriado</label>
                 <select id="estadoFeriado" class="auth-input" style="margin-bottom: 0; padding: 10px; border-color: rgba(245, 158, 11, 0.4); font-weight: bold; color: var(--text-main);">
+                    <option value="auto" selected>🤖 Automático</option>
                     <option value="normal">Ninguno (No es Feriado)</option>
                     <option value="entrada">Feriado el día que ENTRÉ</option>
                     <option value="salida">Feriado el día que SALÍ</option>
@@ -942,6 +943,22 @@
         <button class="btn-msg" id="btn-guardar-upsra" onclick="guardarValoresAdmin()">Guardar Mes</button>
     </div>
 
+    <div class="admin-msg-box" style="border-color: var(--accent); margin-top: 20px;">
+    <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">📅 Gestión de Calendario 2026</h3>
+    <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Las fechas añadidas aquí se detectarán automáticamente en la app de los usuarios.</p>
+    
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <input type="date" id="admin-nuevo-feriado" class="auth-input" style="margin-bottom: 0;">
+        <button onclick="agregarFeriadoAdmin()" style="background: var(--accent); color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">AÑADIR</button>
+    </div>
+    
+    <label style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Feriados Activos (Toca para eliminar):</label>
+    <div id="admin-lista-feriados" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid var(--border); min-height: 50px;">
+        </div>
+    <button class="btn-msg" style="margin-top:15px; background: var(--success);" onclick="guardarFeriadosGlobal()">💾 GUARDAR CALENDARIO GLOBAL</button>
+    <button class="btn-msg" style="margin-top:8px; background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid var(--accent);" onclick="resetearFeriados2026()">🔄 RESETEAR A FERIADOS OFICIALES 2026</button>
+</div>
+
     <div class="admin-header">
         <div id="admin-contador-total" style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 12px; margin-bottom: 10px; text-align: center; border: 1px solid var(--accent);">
             <b style="color: var(--accent); font-size: 1.1rem;" id="admin-txt-contador">👥 Cargando usuarios...</b>
@@ -994,6 +1011,66 @@
     window.turnoEnEdicion = null; 
     window.unsubTurnos = null; 
     window.ultimoUsuarioDoc = null; // Para saber desde dónde seguir cargando
+    // Lista oficial de feriados Argentina 2026 (inamovibles + trasladables + puentes + Día del Vigilador)
+    const FERIADOS_2026 = [
+        "2026-01-01", // Año Nuevo
+        "2026-02-16", // Carnaval (lunes)
+        "2026-02-17", // Carnaval (martes)
+        "2026-03-23", // Puente turístico (previo al 24/3)
+        "2026-03-24", // Día Nacional de la Memoria
+        "2026-04-02", // Día del Veterano/Malvinas + Jueves Santo
+        "2026-04-03", // Viernes Santo
+        "2026-04-25", // 🛡️ Día del Vigilador Privado
+        "2026-05-01", // Día del Trabajador
+        "2026-05-25", // Día de la Revolución de Mayo
+        "2026-06-15", // Güemes (trasladado del 17/6)
+        "2026-06-20", // Paso a la Inmortalidad del Gral. Belgrano
+        "2026-07-09", // Día de la Independencia
+        "2026-07-10", // Puente turístico (posterior al 9/7)
+        "2026-08-17", // Paso a la Inmortalidad del Gral. San Martín
+        "2026-10-12", // Día del Respeto a la Diversidad Cultural
+        "2026-11-23", // Día de la Soberanía Nacional (trasladado del 20/11)
+        "2026-12-07", // Puente turístico (previo al 8/12)
+        "2026-12-08", // Inmaculada Concepción de María
+        "2026-12-25"  // Navidad
+    ];
+    window.feriadosGlobales = [];
+
+    window.detectarFeriadoAutomatico = function() {
+        if (window.turnoEnEdicion || document.getElementById('esVacaciones').checked || 
+            document.getElementById('esLicencia').checked || document.getElementById('esFalta').checked) return;
+
+        const fStr = document.getElementById('fecha').value;
+        const eStr = document.getElementById('entrada').value;
+        const sStr = document.getElementById('salida').value;
+        const select = document.getElementById('estadoFeriado');
+        if (!fStr || !select) return;
+
+        const esFerEntrada = window.feriadosGlobales.includes(fStr);
+        let esFerSalida = false;
+
+        if (eStr && sStr) {
+            const [hE, mE] = eStr.split(':').map(Number);
+            const [hS, mS] = sStr.split(':').map(Number);
+            
+            if (hS < hE || (hS === hE && mS < mE)) {
+                let fechaS = new Date(fStr + "T12:00:00");
+                fechaS.setDate(fechaS.getDate() + 1);
+                const yyyy = fechaS.getFullYear();
+                const mm = String(fechaS.getMonth() + 1).padStart(2, '0');
+                const dd = String(fechaS.getDate()).padStart(2, '0');
+                esFerSalida = window.feriadosGlobales.includes(`${yyyy}-${mm}-${dd}`);
+            }
+        }
+
+        if (esFerEntrada && esFerSalida) select.value = 'ambos';
+        else if (esFerEntrada) select.value = 'entrada';
+        else if (esFerSalida) select.value = 'salida';
+        else select.value = 'auto'; 
+        
+        select.dispatchEvent(new Event('change'));
+    };
+
     
     let esModoRegistro = false;
     window.isRegistering = false; // 🔴 Bandera para evitar la condición de carrera
@@ -1083,7 +1160,7 @@
             });
 
             selectFeriado.addEventListener('change', function() {
-                if(this.value !== 'normal') {
+                if(this.value !== 'normal' && this.value !== 'auto') {
                     chkVacaciones.checked = false; chkLicencia.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                 }
@@ -1542,6 +1619,8 @@
         
         window.ultimoUsuarioDoc = null;
         await buscarUsuariosEnNube();
+        // Mostrar feriados ya cargados en el panel
+        window.renderizarFeriadosAdmin();
     }
 
     async function buscarUsuariosEnNube() {
@@ -1800,6 +1879,48 @@ window.formatearEnlaces = function(texto) {
 
     window.cerrarAviso = function() { document.getElementById('aviso-global').style.display = 'none'; }
 
+    window.agregarFeriadoAdmin = function() {
+        const fecha = document.getElementById('admin-nuevo-feriado').value;
+        if (!fecha || window.feriadosGlobales.includes(fecha)) return;
+        window.feriadosGlobales.push(fecha);
+        window.feriadosGlobales.sort();
+        window.renderizarFeriadosAdmin();
+    };
+    window.renderizarFeriadosAdmin = function() {
+        const lista = document.getElementById('admin-lista-feriados');
+        if (!lista) return;
+        lista.innerHTML = "";
+        window.feriadosGlobales.forEach(f => {
+            const btn = document.createElement('span');
+            btn.className = 'lp-pill';
+            btn.style.cursor = 'pointer';
+            btn.innerHTML = `${f} <b style="color:var(--danger); margin-left:5px;">✕</b>`;
+            btn.onclick = () => {
+                window.feriadosGlobales = window.feriadosGlobales.filter(x => x !== f);
+                window.renderizarFeriadosAdmin();
+            };
+            lista.appendChild(btn);
+        });
+    };
+    window.guardarFeriadosGlobal = async function() {
+        try {
+            await setDoc(doc(db, "global", "feriados"), { lista: window.feriadosGlobales });
+            window.showToast("✅ Calendario actualizado para todos");
+        } catch (e) {
+            window.showToast("⚠️ Error de permisos", "danger");
+        }
+    };
+    window.resetearFeriados2026 = async function() {
+        window.feriadosGlobales = [...FERIADOS_2026];
+        window.renderizarFeriadosAdmin();
+        try {
+            await setDoc(doc(db, "global", "feriados"), { lista: FERIADOS_2026 });
+            window.showToast("✅ Feriados 2026 oficiales cargados (" + FERIADOS_2026.length + " fechas)");
+        } catch (e) {
+            window.showToast("⚠️ Error al guardar", "danger");
+        }
+    };
+
     window.publicarMensaje = async function() {
         const texto = document.getElementById('admin-mensaje-texto').value;
         const btn = document.getElementById('btn-publicar');
@@ -2005,7 +2126,26 @@ async function cargarDatosNube() {
             window.valoresUPSRA = {};
         }
 
-        // 4. SUSCRIPCIÓN DE TURNOS (Esto ahora se ejecuta siempre, garantizando que la UI cargue)
+        // 4. SUSCRIPCIÓN DE FERIADOS GLOBALES
+        try {
+            onSnapshot(doc(db, "global", "feriados"), async (docSnap) => {
+                if (docSnap.exists() && docSnap.data().lista?.length > 0) {
+                    window.feriadosGlobales = docSnap.data().lista;
+                } else {
+                    // Primera vez: auto-sembramos la base con los feriados 2026 oficiales
+                    window.feriadosGlobales = [...FERIADOS_2026];
+                    try {
+                        await setDoc(doc(db, "global", "feriados"), { lista: FERIADOS_2026 });
+                        console.log("Feriados 2026 inicializados en Firebase.");
+                    } catch(e) { /* Sin permisos (usuario normal): usamos los locales */ }
+                }
+                if (document.getElementById('admin-container').style.display === 'block') {
+                    window.renderizarFeriadosAdmin();
+                }
+            });
+        } catch(e) { console.warn("No se pudo cargar feriados globales:", e); }
+
+        // 5. SUSCRIPCIÓN DE TURNOS (Esto ahora se ejecuta siempre, garantizando que la UI cargue)
         suscribirTurnosMes(window.fechaFiltro);
     }
 
@@ -2248,6 +2388,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const turno = window.turnos.find(t => t.id === id);
         if (!turno) return;
         
+        window.turnoEnEdicion = id; // Primero marcamos modo edición, para bloquear la auto-detección
+        
         document.getElementById('fecha').value = turno.f;
         document.getElementById('lugar').value = turno.l || "";
         document.getElementById('entrada').value = turno.e;
@@ -2269,7 +2411,6 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         if(document.getElementById('esFalta')) document.getElementById('esFalta').dispatchEvent(ev);
         
-        window.turnoEnEdicion = id;
         document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO GUARDIA";
         document.getElementById('btn-submit-turno').innerText = "GUARDAR CAMBIOS";
         document.getElementById('btn-submit-turno').style.background = "var(--warning)";
@@ -2289,7 +2430,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('lugar').value = '';
         document.getElementById('entrada').value = '';
         document.getElementById('salida').value = '';
-        if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'normal';
+        if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'auto';
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
         if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
@@ -2308,6 +2449,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     // 🔴 CORRECCIÓN: Precisión de coma flotante en horas nocturnas
     window.guardar = async function() {
         if (!window.currentUser) return;
+        
+        // Forzamos un último cálculo inteligente justo antes de guardar
+        window.detectarFeriadoAutomatico();
+
         const f = document.getElementById('fecha').value;
         // FIX Bug 3: validar que la fecha no esté vacía antes de continuar
         if (!f) return window.showToast("⚠️ Completá la fecha del turno", "danger");
@@ -2353,7 +2498,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             } else {
                 await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
                 document.getElementById('lugar').value = ''; 
-                if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'normal';
+                if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'auto';
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
                 if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
@@ -2396,6 +2541,24 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('mesVisual').innerText = `${mesNom.toUpperCase()} ${window.fechaFiltro.getFullYear()}`;
         document.getElementById('mesBtnLabel').innerText = mesNom.toUpperCase();
         
+        // Sincronizar el input de fecha con el mes navegado
+        const hoy = new Date();
+        const mismoMes = window.fechaFiltro.getMonth() === hoy.getMonth() && 
+                         window.fechaFiltro.getFullYear() === hoy.getFullYear();
+        const fechaInput = document.getElementById('fecha');
+        if (mismoMes) {
+            // Si volvemos al mes actual, mostramos el día de hoy
+            hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
+            fechaInput.value = hoy.toISOString().split('T')[0];
+        } else {
+            // En cualquier otro mes, posicionamos en el día 1
+            const yyyy = window.fechaFiltro.getFullYear();
+            const mm = String(window.fechaFiltro.getMonth() + 1).padStart(2, '0');
+            fechaInput.value = `${yyyy}-${mm}-01`;
+        }
+        // Re-evaluar si la fecha nueva es feriado
+        window.detectarFeriadoAutomatico();
+        
         // Conectar los turnos del mes nuevo (actualizarUI se llama solo al terminar de descargar)
         suscribirTurnosMes(window.fechaFiltro);
     }
@@ -2430,22 +2593,36 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             const esFerSalida = t.ferS;
             let horasFeriadoTurno = 0;
 
-            // Cálculo inteligente separado
-            if (t.e) {
-                const [hh, mm] = t.e.split(':').map(Number);
-                const horasHastaMedianoche = ((24 * 60) - (hh * 60 + mm)) / 60;
-                const horasAntesMedianoche = Math.min(t.t, horasHastaMedianoche);
-                const horasDespuesMedianoche = Math.max(0, t.t - horasHastaMedianoche);
+                        // 🛠️ FIX: Cálculo de horas de feriado sin solapamiento
+            if (t.e && t.s) {
+                const [hE, mE] = t.e.split(':').map(Number);
+                const [hS, mS] = t.s.split(':').map(Number);
+                
+                const minEntrada = hE * 60 + mE;
+                const minSalida = hS * 60 + mS;
+                
+                let minFeriado = 0;
 
-                if (esFerEntrada) {
-                    sf += horasAntesMedianoche;
-                    horasFeriadoTurno += horasAntesMedianoche;
+                if (minSalida <= minEntrada) { 
+                    // Caso: Cruzó la medianoche
+                    const minHastaMedianoche = 1440 - minEntrada;
+                    const minDesdeMedianoche = minSalida;
+
+                    if (esFerEntrada) minFeriado += minHastaMedianoche;
+                    if (esFerSalida) minFeriado += minDesdeMedianoche;
+                } else {
+                    // Caso: Turno en el mismo día
+                    if (esFerEntrada) minFeriado += (minSalida - minEntrada);
                 }
-                if (horasDespuesMedianoche > 0 && esFerSalida) {
-                    sf += horasDespuesMedianoche;
-                    horasFeriadoTurno += horasDespuesMedianoche;
-                }
-            } else {
+
+                const horasFeriadoFinal = Number((minFeriado / 60).toFixed(2));
+                sf += horasFeriadoFinal;
+                horasFeriadoTurno = horasFeriadoFinal;
+            } else if (esFerEntrada) {
+                sf += t.t;
+                horasFeriadoTurno = t.t;
+            }
+ else {
                 // Fallback para turnos sin horarios guardados
                 if (esFerEntrada) {
                     sf += t.t;
