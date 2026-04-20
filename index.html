@@ -759,7 +759,7 @@
             </p>
         </div>
         
-        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalAyuda()">CONFIGURA TUS AÑOS DE ANTIGÜEDAD Y PAGOS DE FERIADOS</button>
+        <button class="auth-btn" id="btn-cerrar-ayuda" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalAyuda()">ENTENDIDO</button>
     </div>
 </div>
 
@@ -2394,7 +2394,13 @@ async function cargarDatosNube() {
     window.abrirModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'flex'; }
     window.cerrarModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'none'; }
 
-    window.abrirModalAyuda = function() { document.getElementById('modal-ayuda').style.display = 'flex'; }
+    window.abrirModalAyuda = function() {
+        document.getElementById('modal-ayuda').style.display = 'flex';
+        const btn = document.getElementById('btn-cerrar-ayuda');
+        if (btn) btn.innerText = window.primerIngreso 
+            ? '⚙️ CONFIGURAR MI ANTIGÜEDAD Y FERIADOS' 
+            : 'ENTENDIDO';
+    }
     window.cerrarModalAyuda = function() {
         document.getElementById('modal-ayuda').style.display = 'none';
         // 🚀 Si viene del onboarding, abre config como siguiente paso
