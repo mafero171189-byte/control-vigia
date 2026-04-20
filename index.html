@@ -2171,17 +2171,17 @@ window.formatearEnlaces = function(texto) {
         btn.innerText = "Guardar Mes";
     };
 
-    // 🔴 CORRECCIÓN: Optimización de Firestore (No descargar todo el historial)
+    // 🔴 CORRECCIÓN: Suscripción directa para garantizar tiempo real a usuarios nuevos
     async function suscribirTurnosMes(fechaObj) {
         if (!window.currentUser) return;
 
         const año = fechaObj.getFullYear();
         const mes = fechaObj.getMonth();
         const mesStr = String(mes + 1).padStart(2, '0');
-        const claveMes = `${año}-${mesStr}`;
         const inicioMes = `${año}-${mesStr}-01`;
         const ultimoDia = new Date(año, mes + 1, 0).getDate();
         const finMes = `${año}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
+        
         const turnosRef = collection(db, "usuarios", window.currentUser.uid, "turnos");
         const q = query(
             turnosRef,
@@ -2190,21 +2190,6 @@ window.formatearEnlaces = function(texto) {
             orderBy("f", "desc")
         );
 
-        // 1. Consultar el conteo rápido (gasta solo 1 lectura)
-        try {
-            const snapshotConteo = await getCountFromServer(q);
-            const totalActual = snapshotConteo.data().count;
-            // 2. ¿Es el mismo conteo que tenemos en memoria?
-            if (window._turnosCache[claveMes] && window._turnosCache[claveMes].count === totalActual) {
-                console.log(`🚀 Usando caché para ${claveMes} (0 lecturas extra)`);
-                window.turnos = window._turnosCache[claveMes].data;
-                if (window.actualizarTituloMes) window.actualizarTituloMes();
-                actualizarUI();
-                return; // ✅ Salimos sin activar el Snapshot
-            }
-        } catch (e) { console.warn("Fallo conteo de turnos:", e); }
-
-        // 3. Si el conteo cambió o no hay caché, activamos la descarga (lecturas normales)
         if (window.unsubTurnos) window.unsubTurnos();
 
         window.unsubTurnos = onSnapshot(q, (querySnapshot) => {
@@ -2212,15 +2197,23 @@ window.formatearEnlaces = function(texto) {
             querySnapshot.forEach((doc) => nuevosTurnos.push({ id: doc.id, ...doc.data() }));
 
             window.turnos = nuevosTurnos;
-            // Guardamos en la memoria para la próxima vez
+            
+            const claveMes = `${año}-${mesStr}`;
             window._turnosCache[claveMes] = {
                 count: querySnapshot.size,
                 data: nuevosTurnos
             };
+
             if (window.actualizarTituloMes) window.actualizarTituloMes();
             actualizarUI();
+        }, (error) => {
+            console.error("Error en la conexión de turnos:", error);
+            if (error.code === 'permission-denied') {
+                console.warn("Acceso denegado a los turnos. Verificá la sesión.");
+            }
         });
     }
+
 
 async function cargarDatosNube() {
         if (!window.currentUser) return;
