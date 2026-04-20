@@ -406,9 +406,9 @@
         <h2 style="color: var(--accent); margin-top: 0; font-size: 1.5rem;">¡Bienvenido a Control Vigía! 🛡️</h2>
         <p style="font-size: 0.95rem; color: var(--text-main); line-height: 1.5; margin-bottom: 15px;">Tu cuenta fue creada con éxito.</p>
         <div style="background: rgba(56, 189, 248, 0.1); border-left: 4px solid var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left;">
-            <p style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0;"><b>Dato importante:</b> El sistema está configurado con la paritaria UPSRA 2026 por defecto. <br><br>Si tu empresa paga diferente, podés editar los valores. ¡El sistema se adapta a vos! <b>Para empezar, configuremos tus años de antigüedad.</b></p>
+            <p style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin: 0;"><b>Dato importante:</b> El sistema está configurado con la paritaria UPSRA 2026 por defecto. <br><br>Si tu empresa paga diferente, podés editar los valores. ¡El sistema se adapta a vos! <b>Para empezar, lee como funciona el sistema y luego configuremos solo tus años de antigüedad, pago de feriados y feriados puente.</b></p>
         </div>
-        <button onclick="document.getElementById('modal-bienvenida').style.display='none'; abrirModalConfig();" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase;">¡CONFIGURAR MI ANTIGÜEDAD!</button>
+        <button onclick="document.getElementById('modal-bienvenida').style.display='none'; window.abrirModalAyuda();" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase;">📖 LEER CÓMO FUNCIONA LA APP</button>
     </div>
 </div>
 
@@ -493,7 +493,7 @@
             <div style="grid-column: span 2;">
                 <label>Feriados Puente (Turísticos)</label>
                 <select id="valPagaPuentes" class="auth-input" style="padding: 10px;">
-                    <option value="si" selected>Me los pagan (Según Ley)</option>
+                    <option value="si">Me los pagan (Según Ley)</option>
                     <option value="no">Mi empresa NO los paga</option>
                 </select>
             </div>
@@ -592,50 +592,165 @@
 
 <div id="modal-ayuda" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9500; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
     <div class="modal-content" style="max-width: 400px; text-align: left; max-height: 85vh; overflow-y: auto;">
-        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">📖 Guía de Uso</h3>
+        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">📖 Guía de Uso Profesional</h3>
         
         <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
-            <p><b style="color: var(--accent);">1. Registro de Turnos:</b> Ingresá la fecha y horarios. El sistema calcula las horas nocturnas (de 21 a 06 hs) automáticamente.</p>
+            <p style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; border-left: 4px solid var(--accent); margin-top: 0;">
+                <b style="color: var(--accent);">⚖️ CONFIGURACIÓN LEGAL:</b> Este sistema está configurado por defecto según la <b>Ley de Contrato de Trabajo (LCT)</b> y el convenio <b>UPSRA</b>.
+            </p>
 
-            <div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 10px; margin: 10px 0;">
-                <b style="color: var(--warning); font-size: 0.75rem; text-transform: uppercase;">Importante para la exactitud:</b><br>
-                • <b>Feriados:</b> Usá el menú desplegable para indicar si el feriado cae el día que entraste, el día que saliste, o en ambos. El sistema aplicará el recargo cortando exactamente a la medianoche.<br>
-                • <b>Licencias:</b> Si te tomaste licencia o carpeta médica, marcalo como licencia. El sistema lo contabiliza para el básico pero ajusta los viáticos.<br>
-                • <b>Vacaciones:</b> Usá este tilde para que el sistema sume el Plus Vacacional por cada día agendado.<br>
-                • <b>Falta sin aviso:</b> Si faltaste sin justificación, registralo con este tilde. El sistema descuenta el valor del día del básico y elimina el presentismo del mes.<br>
-                <i style="font-size: 0.8rem; display: block; margin-top: 5px;">Usar estos tildes correctamente hace que el cálculo sea exacto o casi exacto al de tu recibo.</i>
-            </div>
-            
-            <p><b style="color: var(--accent);">2. Configuración de Valores:</b> Entrá a "Configurar valores de cobro" para cargar solo tu antigüedad. El sistema ya está cargado automáticamente con la escala salarial de UPSRA. Si cobrás diferente, podés modificar los valores.</p>
-            
-            <div style="background: rgba(56, 189, 248, 0.05); border-left: 3px solid var(--accent); padding: 10px; margin: 10px 0;">
-                <b style="color: var(--accent); font-size: 0.75rem; text-transform: uppercase;">Ajustes Universales:</b><br>
-                • <b>Viáticos (Automático):</b> Si no alcanzás las horas base por falta de servicios asignados, la empresa está obligada por ley a abonar el viático mensual completo. Una vez que cubrís las horas base, el sistema liquida proporcional por día trabajado.<br>
-                • <b>Feriados:</b> Seleccioná "Doble (100%)" según marca la ley, o "50%" si tu empresa los paga como extra común.
+            <!-- SECCIÓN 1: CONFIGURACIÓN -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">⚙️ 1. Configurar Valores de Cobro</b></p>
+            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
+                La app ya tiene precargada la <b>escala salarial UPSRA 2026</b> (básico, presentismo, viático y no remunerativo). Desde <b>Configuración</b> podés:<br><br>
+                • <b>Antigüedad:</b> Solo ingresá tus años. El sistema calcula el adicional automáticamente (1% por año sobre el básico).<br>
+                • <b>Valores manuales:</b> Si tu empresa paga diferente a la escala UPSRA, podés pisar cualquier valor. Dejando el campo vacío, vuelve al automático UPSRA.<br>
+                • <b>Horas base:</b> Por defecto 200hs. Cambialo si tu cronograma es diferente.<br>
+                • <b>Descuentos de ley:</b> Por defecto 17% (jubilación + obra social). Modificalo si tenés retenciones distintas.
             </div>
 
-            <p><b style="color: var(--accent);">3. Reporte de Horas:</b> Usá el botón verde "Reporte" para generar un resumen y enviarlo por WhatsApp a tu delegado o guardarlo como control personal.</p>
-
-            <div style="background: rgba(56, 189, 248, 0.05); border-left: 3px solid var(--accent); padding: 10px; margin: 10px 0;">
-                <b style="color: var(--accent); font-size: 0.75rem; text-transform: uppercase;">¿Qué significa cada ícono en la tarjeta?</b><br>
-                • <b>Las horas grandes</b> (ej. <b>12hs</b>) son el total físico del turno.<br>
-                • <b>🌙 Xh</b> son las horas nocturnas dentro de ese turno (de 21:00 a 06:00). Se usan para calcular el plus nocturno.<br>
-                • <b>🚩 Xh</b> son las horas que caen dentro del día feriado en ese turno. Solo aparece cuando hay horas de feriado que cobrar.
+            <!-- SECCIÓN 2: REGISTRO -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🛡️ 2. Registro de Guardias</b></p>
+            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
+                Ingresá fecha y horarios. La app detecta automáticamente las horas nocturnas (21 a 06 hs) y calcula el plus nocturno sobre tu sueldo real (Básico + Antigüedad + Presentismo).
             </div>
 
-            <div style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid var(--warning); padding: 10px; margin: 10px 0;">
-                <b style="color: var(--warning); font-size: 0.75rem; text-transform: uppercase;">🚩 Cálculo inteligente de feriados:</b><br>
-                El sistema corta tus horas exactamente a las 00:00 hs. Solo cobrarás con recargo las horas que caigan en el día marcado como feriado.<br><br>
-                <b style="color: var(--accent);">📅 Feriados Puente (Turísticos):</b><br>
-                Legalmente deben pagarse doble. Pero si tu empresa no los reconoce, podés ir a <b>Configuración</b> y marcar "Mi empresa NO los paga". Así, el sistema los ignorará automáticamente y tus cuentas coincidirán con tu recibo.<br><br>
-                <b>Ejemplo (Cruce de Feriado):</b><br>
-                Si entrás el día anterior y salís el día feriado a las 07:00 am, el sistema te pagará esas <b>7 horas</b> de madrugada con recargo automáticamente.
+            <!-- SECCIÓN 3: FERIADOS -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🚩 3. Feriados — Todo lo que Necesitás Saber</b></p>
+            <div style="background: rgba(245, 158, 11, 0.07); border-left: 3px solid var(--warning); padding: 10px; margin: 0 0 6px 0; border-radius: 0 8px 8px 0;">
+                <b style="color: var(--warning);">Feriados precargados 2026:</b> Los feriados nacionales ya están cargados en la app. La detección es automática al ingresar la fecha de tu turno.<br><br>
+                <b>Corte exacto a las 00:00 hs:</b> Si entrás un día normal y salís en un feriado, solo cobrás con recargo las horas dentro del día feriado. Nada más, nada menos.<br><br>
+                <b style="color: var(--warning);">📅 Feriados Puente (Turísticos):</b> En 2026 hay 3 puentes: <b>23/3, 10/7 y 7/12</b>. Por ley deben pagarse doble, pero muchas empresas no los reconocen. Desde <b>Configuración</b> elegís:<br>
+                <div style="margin: 8px 0 0 8px;">
+                    • <b>"Sí me los pagan"</b> → el sistema los cuenta como feriado normal con recargo.<br>
+                    • <b>"No me los pagan"</b> → el sistema los ignora y tus cuentas coinciden con tu recibo.
+                </div>
             </div>
-            
-            <p style="font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 15px; padding-top: 10px;">* Los cálculos son estimativos y sirven como herramienta de control frente al recibo oficial.</p>
+            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--text-dim); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0; font-size: 0.8rem;">
+                <b>Tipo de pago de feriado:</b> También en Configuración podés elegir cómo te los liquida tu empresa:<br>
+                • <b>Doble (100% extra):</b> Lo que marca la ley. Recibís el valor de la hora normal más un 100% de recargo.<br>
+                • <b>50% extra:</b> Algunas empresas lo pagan como hora extra común. Elegí esta opción si es tu caso.
+            </div>
+
+            <!-- SECCIÓN 4: VIÁTICOS -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🚗 4. Viáticos Inteligentes</b></p>
+            <div style="background: rgba(34, 197, 94, 0.07); border-left: 3px solid var(--success); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
+                El sistema calcula el viático de forma inteligente según tu situación del mes:<br><br>
+                • <b>Sin ausencias y horas incompletas:</b> Si no llegás a las horas base por falta de servicios asignados (no por falta tuya), la empresa <b>está obligada por ley</b> a pagarte el viático mensual completo. El sistema lo detecta y te lo garantiza.<br>
+                • <b>Con ausencias (licencia, vacaciones o falta):</b> El viático se liquida proporcionalmente: <b>viático mensual ÷ 22 × días trabajados</b>.<br>
+                • <b>Horas completas:</b> Se liquida proporcional por día trabajado.
+            </div>
+
+            <!-- SECCIÓN 5: LICENCIAS Y VACACIONES -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🏥 5. Licencias y Vacaciones</b></p>
+            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
+                • <b>Enfermedad / Licencia:</b> Al marcarlo, el sistema ajusta tu meta mensual proporcionalmente, permitiéndote generar horas extras con los días que sí trabajaste.<br>
+                • <b>Vacaciones:</b> Aplica el <b>Art. 155 de la LCT</b>. El plus vacacional se calcula sobre tu <b>base habitual</b> (Básico + Antigüedad + Presentismo) dividida por 25.<br>
+                • <b>Falta sin aviso:</b> Elimina el 100% del presentismo y descuenta el valor del día del básico.
+            </div>
+
+            <!-- SECCIÓN 6: PROGRESO -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">📊 6. Control de Progreso</b></p>
+            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
+                La barra de progreso muestra cuánto avanzaste sobre tus horas base. Al completarlas, el sueldo mostrado pasa de "garantizado" a <b>"Neto en mano estimado"</b>, sumando horas extras, feriados y nocturnos reales.
+            </div>
+
+            <!-- SECCIÓN 7: ESTADO DE FERIADO -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🔀 7. Estado de Feriado al Registrar un Turno</b></p>
+            <div style="background: rgba(245, 158, 11, 0.07); border-left: 3px solid var(--warning); padding: 10px; margin: 0 0 6px 0; border-radius: 0 8px 8px 0;">
+                Al registrar un turno aparece el selector <b>"Estado de Feriado"</b>. Por defecto está en <b>Automático</b>: la app detecta sola si la fecha es feriado y aplica el recargo.<br><br>
+                Si necesitás corregirlo, podés ponerlo manual con estas opciones:<br><br>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                        🟢 <b>Automático</b> — la app decide sola. Recomendado para el 99% de los casos.
+                    </div>
+                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                        🔴 <b>Entrada en feriado</b> — el día que arrancaste el turno es feriado.
+                    </div>
+                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                        🔴 <b>Salida en feriado</b> — cruzaste la medianoche y saliste en un día feriado.
+                    </div>
+                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                        🔴 <b>Ambos</b> — entraste y saliste en feriado (turno completo en día feriado).
+                    </div>
+                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                        ⚪ <b>No es feriado</b> — para anular una detección automática incorrecta.
+                    </div>
+                </div>
+            </div>
+            <div style="background: rgba(30,41,59,0.5); padding: 8px 10px; border-radius: 8px; margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-dim);">
+                💡 <i>El corte siempre es exacto a las 00:00 hs. Si marcás "Salida en feriado" y salís a las 07:00 am, solo esas 7 horas se pagan con recargo.</i>
+            </div>
+
+            <!-- SECCIÓN 8: TILDES ESPECIALES -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">✅ 8. Marcas Especiales del Turno</b></p>
+            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
+                Al registrar, tenés tres opciones adicionales que cambian cómo se procesa ese día:
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                    <div style="background: rgba(56, 189, 248, 0.07); padding: 8px 10px; border-radius: 8px; border-left: 3px solid #22d3ee;">
+                        🌴 <b style="color: #22d3ee;">Vacaciones</b><br>
+                        <span style="font-size: 0.8rem;">Suma el <b>Plus Vacacional</b> por ese día (Art. 155 LCT). La app calcula el monto sobre tu base habitual ÷ 25. Si tenés un valor manual en configuración, usa ese.</span>
+                    </div>
+                    <div style="background: rgba(56, 189, 248, 0.07); padding: 8px 10px; border-radius: 8px; border-left: 3px solid var(--accent);">
+                        🏥 <b style="color: var(--accent);">Licencia / Carpeta Médica</b><br>
+                        <span style="font-size: 0.8rem;">Registra el día como ausencia justificada. <b>No descuenta del básico</b>, pero ajusta la meta mensual de horas proporcionalmente y activa el cálculo proporcional de viáticos.</span>
+                    </div>
+                    <div style="background: rgba(239, 68, 68, 0.07); padding: 8px 10px; border-radius: 8px; border-left: 3px solid var(--danger);">
+                        ⚠️ <b style="color: var(--danger);">Falta Sin Aviso</b><br>
+                        <span style="font-size: 0.8rem;">Activa la penalización completa: <b>elimina el 100% del presentismo</b> del mes y <b>descuenta el valor del día</b> del sueldo básico. Una sola falta en el mes aplica esto.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 9: HISTORIAL DE GUARDIAS -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">📋 9. Cómo Leer el Historial de Guardias</b></p>
+            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 6px 0; border-radius: 0 8px 8px 0;">
+                Cada guardia registrada aparece como una tarjeta en el historial. Esto es lo que muestra cada parte:
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">📅</span>
+                        <span><b>Fecha y Puesto</b> — el día del turno y el lugar donde trabajaste. Si registraste horario, también muestra el rango (ej: <i>20:00 a 08:00</i>).</span>
+                    </div>
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">⏱️</span>
+                        <span><b>Xhs</b> (número grande) — las horas totales físicas del turno. Es lo que cotás para llegar a tu meta mensual.</span>
+                    </div>
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">🌙</span>
+                        <span><b>Xh nocturnas</b> — las horas que caen entre las 21:00 y las 06:00. Se usan para calcular el plus nocturno que se suma a tu sueldo.</span>
+                    </div>
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">🚩</span>
+                        <span><b>Xh de feriado</b> — aparece solo cuando hay horas con recargo. Son las horas que caen exactamente dentro del día feriado, las que te pagan doble (o 50% extra según tu config).</span>
+                    </div>
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">🌴</span>
+                        <span><b>Badge VACACIONES</b> — indica que ese día suma plus vacacional.</span>
+                    </div>
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">🏥</span>
+                        <span><b>Badge LICENCIA</b> — día de carpeta médica o licencia justificada.</span>
+                    </div>
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">⚠️</span>
+                        <span><b>Badge FALTA S/AVISO</b> — falta injustificada. Te recuerda que ese mes perdés presentismo.</span>
+                    </div>
+                    <div style="background: rgba(30,41,59,0.8); padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start;">
+                        <span style="font-size: 1rem; min-width: 24px;">✎ ✕</span>
+                        <span><b>Editar / Borrar</b> — los botones de cada tarjeta para modificar o eliminar ese turno.</span>
+                    </div>
+                </div>
+            </div>
+            <div style="background: rgba(30,41,59,0.5); padding: 8px 10px; border-radius: 8px; margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-dim);">
+                💡 <i>Los totales del mes (horas normales, nocturnas y de feriado) se muestran en los tres contadores arriba del historial.</i>
+            </div>
+
+            <p style="font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 15px; padding-top: 10px;">
+                * Los cálculos son simulaciones precisas para control personal frente al recibo oficial.
+            </p>
         </div>
         
-        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalAyuda()">ENTENDIDO</button>
+        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalAyuda()">CONFIGURA TUS AÑOS DE ANTIGÜEDAD Y PAGOS DE FERIADOS</button>
     </div>
 </div>
 
@@ -1275,7 +1390,7 @@
             feriadoPct: parseFloat(p.feriadoPct) || 100,
             horasBase: parseFloat(p.horasBase) || 200,
             tipoFeriado: p.tipoFeriado || "100",
-            pagaPuentes: p.pagaPuentes || "si"
+            pagaPuentes: p.pagaPuentes || "no"
         };
         if (isNaN(v.descuentos)) v.descuentos = 17;
         
@@ -1427,7 +1542,7 @@
         }
         
         if(document.getElementById('valPagaPuentes')) {
-            document.getElementById('valPagaPuentes').value = p.pagaPuentes || "si";
+            document.getElementById('valPagaPuentes').value = p.pagaPuentes || "no";
         }
         
         if (document.getElementById('modal-config')) document.getElementById('modal-config').style.display = 'flex';
@@ -1531,6 +1646,7 @@
                 actualizarConexion();
                 
                 window.showToast("¡Cuenta creada con éxito!");
+                window.primerIngreso = true; // 🚀 Flag para mostrar la ayuda después de configurar
                 document.getElementById('modal-bienvenida').style.display = 'flex';
                 
             } else {
@@ -2208,7 +2324,14 @@ async function cargarDatosNube() {
     window.cerrarModalPerfil = function() { document.getElementById('modal-perfil').style.display = 'none'; }
 
     window.abrirModalAyuda = function() { document.getElementById('modal-ayuda').style.display = 'flex'; }
-    window.cerrarModalAyuda = function() { document.getElementById('modal-ayuda').style.display = 'none'; }
+    window.cerrarModalAyuda = function() {
+        document.getElementById('modal-ayuda').style.display = 'none';
+        // 🚀 Si viene del onboarding, abre config como siguiente paso
+        if (window.primerIngreso) {
+            window.primerIngreso = false;
+            setTimeout(() => window.abrirModalConfig(), 300);
+        }
+    }
 
     window.cerrarPagoLicencia = function() { document.getElementById('modal-pago-licencia').style.display = 'none'; }
     window.abrirLinkPago = function() { window.open(window.globalLicencias.link_pago, '_blank'); }
@@ -2391,7 +2514,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", 
             horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "",
             tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "100",
-            pagaPuentes: document.getElementById('valPagaPuentes') ? document.getElementById('valPagaPuentes').value : "si"
+            pagaPuentes: document.getElementById('valPagaPuentes') ? document.getElementById('valPagaPuentes').value : "no"
         };
         
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
@@ -2631,7 +2754,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         lista.innerHTML = '';
         
         const valMes = window.obtenerValoresMes(window.fechaFiltro);
-        const pagaPuentes = valMes.pagaPuentes || "si";
+        const pagaPuentes = valMes.pagaPuentes || "no";
         const puentesOficiales = ["2026-03-23", "2026-07-10", "2026-12-07"];
 
         // 🚀 FIX LEY LCT ART 155: El cálculo de vacaciones debe incluir Antigüedad y Presentismo
