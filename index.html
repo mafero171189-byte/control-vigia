@@ -307,6 +307,15 @@
         .admin-header h2 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
         
         .admin-msg-box { background: var(--card-bg); padding: 15px; border-radius: 14px; border: 1px solid var(--admin); margin-bottom: 20px; }
+
+        /* --- ESTILOS PARA SECCIONES DESPLEGABLES EN ADMIN --- */
+        .admin-msg-box { overflow: hidden; transition: 0.3s; }
+        .admin-section-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 5px 0; user-select: none; }
+        .admin-section-header h3 { margin: 0 !important; }
+        .admin-section-arrow { font-size: 1.2rem; color: var(--text-dim); transition: transform 0.3s ease; font-weight: bold; }
+        .admin-msg-box.collapsed .admin-section-content { display: none; }
+        .admin-msg-box.collapsed .admin-section-arrow { transform: rotate(-90deg); }
+        .admin-msg-box.collapsed { padding-bottom: 15px; }
         .admin-msg-box textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text-main); font-family: inherit; font-size: 0.9rem; resize: vertical; min-height: 80px; box-sizing: border-box; margin-bottom: 10px; outline: none; }
         .btn-msg { background: var(--admin); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
 
@@ -999,111 +1008,113 @@
         <button class="btn-logout" onclick="volverApp()">Volver a mi App</button>
     </header>
     
-    <div class="admin-msg-box">
-        <h3 style="margin-top:0; font-size: 1.1rem; color: var(--admin);">📢 Publicar Aviso Global</h3>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Este mensaje aparecerá en la pantalla principal de todos los usuarios registrados.</p>
-        <textarea id="admin-mensaje-texto" placeholder="Escribí el aviso acá... (Dejá el texto vacío y publicá para borrar el aviso)"></textarea>
-        <button class="btn-msg" id="btn-publicar" onclick="publicarMensaje()">Publicar a Todos</button>
+    <div class="admin-msg-box collapsed">
+        <div class="admin-section-header" onclick="toggleAdminSection(this)">
+            <h3 style="font-size: 1.1rem; color: var(--admin);">📢 Publicar Aviso Global</h3>
+            <span class="admin-section-arrow">▼</span>
+        </div>
+        <div class="admin-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Este mensaje aparecerá en la pantalla principal de todos los usuarios registrados.</p>
+            <textarea id="admin-mensaje-texto" placeholder="Escribí el aviso acá... (Dejá el texto vacío y publicá para borrar el aviso)"></textarea>
+            <button class="btn-msg" id="btn-publicar" onclick="publicarMensaje()">Publicar a Todos</button>
+        </div>
     </div>
 
-<div class="admin-msg-box" style="border-color: var(--warning);">
-        <h3 style="margin-top:0; font-size: 1.1rem; color: var(--warning);">💳 Configuración de Licencias</h3>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Ajustá el link, precio y prueba para nuevos registros.</p>
-        
-        <div class="form-row" style="margin-bottom: 10px;">
-            <div><label>Días Gratis (Nuevos)</label><input type="number" id="admin-lic-dias" class="auth-input" style="margin-bottom:0; font-weight: 800; color: var(--warning);"></div>
-            <div><label>Precio Mensual ($)</label><input type="text" id="admin-lic-precio" class="auth-input" style="margin-bottom:0; font-weight: 800; color: var(--warning);" oninput="formatearMiles(this)" placeholder="Ej: 1500"></div>
+    <div class="admin-msg-box collapsed" style="border-color: var(--warning);">
+        <div class="admin-section-header" onclick="toggleAdminSection(this)">
+            <h3 style="font-size: 1.1rem; color: var(--warning);">💳 Configuración de Licencias</h3>
+            <span class="admin-section-arrow">▼</span>
         </div>
-        <input type="text" id="admin-lic-link" class="auth-input" placeholder="Link de Mercado Pago" style="margin-bottom: 10px; font-weight: 800; color: var(--warning);">
-        <input type="text" id="admin-lic-cbu" class="auth-input" placeholder="CBU / CVU / Alias para transferencias" style="margin-bottom: 10px; font-weight: 800; color: var(--warning);">
-        
-<div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); padding: 12px; border-radius: 10px; margin-bottom: 15px;">
-            <label style="color: var(--text-main); font-size: 0.85rem; display: block; margin-bottom: 10px; font-weight: 800;">🔘 Método predeterminado para mostrar:</label>
-            <div style="display: flex; gap: 15px;">
-                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem; color: white;">
-                    <input type="radio" name="metodo-pago" id="admin-metodo-mp" value="mp" checked style="width: auto; margin:0;" onchange="previsualizarMetodoPago()"> Link (Botón Azul)
-                </label>
-                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem; color: white;">
-                    <input type="radio" name="metodo-pago" id="admin-metodo-cbu" value="cbu" style="width: auto; margin:0;" onchange="previsualizarMetodoPago()"> CBU / Alias
-                </label>
+        <div class="admin-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Ajustá el link, precio y prueba para nuevos registros.</p>
+            <div class="form-row" style="margin-bottom: 10px;">
+                <div><label>Días Gratis (Nuevos)</label><input type="number" id="admin-lic-dias" class="auth-input" style="margin-bottom:0; font-weight: 800; color: var(--warning);"></div>
+                <div><label>Precio Mensual ($)</label><input type="text" id="admin-lic-precio" class="auth-input" style="margin-bottom:0; font-weight: 800; color: var(--warning);" oninput="formatearMiles(this)" placeholder="Ej: 1500"></div>
             </div>
+            <input type="text" id="admin-lic-link" class="auth-input" placeholder="Link de Mercado Pago" style="margin-bottom: 10px; font-weight: 800; color: var(--warning);">
+            <input type="text" id="admin-lic-cbu" class="auth-input" placeholder="CBU / CVU / Alias para transferencias" style="margin-bottom: 10px; font-weight: 800; color: var(--warning);">
+            <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); padding: 12px; border-radius: 10px; margin-bottom: 15px;">
+                <label style="color: var(--text-main); font-size: 0.85rem; display: block; margin-bottom: 10px; font-weight: 800;">🔘 Método predeterminado para mostrar:</label>
+                <div style="display: flex; gap: 15px;">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem; color: white;">
+                        <input type="radio" name="metodo-pago" id="admin-metodo-mp" value="mp" checked style="width: auto; margin:0;" onchange="previsualizarMetodoPago()"> Link (Botón Azul)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem; color: white;">
+                        <input type="radio" name="metodo-pago" id="admin-metodo-cbu" value="cbu" style="width: auto; margin:0;" onchange="previsualizarMetodoPago()"> CBU / Alias
+                    </label>
+                </div>
+            </div>
+            <button class="btn-msg" id="btn-guardar-licencias" style="background: var(--warning);" onclick="guardarLicenciasGlobal()">💾 Guardar Sistema Pagos</button>
         </div>
-
-        <button class="btn-msg" id="btn-guardar-licencias" style="background: var(--warning);" onclick="guardarLicenciasGlobal()">💾 Guardar Sistema Pagos</button>
     </div>
 
-    <div class="admin-msg-box">
-        <h3 style="margin-top:0; font-size: 1.1rem; color: var(--admin);">📊 Valores Oficiales UPSRA</h3>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Cargá los valores de la paritaria para que todos los recibos se calculen solos.</p>
-        <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <select id="admin-upsra-anio" class="auth-input" style="margin-bottom:0; padding:10px;" onchange="cargarValoresAdmin()">
-                <option value="2026">2026</option>
-                <option value="2027">2027</option>
-                <option value="2028">2028</option>
-                <option value="2029">2029</option>
-            </select>
-            <select id="admin-upsra-mes" class="auth-input" style="margin-bottom:0; padding:10px;" onchange="cargarValoresAdmin()">
-                <option value="0">Enero</option>
-                <option value="1">Febrero</option>
-                <option value="2">Marzo</option>
-                <option value="3">Abril</option>
-                <option value="4">Mayo</option>
-                <option value="5">Junio</option>
-                <option value="6">Julio</option>
-                <option value="7">Agosto</option>
-                <option value="8">Septiembre</option>
-                <option value="9">Octubre</option>
-                <option value="10">Noviembre</option>
-                <option value="11">Diciembre</option>
-            </select>
+    <div class="admin-msg-box collapsed">
+        <div class="admin-section-header" onclick="toggleAdminSection(this)">
+            <h3 style="font-size: 1.1rem; color: var(--admin);">📊 Valores Oficiales UPSRA</h3>
+            <span class="admin-section-arrow">▼</span>
         </div>
-        <div class="form-row" style="margin-bottom: 10px;">
-            <input type="number" id="admin-upsra-b" class="auth-input" placeholder="Básico ($)" style="margin-bottom:0;">
-            <input type="number" id="admin-upsra-p" class="auth-input" placeholder="Presentismo ($)" style="margin-bottom:0;">
+        <div class="admin-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Cargá los valores de la paritaria para que todos los recibos se calculen solos.</p>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <select id="admin-upsra-anio" class="auth-input" style="margin-bottom:0; padding:10px;" onchange="cargarValoresAdmin()">
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                </select>
+                <select id="admin-upsra-mes" class="auth-input" style="margin-bottom:0; padding:10px;" onchange="cargarValoresAdmin()">
+                    <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                </select>
+            </div>
+            <div class="form-row" style="margin-bottom: 10px;">
+                <input type="number" id="admin-upsra-b" class="auth-input" placeholder="Básico ($)" style="margin-bottom:0;">
+                <input type="number" id="admin-upsra-p" class="auth-input" placeholder="Presentismo ($)" style="margin-bottom:0;">
+            </div>
+            <div class="form-row" style="margin-bottom: 10px;">
+                <input type="number" id="admin-upsra-v" class="auth-input" placeholder="Viáticos ($)" style="margin-bottom:0;">
+                <input type="number" id="admin-upsra-nr" class="auth-input" placeholder="No Remunerativo ($)" style="margin-bottom:0;">
+            </div>
+            <input type="number" id="admin-upsra-vac" class="auth-input" placeholder="Plus Vacacional por día ($)" style="margin-bottom:10px;">
+            <button class="btn-msg" id="btn-guardar-upsra" onclick="guardarValoresAdmin()">Guardar Mes</button>
         </div>
-        <div class="form-row" style="margin-bottom: 10px;">
-            <input type="number" id="admin-upsra-v" class="auth-input" placeholder="Viáticos ($)" style="margin-bottom:0;">
-            <input type="number" id="admin-upsra-nr" class="auth-input" placeholder="No Remunerativo ($)" style="margin-bottom:0;">
-        </div>
-        <input type="number" id="admin-upsra-vac" class="auth-input" placeholder="Plus Vacacional por día ($)" style="margin-bottom:10px;">
-        
-        <button class="btn-msg" id="btn-guardar-upsra" onclick="guardarValoresAdmin()">Guardar Mes</button>
     </div>
 
-    <div class="admin-msg-box" style="border-color: var(--accent); margin-top: 20px;">
-    <h3 style="margin-top:0; font-size: 1.1rem; color: var(--accent);">📅 Gestión de Calendario 2026</h3>
-    <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Las fechas añadidas aquí se detectarán automáticamente en la app de los usuarios.</p>
-    
-    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-        <input type="date" id="admin-nuevo-feriado" class="auth-input" style="margin-bottom: 0;">
-        <button onclick="agregarFeriadoAdmin()" style="background: var(--accent); color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">AÑADIR</button>
-    </div>
-    
-    <label style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Feriados Activos (Toca para eliminar):</label>
-    <div id="admin-lista-feriados" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid var(--border); min-height: 50px;">
+    <div class="admin-msg-box collapsed" style="border-color: var(--accent);">
+        <div class="admin-section-header" onclick="toggleAdminSection(this)">
+            <h3 style="font-size: 1.1rem; color: var(--accent);">📅 Gestión de Calendario</h3>
+            <span class="admin-section-arrow">▼</span>
         </div>
-    <button class="btn-msg" style="margin-top:15px; background: var(--success);" onclick="guardarFeriadosGlobal()">💾 GUARDAR CALENDARIO GLOBAL</button>
-    <button class="btn-msg" style="margin-top:8px; background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid var(--accent);" onclick="resetearFeriados2026()">🔄 RESETEAR A FERIADOS OFICIALES 2026</button>
+        <div class="admin-section-content">
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">Añadí feriados que se detectarán automáticamente.</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="date" id="admin-nuevo-feriado" class="auth-input" style="margin-bottom: 0;">
+                <button onclick="agregarFeriadoAdmin()" style="background: var(--accent); color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">AÑADIR</button>
+            </div>
+            <label style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Feriados Activos (Toca para eliminar):</label>
+            <div id="admin-lista-feriados" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid var(--border); min-height: 50px;"></div>
+            <button class="btn-msg" style="margin-top:15px; background: var(--success);" onclick="guardarFeriadosGlobal()">💾 GUARDAR CALENDARIO GLOBAL</button>
+            <button class="btn-msg" style="margin-top:8px; background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid var(--accent);" onclick="resetearFeriados2026()">🔄 RESETEAR A FERIADOS OFICIALES 2026</button>
+        </div>
+    </div>
+
+    <div class="admin-msg-box collapsed" style="border-color: var(--admin);">
+        <div class="admin-section-header" onclick="toggleAdminSection(this)">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h3 style="font-size: 1.1rem; color: var(--admin);">👥 Personal Registrado</h3>
+                <span id="admin-txt-contador" style="font-size: 0.8rem; color: var(--accent); background: rgba(56,189,248,0.1); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--accent);">Cargando...</span>
+            </div>
+            <span class="admin-section-arrow">▼</span>
+        </div>
+        <div class="admin-section-content">
+            <div style="display: flex; gap: 10px; margin: 15px 0 10px 0;">
+                <input type="text" id="admin-buscar-usuario" class="auth-input" placeholder="📧 Email exacto del usuario..." style="margin-bottom: 0;">
+                <button onclick="buscarUsuarioPorEmail()" style="background: var(--accent); border: none; border-radius: 12px; width: 50px; cursor: pointer; font-size: 1.2rem;">🔍</button>
+            </div>
+            <button onclick="abrirAdmin()" id="btn-volver-admin" style="display:none; width: 100%; background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 10px; border-radius: 12px; margin-bottom: 15px; cursor: pointer; font-weight: bold;">← VOLVER AL LISTADO COMPLETO</button>
+            <div id="lista-usuarios-admin"></div>
+        </div>
+    </div>
 </div>
-
-    <div class="admin-header">
-        <div id="admin-contador-total" style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 12px; margin-bottom: 10px; text-align: center; border: 1px solid var(--accent);">
-            <b style="color: var(--accent); font-size: 1.1rem;" id="admin-txt-contador">👥 Cargando usuarios...</b>
-        </div>
-        <h2>Personal Registrado</h2>
-        <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8;">Lista de todos los usuarios en el sistema</p>
-    </div>
-    
-    <!-- Buscador en el Panel Admin -->
-    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-        <input type="text" id="admin-buscar-usuario" class="auth-input" placeholder="📧 Email exacto del usuario..." style="margin-bottom: 0;">
-        <button onclick="buscarUsuarioPorEmail()" style="background: var(--accent); border: none; border-radius: 12px; width: 50px; cursor: pointer; font-size: 1.2rem;">🔍</button>
-    </div>
-    <button onclick="abrirAdmin()" id="btn-volver-admin" style="display:none; width: 100%; background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 10px; border-radius: 12px; margin-bottom: 15px; cursor: pointer; font-weight: bold;">← VOLVER AL LISTADO COMPLETO</button>
-    
-    <div id="lista-usuarios-admin"></div>
-</div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     // 🔴 IMPORTANTE: Se agregó 'getFirestore' a la importación
@@ -1737,39 +1748,62 @@
         loading.style.opacity = '0'; setTimeout(() => loading.style.display = 'none', 500);
     });
 
+    // 🚀 CACHÉ DE USUARIOS: evita recargar la lista si no hubo nuevos registros
+    window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null };
+    // Memoria para evitar recargar turnos si el conteo no cambió
+    window._turnosCache = {};
+
     window.abrirAdmin = async function() {
         document.getElementById('app-container').style.display = 'none';
         document.getElementById('admin-container').style.display = 'block';
         
         document.getElementById('admin-buscar-usuario').value = '';
         document.getElementById('btn-volver-admin').style.display = 'none';
-        
-        // Contador de usuarios totales actualizado (OPTIMIZADO PARA CUOTA)
-        const txtContador = document.getElementById('admin-txt-contador');
-        txtContador.innerText = "👥 Contando personal...";
-        try {
-            const snapshotTotal = await getCountFromServer(collection(db, "directorio_usuarios"));
-            txtContador.innerText = `👥 TOTAL USUARIOS: ${snapshotTotal.data().count}`;
-        } catch (e) {
-            txtContador.innerText = `👥 Error al contar`;
-        }
 
         // Configura los desplegables en el mes y año actual
         const hoy = new Date();
         document.getElementById('admin-upsra-anio').value = hoy.getFullYear();
         document.getElementById('admin-upsra-mes').value = hoy.getMonth();
         window.cargarValoresAdmin();
-        
-        const lista = document.getElementById('lista-usuarios-admin');
-        lista.innerHTML = "<p style='text-align:center'>Cargando personal...</p>";
-        
-        window.ultimoUsuarioDoc = null;
-        await buscarUsuariosEnNube();
-        // Mostrar feriados ya cargados en el panel
         window.renderizarFeriadosAdmin();
+
+        const txtContador = document.getElementById('admin-txt-contador');
+        const lista = document.getElementById('lista-usuarios-admin');
+
+        // 1 sola lectura para saber el total actual
+        txtContador.innerText = "Contando...";
+        let totalActual = null;
+        try {
+            const snap = await getCountFromServer(collection(db, "directorio_usuarios"));
+            totalActual = snap.data().count;
+            txtContador.innerText = `👥 ${totalActual} usuarios`;
+        } catch (e) {
+            txtContador.innerText = `⚠️ Error`;
+        }
+
+        // Si el total no cambió y ya tenemos caché, restauramos desde memoria (0 lecturas)
+        if (totalActual !== null && totalActual === window._adminCache.totalGuardado && window._adminCache.htmlGuardado) {
+            lista.innerHTML = window._adminCache.htmlGuardado;
+            window.ultimoUsuarioDoc = window._adminCache.ultimoDoc;
+            // Re-asignar los listeners de los botones ya renderizados
+            lista.querySelectorAll('.btn-admin-mod-dias').forEach(btn => {
+                btn.addEventListener('click', function() { abrirModalModificarDias(this.dataset.uid, this.dataset.expira); });
+            });
+            lista.querySelectorAll('.btn-admin-del-user').forEach(btn => {
+                btn.addEventListener('click', function() { abrirModalEliminarUsuario(this.dataset.uid, this.dataset.nombre, this.dataset.email); });
+            });
+            renderizarBotonCargarMas(!!window.ultimoUsuarioDoc);
+            return; // ✅ Salimos sin gastar ninguna lectura extra
+        }
+
+        // Si el total cambió (o es la primera vez), recargamos desde Firebase
+        lista.innerHTML = "<p style='text-align:center'>Cargando personal...</p>";
+        window.ultimoUsuarioDoc = null;
+        window._adminCache.htmlGuardado = null; // Limpiamos caché vieja
+        await buscarUsuariosEnNube(totalActual);
     }
 
-    async function buscarUsuariosEnNube() {
+    async function buscarUsuariosEnNube(totalActual = null) {
         const lista = document.getElementById('lista-usuarios-admin');
         try {
             let q;
@@ -1831,6 +1865,18 @@
                 lista.appendChild(card);
             });
             renderizarBotonCargarMas(querySnapshot.size === 20);
+
+            // 🚀 Guardar en caché solo si es la primera página completa (sin paginación previa)
+            // y si tenemos el total para comparar la próxima vez
+            if (totalActual !== null && !window._adminCache.htmlGuardado) {
+                // Pequeño delay para que el botón "ver más" ya esté en el DOM
+                setTimeout(() => {
+                    const btnCargarMas = document.getElementById('btn-cargar-mas-admin');
+                    window._adminCache.htmlGuardado = lista.innerHTML;
+                    window._adminCache.ultimoDoc = window.ultimoUsuarioDoc;
+                    window._adminCache.totalGuardado = totalActual;
+                }, 50);
+            }
         } catch (e) {
             console.error(e);
             lista.innerHTML += "<p style='color:red'>Error al cargar más usuarios.</p>";
@@ -1966,6 +2012,7 @@
             await batch.commit();
             
             window.showToast("🗑️ Usuario y todos sus turnos eliminados", "success");
+            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null }; // Invalida caché
             window.cerrarModalEliminarUsuario();
             window.abrirAdmin(); 
         } catch (e) {
@@ -2125,29 +2172,53 @@ window.formatearEnlaces = function(texto) {
     };
 
     // 🔴 CORRECCIÓN: Optimización de Firestore (No descargar todo el historial)
-    function suscribirTurnosMes(fechaObj) {
+    async function suscribirTurnosMes(fechaObj) {
         if (!window.currentUser) return;
-        
-        const año = fechaObj.getFullYear();
-        const mesStr = String(fechaObj.getMonth() + 1).padStart(2, '0');
-        const inicioMes = `${año}-${mesStr}-01`;
-        const ultimoDia = new Date(año, fechaObj.getMonth() + 1, 0).getDate();
-        const finMes = `${año}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
 
+        const año = fechaObj.getFullYear();
+        const mes = fechaObj.getMonth();
+        const mesStr = String(mes + 1).padStart(2, '0');
+        const claveMes = `${año}-${mesStr}`;
+        const inicioMes = `${año}-${mesStr}-01`;
+        const ultimoDia = new Date(año, mes + 1, 0).getDate();
+        const finMes = `${año}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
+        const turnosRef = collection(db, "usuarios", window.currentUser.uid, "turnos");
         const q = query(
-            collection(db, "usuarios", window.currentUser.uid, "turnos"),
+            turnosRef,
             where("f", ">=", inicioMes),
             where("f", "<=", finMes),
             orderBy("f", "desc")
         );
 
-        if (window.unsubTurnos) window.unsubTurnos(); 
-        
+        // 1. Consultar el conteo rápido (gasta solo 1 lectura)
+        try {
+            const snapshotConteo = await getCountFromServer(q);
+            const totalActual = snapshotConteo.data().count;
+            // 2. ¿Es el mismo conteo que tenemos en memoria?
+            if (window._turnosCache[claveMes] && window._turnosCache[claveMes].count === totalActual) {
+                console.log(`🚀 Usando caché para ${claveMes} (0 lecturas extra)`);
+                window.turnos = window._turnosCache[claveMes].data;
+                if (window.actualizarTituloMes) window.actualizarTituloMes();
+                actualizarUI();
+                return; // ✅ Salimos sin activar el Snapshot
+            }
+        } catch (e) { console.warn("Fallo conteo de turnos:", e); }
+
+        // 3. Si el conteo cambió o no hay caché, activamos la descarga (lecturas normales)
+        if (window.unsubTurnos) window.unsubTurnos();
+
         window.unsubTurnos = onSnapshot(q, (querySnapshot) => {
-            window.turnos = [];
-            querySnapshot.forEach((doc) => window.turnos.push({ id: doc.id, ...doc.data() }));
-            if (window.actualizarTituloMes) window.actualizarTituloMes(); // 🚀 FIX: Borra el "ABRIL" del HTML y pone el mes/año real al instante
-            actualizarUI(); // Actualiza pantalla al instante
+            const nuevosTurnos = [];
+            querySnapshot.forEach((doc) => nuevosTurnos.push({ id: doc.id, ...doc.data() }));
+
+            window.turnos = nuevosTurnos;
+            // Guardamos en la memoria para la próxima vez
+            window._turnosCache[claveMes] = {
+                count: querySnapshot.size,
+                data: nuevosTurnos
+            };
+            if (window.actualizarTituloMes) window.actualizarTituloMes();
+            actualizarUI();
         });
     }
 
@@ -2483,7 +2554,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             await setDoc(doc(db, "usuarios", uid, "config", "datos"), { licencia_expira: nuevaFechaIso }, { merge: true });
             await setDoc(doc(db, "directorio_usuarios", uid), { licencia_expira: nuevaFechaIso }, { merge: true });
             window.showToast("✅ Días actualizados correctamente", "success");
-            
+            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null }; // Invalida caché
             // Recargar la lista según dónde estemos (búsqueda específica o lista general)
             if (document.getElementById('admin-buscar-usuario').value.trim() !== "") {
                 window.buscarUsuarioPorEmail();
@@ -2652,6 +2723,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         }
         
         const nuevoTurno = { f, l, e, s, ferE, ferS, vac, lic, falta, t: diff, n: noct };
+
+        // Invalida la memoria del mes para forzar recarga
+        const mesTurno = f.substring(0, 7); // Obtiene YYYY-MM
+        delete window._turnosCache[mesTurno];
         
         try {
             if (window.turnoEnEdicion) {
@@ -2695,6 +2770,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     window.borrarTurnoNube = async function(id) {
         if (!window.currentUser) return;
         try { 
+            // Buscamos el turno en la lista local para saber su fecha antes de borrarlo
+            const t = window.turnos.find(item => item.id === id);
+            if (t) {
+                const mesTurno = t.f.substring(0, 7);
+                delete window._turnosCache[mesTurno];
+            }
             await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); 
             window.showToast("🗑️ Turno eliminado"); 
         } catch (e) { }
@@ -3181,6 +3262,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         bannerInstalar.style.display = 'none';
         localStorage.setItem(PWA_KEY, 'instalada');
     });
+    window.toggleAdminSection = function(header) {
+        const parent = header.parentElement;
+        parent.classList.toggle('collapsed');
+    };
 </script>
 </body>
 </html>
