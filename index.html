@@ -1384,7 +1384,6 @@
         const año = fObj.getFullYear();
         const mes = fObj.getMonth();
         const p = window.preciosGuardados || {};
-        
         const categoria = categoriaForzada || p.categoria || 'general'; 
 
         let v = {
@@ -1431,13 +1430,16 @@
             if (isNaN(v.presentismo)) v.presentismo = auto.p;
             if (isNaN(v.viatico)) v.viatico = auto.v;
             if (isNaN(v.noRem)) v.noRem = auto.nr;
-        } else {
-            if (isNaN(v.basico)) v.basico = 0;
-            if (isNaN(v.presentismo)) v.presentismo = 0;
-            if (isNaN(v.viatico)) v.viatico = 0;
-            if (isNaN(v.noRem)) v.noRem = 0;
-            if (isNaN(v.plusVac)) v.plusVac = 0;
+            // 🔴 Si el plus manual está vacío, usamos el de la paritaria si existe
+            if (isNaN(v.plusVac) && auto.vac) v.plusVac = auto.vac;
         }
+
+        // 🔴 FIX: No seteamos plusVac a 0 si es NaN para que render() calcule el de Ley
+        if (isNaN(v.basico)) v.basico = 0;
+        if (isNaN(v.presentismo)) v.presentismo = 0;
+        if (isNaN(v.viatico)) v.viatico = 0;
+        if (isNaN(v.noRem)) v.noRem = 0;
+        
         return v;
     };
 
@@ -1638,9 +1640,14 @@
                     licencia_expira: fechaExp.toISOString()
                 });
 
-                window.isRegistering = false; // Ya guardamos todo
-                window.currentUser = cred.user; // Set manual rápido
-                await cargarDatosNube(); // Forzamos carga segura
+                        window.isRegistering = false; // Ya guardamos todo
+        window.currentUser = cred.user; // Set manual rápido
+        
+        // 🔴 FIX: Esperamos medio segundo para que Firebase propague los permisos 
+        // internos de seguridad y el "escuchador" de turnos no sea rechazado.
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        await cargarDatosNube(); // Forzamos carga segura
                 
                 // NUEVO: Ocultamos el login y mostramos la app manualmente
                 document.getElementById('landing-page').style.display = 'none';
@@ -2687,8 +2694,13 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         }
 
         const f = document.getElementById('fecha').value;
-        // FIX Bug 3: validar que la fecha no esté vacía antes de continuar
-        if (!f) return window.showToast("⚠️ Completá la fecha del turno", "danger");
+        // 🔴 FIX: Si no hay fecha, habilitamos el botón antes de salir
+        if (!f) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
+            return window.showToast("⚠️ Completá la fecha del turno", "danger");
+        }
+
         const l = document.getElementById('lugar').value || "Puesto General";
         let e = document.getElementById('entrada').value;
         let s = document.getElementById('salida').value;
@@ -2703,7 +2715,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         let noct = 0;
         // Si NO son vacaciones ni licencia ni falta, calculamos las horas normales
         if (!vac && !lic && !falta) {
-            if (!e || !s) return window.showToast("⚠️ Completá Entrada y Salida", "danger");
+            // 🔴 FIX: Si faltan horas, habilitamos el botón antes de salir
+            if (!e || !s) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
+                return window.showToast("⚠️ Completá Entrada y Salida", "danger");
+            }
             
             let ent = new Date(f + "T" + e), sal = new Date(f + "T" + s);
             if (sal <= ent) sal.setDate(sal.getDate() + 1);
@@ -2777,8 +2794,13 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }
             await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); 
             window.showToast("🗑️ Turno eliminado"); 
+            
+            // 🔴 FIX: Si estábamos editando este turno que acabamos de borrar, cancelamos la edición
+            if (window.turnoEnEdicion === id) window.cancelarEdicion();
+            
         } catch (e) { }
     }
+
 
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
     
@@ -2894,7 +2916,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
             if (t.vac) { 
                 // FIX LCT ART 155: Se usa la base habitual calculada arriba (con antigüedad)
-                const plusV = valMes.plusVac ? Number(valMes.plusVac) : valorPlusLeyCorrecto;
+                const plusV = !isNaN(valMes.plusVac) ? Number(valMes.plusVac) : valorPlusLeyCorrecto;
                 plusVacacionalTotal += plusV; 
                 diasVacaciones++;
             } else if (t.lic) {
@@ -3076,11 +3098,15 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     window.enviarWhatsapp = function() {
         const nom = document.getElementById('vigiNombre').value, ape = document.getElementById('vigiApellido').value;
         if (!nom || !ape) return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger");
-        const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
-        let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
-        let antiguedadTexto = window.totalStats.antiguedad > 0 ? `🏅 *Antigüedad:* ${window.totalStats.antiguedad} Años\n` : "";
         
-        // Mensaje limpio: Solo se envían los datos de personal y el desglose de horas.
+        const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
+        const v = window.obtenerValoresMes(window.fechaFiltro);
+        
+        let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
+        let antiguedadTexto = v.antiguedadAños > 0 
+            ? `🏅 *Antigüedad:* ${v.antiguedadAños} Años\n` 
+            : "";
+        
         const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n\n_Generado por Control Vigía_`;
         
         window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
