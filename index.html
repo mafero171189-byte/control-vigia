@@ -2980,18 +2980,109 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         });
 
         // Totales y Barra de Progreso
-        document.getElementById('totH').innerText = fmtH(st); document.getElementById('totN').innerText = fmtH(sn); document.getElementById('totF').innerText = fmtH(sf);
-        let valH = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
-        let hExtraV = (valMes.hora !== undefined && valMes.hora !== "") ? Number(valMes.hora) : (valH * 1.5);
-        let pagoF = sf * (valH * (valMes.tipoFeriado === "50" ? 0.5 : 1));
-        let hBaseAjustada = Math.round(Math.max(0, valMes.horasBase - ((valMes.horasBase / 30) * (diasLicencia + diasVacaciones))));
-        let pExtras = st > hBaseAjustada ? (st - hBaseAjustada) * hExtraV : 0;
-        let viaticoF = (diasLicencia + diasVacaciones + diasFaltaSinAviso) === 0 ? (st >= valMes.horasBase ? Math.max(valMes.viatico, (valMes.viatico / 22) * diasUnicosTrabajados.size) : valMes.viatico) : (valMes.viatico / 22) * diasUnicosTrabajados.size;
-        let sumaR = valMes.basico + (diasFaltaSinAviso > 0 ? 0 : valMes.presentismo) + montoAntiguedad + pExtras + pagoF + plusVacacionalTotal + (sn * (isNaN(valMes.noct) ? (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000 : valMes.noct)) - (((valMes.basico + montoAntiguedad) / 30) * diasFaltaSinAviso);
-        let tNeto = (sumaR + viaticoF + valMes.noRem) - (sumaR * ((valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17) / 100);
-        document.getElementById('totalBruto').innerText = `$ ${(sumaR + viaticoF + valMes.noRem).toLocaleString('es-AR', {minimumFractionDigits: 2})}`; 
-        document.getElementById('totalNeto').innerText = `$ ${tNeto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
-        const pb = document.getElementById('progress-bar'); if (pb) { pb.style.width = Math.min((st / (hBaseAjustada || valMes.horasBase)) * 100, 100) + "%"; }
+        document.getElementById('totH').innerText = fmtH(st); 
+        document.getElementById('totN').innerText = fmtH(sn); 
+        document.getElementById('totF').innerText = fmtH(sf);
+        
+        let valorNocturnoFinal = valMes.noct;
+        if (isNaN(valorNocturnoFinal)) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
+
+        let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
+        let horaExtraVal = (valMes.hora !== undefined && valMes.hora !== "") ? Number(valMes.hora) : (valorHoraNormal * 1.5);
+        let recargoFeriado = valMes.tipoFeriado === "50" ? 0.5 : 1;
+        let horaFeriadoVal = valorHoraNormal * recargoFeriado;
+        let pagoFeriados = sf * horaFeriadoVal;
+        
+        const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones;
+        const diasAusenciaJustificada = diasLicencia + diasVacaciones;
+        const horasBaseDiarias = valMes.horasBase / 30; 
+        let horasBaseAjustada = Math.max(0, valMes.horasBase - (horasBaseDiarias * diasAusenciaJustificada));
+        horasBaseAjustada = Math.round(horasBaseAjustada);
+
+        let pagoHorasTotales = 0, hsExtra = 0;
+        if (st > horasBaseAjustada) { 
+            hsExtra = st - horasBaseAjustada; 
+            pagoHorasTotales = hsExtra * horaExtraVal; 
+        }
+
+        const diasTrabajados = diasUnicosTrabajados.size;
+        let viaticoFinal; 
+        
+        if (totalDiasAusente === 0) {
+            if (st >= valMes.horasBase) {
+                viaticoFinal = Math.max(valMes.viatico, (valMes.viatico / 22) * diasTrabajados);
+            } else {
+                viaticoFinal = valMes.viatico; 
+            }
+        } else {
+            viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
+        }
+
+        const presentismoReal = diasFaltaSinAviso > 0 ? 0 : valMes.presentismo;
+        const descuentoFalta = ((valMes.basico + montoAntiguedad) / 30) * diasFaltaSinAviso;
+        const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFalta;
+        
+        const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
+        const descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
+        const sumaNoRemunerativa = viaticoFinal + valMes.noRem;
+
+        const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
+        const totalNeto = totalBruto - descuentosLey;
+        
+        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
+        document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        
+        // Sincronización para reportes de WhatsApp
+        window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
+
+        // Actualización visual de la barra de progreso
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const progressStatus = document.getElementById('progress-status');
+        if (progressBar && progressText) {
+            const metaVisual = horasBaseAjustada > 0 ? horasBaseAjustada : valMes.horasBase;
+            const porcentaje = Math.min((st / metaVisual) * 100, 100);
+            
+            progressBar.style.width = porcentaje + "%";
+            progressText.innerText = `${st.toFixed(1)} / ${metaVisual} hs`;
+            
+            if (st === 0) {
+                progressStatus.innerHTML = "Todavía no registraste horas este mes.";
+                progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
+                progressBar.style.boxShadow = "none";
+                progressBar.style.animation = "";
+            } else if (st < metaVisual) {
+                progressStatus.innerHTML = totalDiasAusente > 0 ? `Meta ajustada por ausencias/vacaciones.` : "";
+                progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
+                progressBar.style.boxShadow = "none";
+                progressBar.style.animation = "";
+            } else {
+                progressStatus.innerHTML = "¡Objetivo cubierto! 💰";
+                progressBar.style.background = "linear-gradient(90deg, var(--success), #4ade80)";
+                progressBar.style.animation = "glow-pulse 1.8s ease-in-out infinite";
+            }
+        }
+
+        // Notas explicativas del sueldo
+        const txtNotaSueldo = document.getElementById('txt-nota-sueldo');
+        const netoTitleLabel = document.getElementById('neto-title-label');
+        if (st >= valMes.horasBase) {
+            if (netoTitleLabel) netoTitleLabel.innerText = 'NETO EN MANO (Estimado)';
+            if (txtNotaSueldo) {
+                txtNotaSueldo.style.display = '';
+                txtNotaSueldo.innerHTML = '*Puede variar levemente por redondeos contables o acuerdos específicos de tu empresa.';
+            }
+        } else {
+            if (netoTitleLabel) netoTitleLabel.innerText = 'SUELDO GARANTIZADO (MES COMPLETO)';
+            if (txtNotaSueldo) {
+                txtNotaSueldo.style.display = '';
+                if (!txtNotaSueldo.querySelector('#txt-nota-corta') && !txtNotaSueldo.querySelector('#txt-nota-larga')) {
+                    txtNotaSueldo.innerHTML = `
+                        <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
+                        <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>`;
+                }
+            }
+        }
     }
 
     window.toggleHistorial = function() {
