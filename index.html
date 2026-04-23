@@ -2292,21 +2292,25 @@ async function cargarDatosNube() {
                             document.getElementById('modal-pago-licencia').style.display = 'none';
                             document.getElementById('app-container').style.display = 'block';
                             const bannerCerrado = localStorage.getItem('banner_licencia_cerrado');
+                            
                             if (!bannerCerrado || diffDias <= 7) {
                                 const banner = document.getElementById('banner-licencia');
+                                const tituloBanner = banner.querySelector('h4');
+                                const esPago = configData.es_pago === true;
+
                                 banner.style.display = 'block';
                                 document.getElementById('dias-restantes-banner').innerText = diffDias;
                                 
                                 if (diffDias <= 7) {
                                     banner.style.background = "linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.2))";
                                     banner.style.borderColor = "var(--danger)";
-                                    banner.querySelector('h4').style.color = "var(--danger)";
-                                    banner.querySelector('h4').innerText = "⚠️ ¡LICENCIA POR VENCER!";
+                                    tituloBanner.style.color = "var(--danger)";
+                                    tituloBanner.innerText = "⚠️ ¡LICENCIA POR VENCER!";
                                 } else {
-                                    banner.style.background = "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1))";
-                                    banner.style.borderColor = "var(--warning)";
-                                    banner.querySelector('h4').style.color = "var(--warning)";
-                                    banner.querySelector('h4').innerText = "⚠️ Licencia de Prueba";
+                                    banner.style.background = "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(56, 189, 248, 0.05))";
+                                    banner.style.borderColor = esPago ? "var(--accent)" : "var(--warning)";
+                                    tituloBanner.style.color = esPago ? "var(--accent)" : "var(--warning)";
+                                    tituloBanner.innerText = esPago ? "🛡️ LICENCIA MENSUAL" : "⚠️ LICENCIA DE PRUEBA";
                                 }
                             }
                         }
@@ -2557,16 +2561,24 @@ window.guardarLicenciasGlobal = async function() {
 
 window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         try {
-            await setDoc(doc(db, "usuarios", uid, "config", "datos"), { licencia_expira: nuevaFechaIso }, { merge: true });
-            await setDoc(doc(db, "directorio_usuarios", uid), { licencia_expira: nuevaFechaIso }, { merge: true });
-            window.showToast("✅ Días actualizados correctamente", "success");
-            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null }; // Invalida caché
-            // Recargar la lista según dónde estemos (búsqueda específica o lista general)
+            await setDoc(doc(db, "usuarios", uid, "config", "datos"), { 
+                licencia_expira: nuevaFechaIso,
+                es_pago: true 
+            }, { merge: true });
+
+            await setDoc(doc(db, "directorio_usuarios", uid), { 
+                licencia_expira: nuevaFechaIso,
+                es_pago: true 
+            }, { merge: true });
+
+            window.showToast("✅ Días actualizados y Licencia Mensual activada", "success");
+            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null }; 
+            
             if (document.getElementById('admin-buscar-usuario').value.trim() !== "") {
                 window.buscarUsuarioPorEmail();
             } else {
-                window.ultimoUsuarioDoc = null; // Reiniciamos la paginación
-                buscarUsuariosEnNube(); // Sin el "window." para que no tire error
+                window.ultimoUsuarioDoc = null; 
+                buscarUsuariosEnNube(); 
             }
         } catch (e) { 
             console.error(e);
