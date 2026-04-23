@@ -390,6 +390,24 @@
 
        
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; display: flex; justify-content: center; align-items: center; color: var(--accent); font-weight: bold; font-size: 1.2rem; transition: 0.5s opacity; }
+
+        /* --- NUEVOS BOTONES DE SOPORTE --- */
+        .btn-soporte-lp {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; max-width: 380px; margin: 20px auto 0; padding: 14px;
+            background: rgba(255, 255, 255, 0.05); border: 1px dashed rgba(56, 189, 248, 0.4);
+            border-radius: 14px; color: var(--accent); font-weight: 700; font-size: 0.9rem;
+            text-decoration: none; transition: 0.3s;
+        }
+        .btn-soporte-lp:hover { background: rgba(56, 189, 248, 0.1); border-style: solid; }
+        .btn-soporte-main {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin: 40px auto 20px; padding: 10px; width: fit-content;
+            color: var(--text-dim); font-size: 0.75rem; font-weight: 600;
+            text-decoration: none; opacity: 0.6; transition: 0.3s;
+            border-top: 1px solid var(--border); width: 100%;
+        }
+        .btn-soporte-main:hover { opacity: 1; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -870,7 +888,9 @@
 
         <button id="btn-toggle-auth" class="auth-switch" onclick="toggleAuthMode()">¿No tenés cuenta? <b>Registrate gratis</b></button>
     </div>
-
+    <a href="https://wa.me/5491135654094?text=Hola!%20Necesito%20soporte%20con%20la%20App%20Control%20Vigía" target="_blank" class="btn-soporte-lp">
+        💬 ¿Necesitás ayuda? Contactar Soporte
+    </a>
   </div>
 </div>
 
@@ -998,6 +1018,9 @@
 
     <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL DE TURNOS</span></button>
     <div id="lista"></div>
+    <a href="https://wa.me/5491135654094?text=Hola!%20Tengo%20una%20consulta%20sobre%20mi%20cuenta%20de%20Control%20Vigía" target="_blank" class="btn-soporte-main">
+        🛠️ Soporte Técnico WhatsApp
+    </a>
 </div>
 
 <div id="admin-container">
