@@ -2725,9 +2725,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
               
         let diff = 0;
         let noct = 0;
-        // Si NO son vacaciones ni licencia ni falta, calculamos las horas normales
         if (!vac && !lic && !falta) {
-            // 🔴 FIX: Si faltan horas, habilitamos el botón antes de salir
             if (!e || !s) {
                 btnSubmit.disabled = false;
                 btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
@@ -2745,12 +2743,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }
             noct = Number((noctMinutos / 60).toFixed(2));
         } else {
-            // Si son vacaciones, licencia o falta, limpiamos los horarios para que no queden guardados en la base
-            e = "";
-            s = "";
+            e = ""; s = "";
         }
         
-        const nuevoTurno = { f, l, e, s, ferE, ferS, vac, lic, falta, t: diff, n: noct };
+        // Agregamos 'mF' para saber si el usuario eligió Manual o Auto
+        const nuevoTurno = { f, l, e, s, ferE, ferS, mF: estFeriado, vac, lic, falta, t: diff, n: noct };
 
         // Invalida la memoria del mes para forzar recarga
         const mesTurno = f.substring(0, 7); // Obtiene YYYY-MM
@@ -2857,13 +2854,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         render();
     }
 
-    // 🔴 CORRECCIÓN LÓGICA: Viáticos calculados por días únicos y Feriados Dinámicos
     function render() {
         const lista = document.getElementById('lista'); 
         let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0;
-        let diasFaltaSinAviso = 0; 
-        let diasLicencia = 0;      
-        let diasVacaciones = 0;    
+        let diasFaltaSinAviso = 0; let diasLicencia = 0; let diasVacaciones = 0;    
         let diasUnicosTrabajados = new Set();
         lista.innerHTML = '';
         
@@ -2871,36 +2865,46 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const pagaPuentes = valMes.pagaPuentes || "no";
         const puentesOficiales = ["2026-03-23", "2026-07-10", "2026-12-07"];
 
-        // 🚀 FIX LEY LCT ART 155: El cálculo de vacaciones debe incluir Antigüedad y Presentismo
         const montoAntiguedad = valMes.basico * (valMes.antiguedadAños / 100);
         const baseHabitual = valMes.basico + valMes.presentismo + montoAntiguedad;
         const valorPlusLeyCorrecto = (baseHabitual / 25) - (baseHabitual / 30);
 
         window.turnos.forEach((t) => {
             const fObj = new Date(t.f + "T00:00:00");
-            
-            // 🚀 FIX EXTREMO: El patovica del Mes (Evita el Bug del Sueldo Infinito)
-            // Si el turno no es del mes y año que estamos mirando en pantalla, lo ignoramos por completo
-            if (fObj.getMonth() !== window.fechaFiltro.getMonth() || fObj.getFullYear() !== window.fechaFiltro.getFullYear()) {
-                return; // Corta acá y pasa al siguiente turno sin sumar nada
-            }
+            if (fObj.getMonth() !== window.fechaFiltro.getMonth() || fObj.getFullYear() !== window.fechaFiltro.getFullYear()) return; 
 
             st += t.t; sn += t.n;
 
-            let esFerEntrada = t.ferE || t.fer;
-            let esFerSalida = t.ferS;
+            // --- LÓGICA HÍBRIDA: RESPETO AL USUARIO O SINCRONIZACIÓN ADMIN ---
+            let esFerEntrada, esFerSalida;
 
+            // Si el feriado se marcó MANUALMENTE (distinto de 'auto'), se respeta la DB local
+            if (t.mF && t.mF !== 'auto') {
+                esFerEntrada = t.ferE || t.fer;
+                esFerSalida = t.ferS;
+            } else {
+                // Si está en AUTOMÁTICO, se sincroniza con el calendario global del Admin
+                esFerEntrada = window.feriadosGlobales.includes(t.f);
+                esFerSalida = false;
+                if (t.e && t.s) {
+                    const [hE, mE] = t.e.split(':').map(Number);
+                    const [hS, mS] = t.s.split(':').map(Number);
+                    if (hS < hE || (hS === hE && mS < mE)) {
+                        let dSalida = new Date(t.f + "T12:00:00");
+                        dSalida.setDate(dSalida.getDate() + 1);
+                        const fSalidaStr = `${dSalida.getFullYear()}-${String(dSalida.getMonth() + 1).padStart(2, '0')}-${String(dSalida.getDate()).padStart(2, '0')}`;
+                        esFerSalida = window.feriadosGlobales.includes(fSalidaStr);
+                    }
+                }
+            }
+
+            // Aplicar restricción de Feriados Puente según configuración del usuario
             if (pagaPuentes === "no") {
                 if (puentesOficiales.includes(t.f)) esFerEntrada = false;
-                
                 let dSalida = new Date(t.f + "T12:00:00");
                 dSalida.setDate(dSalida.getDate() + 1);
-                const yyyy = dSalida.getFullYear();
-                const mm = String(dSalida.getMonth() + 1).padStart(2, '0');
-                const dd = String(dSalida.getDate()).padStart(2, '0');
-                const fSalidaStr = `${yyyy}-${mm}-${dd}`;
-                
-                if (puentesOficiales.includes(fSalidaStr)) esFerSalida = false;
+                const fs = `${dSalida.getFullYear()}-${String(dSalida.getMonth() + 1).padStart(2, '0')}-${String(dSalida.getDate()).padStart(2, '0')}`;
+                if (puentesOficiales.includes(fs)) esFerSalida = false;
             }
 
             let horasFeriadoTurno = 0;
@@ -2910,14 +2914,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 const minEntrada = hE * 60 + mE;
                 const minSalida = hS * 60 + mS;
                 let minFeriado = 0;
-                
                 if (minSalida <= minEntrada) { 
-                    const minHastaMedianoche = 1440 - minEntrada;
-                    const minDesdeMedianoche = minSalida;
-                    if (esFerEntrada) minFeriado += minHastaMedianoche;
-                    if (esFerSalida) minFeriado += minDesdeMedianoche;
-                } else {
-                    if (esFerEntrada || esFerSalida) minFeriado += (minSalida - minEntrada);
+                    if (esFerEntrada) minFeriado += (1440 - minEntrada);
+                    if (esFerSalida) minFeriado += minSalida;
+                } else if (esFerEntrada || esFerSalida) {
+                    minFeriado += (minSalida - minEntrada);
                 }
                 horasFeriadoTurno = Number((minFeriado / 60).toFixed(2));
             } else if (esFerEntrada || esFerSalida) { 
@@ -2927,10 +2928,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             sf += horasFeriadoTurno;
 
             if (t.vac) { 
-                // FIX LCT ART 155: Se usa la base habitual calculada arriba (con antigüedad)
                 const plusV = !isNaN(valMes.plusVac) ? Number(valMes.plusVac) : valorPlusLeyCorrecto;
-                plusVacacionalTotal += plusV; 
-                diasVacaciones++;
+                plusVacacionalTotal += plusV; diasVacaciones++;
             } else if (t.lic) {
                 diasLicencia++;
             } else if (t.falta) {
@@ -2940,163 +2939,36 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }
 
             const card = document.createElement('div'); 
-            // FIX: Protegemos contra comillas simples y dobles para no romper el botón borrar
             const locEscaped = (t.l || 'Puesto').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const horarioTexto = (t.e && t.s) ? `(${t.e} a ${t.s})` : "";
             const esAlgunFeriadoCalculado = (horasFeriadoTurno > 0);
 
             if (t.lic) {
                 card.className = 'shift-card licencia';
-                card.innerHTML = `
-                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
-                    <div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div>
-                    <div style="display:flex; align-items:center;">
-                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
-                    </div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else if (t.falta) {
                 card.className = 'shift-card falta';
-                card.innerHTML = `
-                    <div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div>
-                    <div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div>
-                    <div style="display:flex; align-items:center;">
-                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
-                    </div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else {
                 card.className = t.vac ? 'shift-card vacaciones' : (esAlgunFeriadoCalculado ? 'shift-card feriado' : 'shift-card');
-                card.innerHTML = `
-                    <div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;">
-                        <span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span>
-                        <span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span>
-                    </div>
-                    ${esAlgunFeriadoCalculado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}
-                    ${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}
-                    <div style="display:flex; align-items:center;">
-                        <div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div>
-                        <div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div>
-                    </div>`;
+                card.innerHTML = `<div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;"><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span></div>${esAlgunFeriadoCalculado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}<div style="display:flex; align-items:center;"><div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             }
             lista.appendChild(card);
         });
 
-        document.getElementById('totH').innerText = fmtH(st); 
-        document.getElementById('totN').innerText = fmtH(sn); 
-        document.getElementById('totF').innerText = fmtH(sf);
-        
-        // (La variable montoAntiguedad ya fue calculada arriba para las vacaciones)
-        // 🚀 FIX: Respetamos el "0" si la empresa lo estafa. Solo aplicamos ley si está vacío (NaN).
-        let valorNocturnoFinal = valMes.noct;
-        if (isNaN(valorNocturnoFinal)) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
-
-        let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
-
-        // 🚀 FIX: Misma lógica para las horas extras. Si tipeó explícitamente "0", el valor es 0.
-        let horaExtraVal = (valMes.hora !== undefined && valMes.hora !== "") ? Number(valMes.hora) : (valorHoraNormal * 1.5);
-
-        let recargoFeriado = valMes.tipoFeriado === "50" ? 0.5 : 1;
-        let horaFeriadoVal = valorHoraNormal * recargoFeriado;
-        let pagoFeriados = sf * horaFeriadoVal;
-        
-        const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones;
-        
-        // 🚀 FIX EXTREMO: Ajuste de horas base SOLO por ausencias justificadas
-        const diasAusenciaJustificada = diasLicencia + diasVacaciones;
-        const horasBaseDiarias = valMes.horasBase / 30; 
-        
-        // La falta sin aviso NO te baja la meta (no te regala horas extras)
-        let horasBaseAjustada = Math.max(0, valMes.horasBase - (horasBaseDiarias * diasAusenciaJustificada));
-        
-        // Redondeamos para que la meta visual no tenga mil decimales
-        horasBaseAjustada = Math.round(horasBaseAjustada);
-
-        let pagoHorasTotales = 0, hsExtra = 0;
-        // Ahora el sistema calcula las extras basándose en la meta real ajustada
-        if (st > horasBaseAjustada) { 
-            hsExtra = st - horasBaseAjustada; 
-            pagoHorasTotales = hsExtra * horaExtraVal; 
-        }
-
-        const diasTrabajados = diasUnicosTrabajados.size;
-        let viaticoFinal; 
-        
-        // 🚀 FIX EXTREMO: Fin del viático "fantasma" en vacaciones o licencias
-        if (totalDiasAusente === 0) {
-            // Mes completo y perfecto: rige la garantía de viático al 100%
-            if (st >= valMes.horasBase) {
-                viaticoFinal = Math.max(valMes.viatico, (valMes.viatico / 22) * diasTrabajados);
-            } else {
-                viaticoFinal = valMes.viatico; // Garantizado porque la empresa no dio horas
-            }
-        } else {
-            // Si hubo vacaciones, licencia o falta, se anula la garantía de mes completo.
-            // Se cobra el viático ESTRICTAMENTE por la cantidad de días que viajó.
-            viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
-        }
-
-        const presentismoReal = diasFaltaSinAviso > 0 ? 0 : valMes.presentismo;
-        const descuentoFalta = ((valMes.basico + montoAntiguedad) / 30) * diasFaltaSinAviso;
-        const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFalta;
-        
-        // 🚀 FIX: Salvavidas para usuarios nuevos. Si no configuraron descuento, asume 17% de ley.
-        const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
-        const descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
-        
-        const sumaNoRemunerativa = viaticoFinal + valMes.noRem;
-
-        const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
-        const totalNeto = totalBruto - descuentosLey;
-        
-        document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
-        document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        
-        window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
-
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('progress-text');
-        const progressStatus = document.getElementById('progress-status');
-        if (progressBar && progressText) {
-            // La barra visual ahora se llena en base a la meta ajustada del trabajador
-            const metaVisual = horasBaseAjustada > 0 ? horasBaseAjustada : valMes.horasBase;
-            const porcentaje = Math.min((st / metaVisual) * 100, 100);
-            
-            progressBar.style.width = porcentaje + "%";
-            progressText.innerText = `${st.toFixed(1)} / ${metaVisual} hs`;
-            
-            if (st === 0) {
-                progressStatus.innerHTML = "Todavía no registraste horas este mes.";
-                progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
-                progressBar.style.boxShadow = "none";
-                progressBar.style.animation = "";
-            } else if (st < metaVisual) {
-                progressStatus.innerHTML = totalDiasAusente > 0 ? `Meta ajustada por ausencias/vacaciones.` : "";
-                progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
-                progressBar.style.boxShadow = "none";
-                progressBar.style.animation = "";
-            } else {
-                progressStatus.innerHTML = "¡Objetivo cubierto! 💰";
-                progressBar.style.background = "linear-gradient(90deg, var(--success), #4ade80)";
-                progressBar.style.animation = "glow-pulse 1.8s ease-in-out infinite";
-            }
-        }
-
-        const txtNotaSueldo = document.getElementById('txt-nota-sueldo');
-        const netoTitleLabel = document.getElementById('neto-title-label');
-        if (st >= valMes.horasBase) {
-            if (netoTitleLabel) netoTitleLabel.innerText = 'NETO EN MANO (Estimado)';
-            if (txtNotaSueldo) {
-                txtNotaSueldo.style.display = '';
-                txtNotaSueldo.innerHTML = '*Puede variar levemente por redondeos contables o acuerdos específicos de tu empresa.';
-            }
-        } else {
-            if (netoTitleLabel) netoTitleLabel.innerText = 'SUELDO GARANTIZADO (MES COMPLETO)';
-            if (txtNotaSueldo) {
-                txtNotaSueldo.style.display = '';
-                if (!txtNotaSueldo.querySelector('#txt-nota-corta') && !txtNotaSueldo.querySelector('#txt-nota-larga')) {
-                    txtNotaSueldo.innerHTML = `
-                        <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
-                        <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>`;
-                }
-            }
-        }
+        // Totales y Barra de Progreso
+        document.getElementById('totH').innerText = fmtH(st); document.getElementById('totN').innerText = fmtH(sn); document.getElementById('totF').innerText = fmtH(sf);
+        let valH = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
+        let hExtraV = (valMes.hora !== undefined && valMes.hora !== "") ? Number(valMes.hora) : (valH * 1.5);
+        let pagoF = sf * (valH * (valMes.tipoFeriado === "50" ? 0.5 : 1));
+        let hBaseAjustada = Math.round(Math.max(0, valMes.horasBase - ((valMes.horasBase / 30) * (diasLicencia + diasVacaciones))));
+        let pExtras = st > hBaseAjustada ? (st - hBaseAjustada) * hExtraV : 0;
+        let viaticoF = (diasLicencia + diasVacaciones + diasFaltaSinAviso) === 0 ? (st >= valMes.horasBase ? Math.max(valMes.viatico, (valMes.viatico / 22) * diasUnicosTrabajados.size) : valMes.viatico) : (valMes.viatico / 22) * diasUnicosTrabajados.size;
+        let sumaR = valMes.basico + (diasFaltaSinAviso > 0 ? 0 : valMes.presentismo) + montoAntiguedad + pExtras + pagoF + plusVacacionalTotal + (sn * (isNaN(valMes.noct) ? (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000 : valMes.noct)) - (((valMes.basico + montoAntiguedad) / 30) * diasFaltaSinAviso);
+        let tNeto = (sumaR + viaticoF + valMes.noRem) - (sumaR * ((valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17) / 100);
+        document.getElementById('totalBruto').innerText = `$ ${(sumaR + viaticoF + valMes.noRem).toLocaleString('es-AR', {minimumFractionDigits: 2})}`; 
+        document.getElementById('totalNeto').innerText = `$ ${tNeto.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+        const pb = document.getElementById('progress-bar'); if (pb) { pb.style.width = Math.min((st / (hBaseAjustada || valMes.horasBase)) * 100, 100) + "%"; }
     }
 
     window.toggleHistorial = function() {
