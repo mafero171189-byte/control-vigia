@@ -1725,6 +1725,27 @@
 
         if (user) {
             window.currentUser = user;
+
+            // --- LÓGICA DE OPTIMIZACIÓN DE INGRESO (1 Hora) ---
+            const userRef = doc(db, "directorio_usuarios", user.uid);
+            try {
+                const userSnap = await getDoc(userRef);
+                const ahora = new Date();
+                let debeGrabar = true;
+
+                if (userSnap.exists() && userSnap.data().ultimo_ingreso) {
+                    const ultimaConexion = new Date(userSnap.data().ultimo_ingreso);
+                    const diferenciaMs = ahora - ultimaConexion;
+                    
+                    if (diferenciaMs < 3600000) debeGrabar = false;
+                }
+
+                if (debeGrabar) {
+                    setDoc(userRef, { ultimo_ingreso: ahora.toISOString() }, { merge: true });
+                }
+            } catch (e) { console.warn("Error ingreso:", e); }
+            // ------------------------------------------
+
             document.getElementById('landing-page').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             
@@ -1855,6 +1876,14 @@
                     const d = new Date(data.fecha);
                     fechaRegistro = d.toLocaleDateString('es-AR') + ' - ' + d.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
                 }
+
+                // NUEVO: Formatear último ingreso
+                let ultimoIngresoTexto = "Nunca";
+                if (data.ultimo_ingreso) {
+                    const uI = new Date(data.ultimo_ingreso);
+                    ultimoIngresoTexto = uI.toLocaleDateString('es-AR') + ' - ' + uI.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
+                }
+
                 let expiraTexto = "Sin límite / Prueba no iniciada";
                 let colorExpira = "var(--success)";
                 if (data.licencia_expira) {
@@ -1878,6 +1907,7 @@
                             <b>${safeNombre}</b>
                             <span style="color: var(--text-dim); display: block;">${safeEmail}</span>
                             <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
+                            <span style="color: #818cf8; font-size: 0.75rem; display: block; margin-top: 2px;">🕒 Último acceso: ${ultimoIngresoTexto}</span>
                             <span style="color: ${colorExpira}; font-size: 0.75rem; display: block; font-weight: bold; margin-top: 2px;">⏳ ${expiraTexto}</span>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 5px;">
@@ -1951,6 +1981,14 @@
                     const d = new Date(data.fecha);
                     fechaRegistro = d.toLocaleDateString('es-AR') + ' - ' + d.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
                 }
+
+                // NUEVO: Formatear último ingreso
+                let ultimoIngresoTexto = "Nunca";
+                if (data.ultimo_ingreso) {
+                    const uI = new Date(data.ultimo_ingreso);
+                    ultimoIngresoTexto = uI.toLocaleDateString('es-AR') + ' - ' + uI.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'});
+                }
+
                 let expiraTexto = "Sin límite / Prueba no iniciada";
                 let colorExpira = "var(--success)";
                 if (data.licencia_expira) {
@@ -1973,6 +2011,7 @@
                             <b>${safeNombre}</b>
                             <span style="color: var(--text-dim); display: block;">${safeEmail}</span>
                             <span style="color: var(--accent); font-size: 0.75rem; display: block; margin-top: 4px;">📅 Registro: ${fechaRegistro}</span>
+                            <span style="color: #818cf8; font-size: 0.75rem; display: block; margin-top: 2px;">🕒 Último acceso: ${ultimoIngresoTexto}</span>
                             <span style="color: var(--success); font-size: 0.75rem; font-weight: bold; margin-top: 4px; display: inline-block;">🔍 Resultado de búsqueda</span>
                             <span style="color: ${colorExpira}; font-size: 0.75rem; display: block; font-weight: bold; margin-top: 4px;">⏳ ${expiraTexto}</span>
                         </div>
