@@ -3132,6 +3132,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         label.innerText = visible ? 'MOSTRAR HISTORIAL DE TURNOS' : 'OCULTAR HISTORIAL DE TURNOS';
     }
 
+    // Variable global para guardar el mensaje temporalmente
+    window.mensajeReporteTemporal = "";
     window.enviarWhatsapp = function() {
         const nom = document.getElementById('vigiNombre').value, ape = document.getElementById('vigiApellido').value;
         if (!nom || !ape) return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger");
@@ -3144,9 +3146,23 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             ? `🏅 *Antigüedad:* ${v.antiguedadAños} Años\n` 
             : "";
         
-        const mensaje = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n\n_Generado por Control Vigía_`;
+        // Generamos el mensaje
+        window.mensajeReporteTemporal = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n\n_Generado por Control Vigía_`;
         
-        window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+        // Inyectamos el texto en el modal (limpiando los asteriscos de negrita para que se vea bien en el preview)
+        document.getElementById('cuerpo-reporte-preview').innerText = window.mensajeReporteTemporal.replace(/\*/g, "");
+        
+        // Mostramos el modal
+        document.getElementById('modal-reporte-preview').style.display = 'flex';
+    }
+    window.confirmarEnvioWhatsapp = function() {
+        if (!window.mensajeReporteTemporal) return;
+        window.open(`https://wa.me/?text=${encodeURIComponent(window.mensajeReporteTemporal)}`, '_blank');
+        window.cerrarModalReporte();
+    }
+    window.cerrarModalReporte = function() {
+        document.getElementById('modal-reporte-preview').style.display = 'none';
+        window.mensajeReporteTemporal = "";
     }
 
     // ==========================================
@@ -3329,5 +3345,22 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         parent.classList.toggle('collapsed');
     };
 </script>
+
+<div id="modal-reporte-preview" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9600; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 380px; text-align: left;">
+        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">📄 Vista Previa del Reporte</h3>
+        
+        <div id="cuerpo-reporte-preview" style="background: var(--input-bg); padding: 15px; border-radius: 12px; margin: 15px 0; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; color: var(--text-main); white-space: pre-wrap; border: 1px solid var(--border); line-height: 1.4;">
+            </div>
+        <div class="modal-btns" style="flex-direction: column; gap: 10px;">
+            <button class="btn-send" style="width: 100%; padding: 14px; background: var(--whatsapp); display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="confirmarEnvioWhatsapp()">
+                <span>📲 ENVIAR A WHATSAPP</span>
+            </button>
+            <button class="btn-cancel" style="width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border); color: var(--text-dim);" onclick="cerrarModalReporte()">
+                CANCELAR
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
