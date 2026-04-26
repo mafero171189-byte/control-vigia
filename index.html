@@ -872,6 +872,7 @@
         <form onsubmit="event.preventDefault(); procesarAuth();">
             <input type="text" id="auth-nombre" class="auth-input" placeholder="Tu Nombre y Apellido" autocomplete="name" style="display: none;">
             <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico" autocomplete="email" required>
+            <input type="email" id="auth-email-confirm" class="auth-input" placeholder="Repetir Correo electrónico" style="display: none;">
             
             <div class="password-container">
                 <input type="password" id="auth-password" class="auth-input" placeholder="Contraseña" autocomplete="current-password" required>
@@ -1624,6 +1625,7 @@
         document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
         document.getElementById('btn-toggle-auth').innerHTML = esModoRegistro ? "¿Ya tenés cuenta? <b>Ingresá acá</b>" : "¿No tenés cuenta? <b>Registrate acá</b>";
         document.getElementById('auth-nombre').style.display = esModoRegistro ? "block" : "none";
+        document.getElementById('auth-email-confirm').style.display = esModoRegistro ? "block" : "none";
         document.getElementById('btn-forgot-pwd').style.display = esModoRegistro ? "none" : "block"; 
     }
 
@@ -1633,6 +1635,13 @@
         const pass = document.getElementById('auth-password').value;
         const nombre = document.getElementById('auth-nombre').value;
         const recordar = document.getElementById('chk-recordar').checked;
+
+        if (esModoRegistro) {
+            const emailConfirm = document.getElementById('auth-email-confirm').value.trim().toLowerCase();
+            if (email !== emailConfirm) {
+                return window.showToast("⚠️ Los correos electrónicos no coinciden", "danger");
+            }
+        }
         if(!email || !pass || (esModoRegistro && !nombre)) return window.showToast("Completá todos los campos", "danger");
         
         document.getElementById('btn-action-auth').innerText = "Cargando...";
