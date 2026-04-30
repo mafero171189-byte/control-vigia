@@ -285,6 +285,16 @@
             background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); 
             padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; 
         }
+        /* Estilo para la tarjeta de SUSPENSIÓN en el historial */
+        .shift-card.suspension { 
+            border-color: #94a3b8; 
+            background: linear-gradient(135deg, var(--card-bg), rgba(100, 116, 139, 0.08)); 
+        }
+        .suspension-badge { 
+            font-size: 0.65rem; font-weight: 700; color: #94a3b8; 
+            background: rgba(100, 116, 139, 0.15); border: 1px solid rgba(100, 116, 139, 0.3); 
+            padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px; letter-spacing: 0.5px; 
+        }
         
         .btn-submit { flex: 1; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.3s; }
 
@@ -1009,6 +1019,14 @@
                 <b>⚠️ ¡OJO!</b> Faltar sin aviso te hace perder el <b>Presentismo completo</b> y el cobro del <b>día no trabajado</b>.<br>
                 El descuento total estimado será de: <b id="monto-descuento-dia" style="color: var(--danger); font-size: 1.05rem; display: block; margin-top: 5px;">-$0,00</b>
             </div>
+            <label class="falta-full" id="label-suspension" style="background: rgba(100, 116, 139, 0.1); border-color: rgba(100, 116, 139, 0.2); margin-top: 5px;">
+                <input type="checkbox" id="esSuspension">
+                <span style="color: #94a3b8;">🚫 Marcar si es SUSPENSIÓN DISCIPLINARIA</span>
+            </label>
+            <div id="msj-suspension" style="display: none; grid-column: span 2; background: rgba(100, 116, 139, 0.15); border: 1px solid #94a3b8; color: var(--text-main); padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 0.85rem; line-height: 1.4;">
+                <b>🚫 SUSPENSIÓN:</b> Se descuenta el valor del día y se pierde el <b>Presentismo completo</b>.<br>
+                El descuento del día estimado será de: <b id="monto-descuento-suspension" style="color: #94a3b8; font-size: 1.05rem; display: block; margin-top: 5px;">-$0,00</b>
+            </div>
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -1200,7 +1218,8 @@
 
     window.detectarFeriadoAutomatico = function() {
         if (window.turnoEnEdicion || document.getElementById('esVacaciones').checked || 
-            document.getElementById('esLicencia').checked || document.getElementById('esFalta').checked) return;
+            document.getElementById('esLicencia').checked || document.getElementById('esFalta').checked ||
+            (document.getElementById('esSuspension') && document.getElementById('esSuspension').checked)) return;
 
         const fStr = document.getElementById('fecha').value;
         const eStr = document.getElementById('entrada').value;
@@ -1301,14 +1320,17 @@
         const selectFeriado = document.getElementById('estadoFeriado');
         const chkLicencia = document.getElementById('esLicencia');
         const chkFalta = document.getElementById('esFalta');
+        const chkSuspension = document.getElementById('esSuspension');
         const inputEntrada = document.getElementById('entrada');
         const inputSalida = document.getElementById('salida');
         const msjFalta = document.getElementById('msj-falta');
+        const msjSuspension = document.getElementById('msj-suspension');
         const montoTxt = document.getElementById('monto-descuento-dia');
+        const montoSuspTxt = document.getElementById('monto-descuento-suspension');
 
         if(chkVacaciones && selectFeriado && chkLicencia) {
             const actualizarEstadoHoras = () => {
-                if (chkVacaciones.checked || chkLicencia.checked || (chkFalta && chkFalta.checked)) {
+                if (chkVacaciones.checked || chkLicencia.checked || (chkFalta && chkFalta.checked) || (chkSuspension && chkSuspension.checked)) {
                     inputEntrada.disabled = true; inputSalida.disabled = true;
                     inputEntrada.value = ""; inputSalida.value = "";
                 } else {
@@ -1320,6 +1342,7 @@
                 if(this.checked) {
                     selectFeriado.value = 'normal'; chkLicencia.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
+                    if(chkSuspension) { chkSuspension.checked = false; if(msjSuspension) msjSuspension.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
             });
@@ -1328,6 +1351,7 @@
                 if(this.value !== 'normal' && this.value !== 'auto') {
                     chkVacaciones.checked = false; chkLicencia.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
+                    if(chkSuspension) { chkSuspension.checked = false; if(msjSuspension) msjSuspension.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
             });
@@ -1336,21 +1360,62 @@
                 if(this.checked) {
                     selectFeriado.value = 'normal'; chkVacaciones.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
+                    if(chkSuspension) { chkSuspension.checked = false; if(msjSuspension) msjSuspension.style.display = 'none'; }
                 }
                 actualizarEstadoHoras();
             });
+
+                       // Función para verificar si el presentismo ya voló este mes
+            const comprobarPresentismoPerdido = () => {
+                return window.turnos.some(t => {
+                    // Ignora el turno que se está editando actualmente
+                    if (window.turnoEnEdicion && t.id === window.turnoEnEdicion) return false;
+                    const fObj = new Date(t.f + "T00:00:00");
+                    return fObj.getMonth() === window.fechaFiltro.getMonth() && 
+                           fObj.getFullYear() === window.fechaFiltro.getFullYear() && 
+                           (t.falta || t.susp);
+                });
+            };
 
             if(chkFalta) {
                 chkFalta.addEventListener('change', function() {
                     if(this.checked) {
                         selectFeriado.value = 'normal'; chkVacaciones.checked = false; chkLicencia.checked = false;
+                        if(chkSuspension) { chkSuspension.checked = false; if(msjSuspension) msjSuspension.style.display = 'none'; }
+
                         const v = window.obtenerValoresMes(window.fechaFiltro);
                         const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
-                        const totalPerdido = descuentoDia + v.presentismo;
-                        if(montoTxt) montoTxt.innerText = "- $ " + totalPerdido.toLocaleString('es-AR', {maximumFractionDigits: 2});
-                        if(msjFalta) msjFalta.style.display = 'block';
+
+                        const yaPerdio = comprobarPresentismoPerdido();
+                        const montoAMostrar = yaPerdio ? descuentoDia : (descuentoDia + v.presentismo);
+
+                        montoTxt.innerText = "- $ " + montoAMostrar.toLocaleString('es-AR', {maximumFractionDigits: 2});
+                        if(yaPerdio) montoTxt.innerHTML += " <br><small style='font-size:0.7rem; opacity:0.7;'>(El presentismo ya se descontó en otra falta)</small>";
+                        msjFalta.style.display = 'block';
                     } else {
-                        if(msjFalta) msjFalta.style.display = 'none';
+                        msjFalta.style.display = 'none';
+                    }
+                    actualizarEstadoHoras();
+                });
+            }
+
+            if(chkSuspension) {
+                chkSuspension.addEventListener('change', function() {
+                    if(this.checked) {
+                        selectFeriado.value = 'normal'; chkVacaciones.checked = false; chkLicencia.checked = false;
+                        if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
+
+                        const v = window.obtenerValoresMes(window.fechaFiltro);
+                        const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
+
+                        const yaPerdio = comprobarPresentismoPerdido();
+                        const montoAMostrar = yaPerdio ? descuentoDia : (descuentoDia + v.presentismo);
+
+                        montoSuspTxt.innerText = "- $ " + montoAMostrar.toLocaleString('es-AR', {maximumFractionDigits: 2});
+                        if(yaPerdio) montoSuspTxt.innerHTML += " <br><small style='font-size:0.7rem; opacity:0.7;'>(El presentismo ya se descontó en otra sanción)</small>";
+                        msjSuspension.style.display = 'block';
+                    } else {
+                        msjSuspension.style.display = 'none';
                     }
                     actualizarEstadoHoras();
                 });
@@ -2703,7 +2768,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const turno = window.turnos.find(t => t.id === id);
         if (!turno) return;
         
-        window.turnoEnEdicion = id; // Primero marcamos modo edición, para bloquear la auto-detección
+        window.turnoEnEdicion = id;
         
         document.getElementById('fecha').value = turno.f;
         document.getElementById('lugar').value = turno.l || "";
@@ -2718,13 +2783,14 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = turno.vac || false;
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = turno.lic || false;
         if(document.getElementById('esFalta')) document.getElementById('esFalta').checked = turno.falta || false;
+        if(document.getElementById('esSuspension')) document.getElementById('esSuspension').checked = turno.susp || false;
         
-        // Disparar los eventos para que la interfaz se bloquee/desbloquee sola
         const ev = new Event('change');
         if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         if(document.getElementById('esFalta')) document.getElementById('esFalta').dispatchEvent(ev);
+        if(document.getElementById('esSuspension')) document.getElementById('esSuspension').dispatchEvent(ev);
         
         document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO GUARDIA";
         document.getElementById('btn-submit-turno').innerText = "GUARDAR CAMBIOS";
@@ -2749,6 +2815,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
         if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
+        if(document.getElementById('esSuspension')) { document.getElementById('esSuspension').checked = false; document.getElementById('msj-suspension').style.display = 'none'; }
+        
         const ev = new Event('change');
         if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
@@ -2766,18 +2834,16 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if (!window.currentUser) return;
         
         const btnSubmit = document.getElementById('btn-submit-turno');
-        if (btnSubmit.disabled) return; // Evita el doble toque accidental
+        if (btnSubmit.disabled) return; 
         btnSubmit.disabled = true;
         btnSubmit.innerText = "⏳ GUARDANDO...";
         
-        // Solo forzamos el cálculo si el menú sigue en "Automático" (respeta cambios manuales)
         const selectFeriadoUI = document.getElementById('estadoFeriado');
         if (selectFeriadoUI && selectFeriadoUI.value === 'auto') {
             window.detectarFeriadoAutomatico();
         }
 
         const f = document.getElementById('fecha').value;
-        // 🔴 FIX: Si no hay fecha, habilitamos el botón antes de salir
         if (!f) {
             btnSubmit.disabled = false;
             btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
@@ -2793,10 +2859,50 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const vac = document.getElementById('esVacaciones') ? document.getElementById('esVacaciones').checked : false;
         const lic = document.getElementById('esLicencia') ? document.getElementById('esLicencia').checked : false;
         const falta = document.getElementById('esFalta') ? document.getElementById('esFalta').checked : false;
+        const susp = document.getElementById('esSuspension') ? document.getElementById('esSuspension').checked : false;
+
+        // ========================================================
+        // 🔥 VALIDACIÓN ESTRICTA DE SUPERPOSICIÓN DE HORARIOS
+        // ========================================================
+        const esAusencia = vac || lic || falta || susp;
+
+        const esDuplicadoOSuperpuesto = window.turnos.some(t => {
+            if (window.turnoEnEdicion && t.id === window.turnoEnEdicion) return false;
+            if (t.f !== f) return false;
+
+            const existenteEsAusencia = t.vac || t.lic || t.falta || t.susp;
+
+            if (esAusencia) return true;
+            if (existenteEsAusencia) return true;
+
+            // Validación de cruce de horarios (Superposición)
+            if (t.e && t.s && e && s) {
+                const minEntradaNuevo = parseInt(e.split(':')[0]) * 60 + parseInt(e.split(':')[1]);
+                let minSalidaNuevo = parseInt(s.split(':')[0]) * 60 + parseInt(s.split(':')[1]);
+                if (minSalidaNuevo <= minEntradaNuevo) minSalidaNuevo += 1440; // Cruce de medianoche
+
+                const minEntradaExistente = parseInt(t.e.split(':')[0]) * 60 + parseInt(t.e.split(':')[1]);
+                let minSalidaExistente = parseInt(t.s.split(':')[0]) * 60 + parseInt(t.s.split(':')[1]);
+                if (minSalidaExistente <= minEntradaExistente) minSalidaExistente += 1440;
+
+                // Si el nuevo empieza antes de que termine el otro Y termina después de que empieza el otro = CHOCAN
+                if (minEntradaNuevo < minSalidaExistente && minSalidaNuevo > minEntradaExistente) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (esDuplicadoOSuperpuesto) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
+            return window.showToast("🚫 Los horarios se superponen con otra guardia de este día.", "danger");
+        }
+        // ========================================================
               
         let diff = 0;
         let noct = 0;
-        if (!vac && !lic && !falta) {
+        if (!vac && !lic && !falta && !susp) {
             if (!e || !s) {
                 btnSubmit.disabled = false;
                 btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
@@ -2807,21 +2913,29 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             if (sal <= ent) sal.setDate(sal.getDate() + 1);
             diff = (sal - ent) / 3600000;
             
-            let noctMinutos = 0; let temp = new Date(ent);
-            while (temp < sal) { 
-                if (temp.getHours() >= INICIO_NOCHE || temp.getHours() < FIN_NOCHE) noctMinutos++; 
-                temp.setMinutes(temp.getMinutes() + 1); 
+            function calcularNocturnasRapido(inicio, fin) {
+                let minutosNocturnos = 0;
+                let temp = new Date(inicio);
+                while (temp < fin) {
+                    let sigHora = new Date(temp);
+                    sigHora.setHours(temp.getHours() + 1, 0, 0, 0);
+                    let finTramo = sigHora < fin ? sigHora : fin;
+                    let h = temp.getHours();
+                    if (h >= INICIO_NOCHE || h < FIN_NOCHE) {
+                        minutosNocturnos += (finTramo - temp) / 60000;
+                    }
+                    temp = finTramo;
+                }
+                return Number((minutosNocturnos / 60).toFixed(2));
             }
-            noct = Number((noctMinutos / 60).toFixed(2));
+            noct = calcularNocturnasRapido(ent, sal);
         } else {
             e = ""; s = "";
         }
         
-        // Agregamos 'mF' para saber si el usuario eligió Manual o Auto
-        const nuevoTurno = { f, l, e, s, ferE, ferS, mF: estFeriado, vac, lic, falta, t: diff, n: noct };
+        const nuevoTurno = { f, l, e, s, ferE, ferS, mF: estFeriado, vac, lic, falta, susp, t: diff, n: noct };
 
-        // Invalida la memoria del mes para forzar recarga
-        const mesTurno = f.substring(0, 7); // Obtiene YYYY-MM
+        const mesTurno = f.substring(0, 7);
         delete window._turnosCache[mesTurno];
         
         try {
@@ -2836,10 +2950,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
                 if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
-                // Reactivamos los inputs de hora por si estaban bloqueados
+                if(document.getElementById('esSuspension')) { document.getElementById('esSuspension').checked = false; document.getElementById('msj-suspension').style.display = 'none'; }
                 document.getElementById('entrada').disabled = false;
                 document.getElementById('salida').disabled = false;
-                // Vaciamos las horas para arrancar limpio el próximo turno
                 document.getElementById('entrada').value = '';
                 document.getElementById('salida').value = '';
                 window.showToast("✅ Turno guardado"); 
@@ -2847,7 +2960,6 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         } catch (error) { 
             window.showToast("⚠️ Error al guardar", "danger"); 
         } finally {
-            // Liberamos el botón sea cual sea el resultado
             btnSubmit.disabled = false;
             btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
         }
@@ -2928,7 +3040,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     function render() {
         const lista = document.getElementById('lista'); 
         let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0;
-        let diasFaltaSinAviso = 0; let diasLicencia = 0; let diasVacaciones = 0;    
+        let diasFaltaSinAviso = 0; let diasLicencia = 0; let diasVacaciones = 0; let diasSuspension = 0;   
         let diasUnicosTrabajados = new Set();
         lista.innerHTML = '';
         
@@ -2946,15 +3058,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
             st += t.t; sn += t.n;
 
-            // --- LÓGICA HÍBRIDA: RESPETO AL USUARIO O SINCRONIZACIÓN ADMIN ---
             let esFerEntrada, esFerSalida;
 
-            // Si el feriado se marcó MANUALMENTE (distinto de 'auto'), se respeta la DB local
             if (t.mF && t.mF !== 'auto') {
                 esFerEntrada = t.ferE || t.fer;
                 esFerSalida = t.ferS;
             } else {
-                // Si está en AUTOMÁTICO, se sincroniza con el calendario global del Admin
                 esFerEntrada = window.feriadosGlobales.includes(t.f);
                 esFerSalida = false;
                 if (t.e && t.s) {
@@ -2969,7 +3078,6 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 }
             }
 
-            // Aplicar restricción de Feriados Puente según configuración del usuario
             if (pagaPuentes === "no") {
                 if (puentesOficiales.includes(t.f)) esFerEntrada = false;
                 let dSalida = new Date(t.f + "T12:00:00");
@@ -3005,6 +3113,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 diasLicencia++;
             } else if (t.falta) {
                 diasFaltaSinAviso++;
+            } else if (t.susp) {
+                diasSuspension++;
             } else { 
                 diasUnicosTrabajados.add(t.f); 
             }
@@ -3020,6 +3130,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             } else if (t.falta) {
                 card.className = 'shift-card falta';
                 card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+            } else if (t.susp) {
+                card.className = 'shift-card suspension';
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="suspension-badge">🚫 SUSPENSIÓN</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else {
                 card.className = t.vac ? 'shift-card vacaciones' : (esAlgunFeriadoCalculado ? 'shift-card feriado' : 'shift-card');
                 card.innerHTML = `<div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;"><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span></div>${esAlgunFeriadoCalculado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}<div style="display:flex; align-items:center;"><div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
@@ -3027,7 +3140,6 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             lista.appendChild(card);
         });
 
-        // Totales y Barra de Progreso
         document.getElementById('totH').innerText = fmtH(st); 
         document.getElementById('totN').innerText = fmtH(sn); 
         document.getElementById('totF').innerText = fmtH(sf);
@@ -3041,10 +3153,26 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         let horaFeriadoVal = valorHoraNormal * recargoFeriado;
         let pagoFeriados = sf * horaFeriadoVal;
         
-        const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones;
+        const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones + diasSuspension;
         const diasAusenciaJustificada = diasLicencia + diasVacaciones;
-        const horasBaseDiarias = valMes.horasBase / 30; 
-        let horasBaseAjustada = Math.max(0, valMes.horasBase - (horasBaseDiarias * diasAusenciaJustificada));
+
+        // --- PROMEDIO DE HORAS (se calcula aquí para usarlo en horasBaseAjustada Y viáticos) ---
+        let sumaHorasParaPromedio = 0;
+        let conteoTurnosParaPromedio = 0;
+        window.turnos.forEach((t) => {
+            const fObj = new Date(t.f + "T00:00:00");
+            if (fObj.getMonth() !== window.fechaFiltro.getMonth() || fObj.getFullYear() !== window.fechaFiltro.getFullYear()) return;
+            if (!t.vac && !t.lic && !t.falta && !t.susp && t.t > 0) {
+                sumaHorasParaPromedio += t.t;
+                conteoTurnosParaPromedio++;
+            }
+        });
+        // Promedio por defecto 8hs si no hay turnos cargados aún
+        let promedioHorasTurno = conteoTurnosParaPromedio > 0 ? (sumaHorasParaPromedio / conteoTurnosParaPromedio) : 8;
+
+        // FIX Bug 2: horasBaseAjustada usa el turno real en lugar del divisor fijo /30
+        // Para un trabajador de 12hs: 1 licencia reduce la meta en 12h, no en 6.67h
+        let horasBaseAjustada = Math.max(0, valMes.horasBase - (promedioHorasTurno * diasAusenciaJustificada));
         horasBaseAjustada = Math.round(horasBaseAjustada);
 
         let pagoHorasTotales = 0, hsExtra = 0;
@@ -3053,22 +3181,33 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             pagoHorasTotales = hsExtra * horaExtraVal; 
         }
 
-        const diasTrabajados = diasUnicosTrabajados.size;
-        let viaticoFinal; 
-        
-        if (totalDiasAusente === 0) {
+        // --- DIVISOR INTELIGENTE DE VIÁTICOS ---
+        // Horas Base / Promedio de horas del turno → cantidad real de turnos en el mes
+        // 12hs → 200/12 = 17 días | 8hs → 200/8 = 25 días
+        let divisorInteligente = Math.round(valMes.horasBase / promedioHorasTurno);
+        if (divisorInteligente < 14) divisorInteligente = 16;
+        if (divisorInteligente > 26) divisorInteligente = 22;
+
+        const diasTrabajados = conteoTurnosParaPromedio;
+        let viaticoFinal;
+        // FIX Bug 1: solo faltas y suspensiones reducen el viático (no vacaciones ni licencias)
+        const diasReducenViatico = diasFaltaSinAviso + diasSuspension;
+        if (diasReducenViatico === 0) {
+            // Sin faltas/suspensiones: viático completo siempre
+            // Si además se pasó de horas, se paga el mayor entre el mensual y el proporcional
             if (st >= valMes.horasBase) {
-                viaticoFinal = Math.max(valMes.viatico, (valMes.viatico / 22) * diasTrabajados);
+                viaticoFinal = Math.max(valMes.viatico, (valMes.viatico / divisorInteligente) * diasTrabajados);
             } else {
-                viaticoFinal = valMes.viatico; 
+                viaticoFinal = valMes.viatico;
             }
         } else {
-            viaticoFinal = (valMes.viatico / 22) * diasTrabajados;
+            // Con faltas o suspensiones: proporcional por días efectivamente trabajados
+            viaticoFinal = (valMes.viatico / divisorInteligente) * diasTrabajados;
         }
 
-        const presentismoReal = diasFaltaSinAviso > 0 ? 0 : valMes.presentismo;
-        const descuentoFalta = ((valMes.basico + montoAntiguedad) / 30) * diasFaltaSinAviso;
-        const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFalta;
+        const presentismoReal = (diasFaltaSinAviso > 0 || diasSuspension > 0) ? 0 : valMes.presentismo;
+        const descuentoFaltaYSuspension = ((valMes.basico + montoAntiguedad) / 30) * (diasFaltaSinAviso + diasSuspension);
+        const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFaltaYSuspension;
         
         const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
         const descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
@@ -3080,10 +3219,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
-        // Sincronización para reportes de WhatsApp
         window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
 
-        // Actualización visual de la barra de progreso
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
         const progressStatus = document.getElementById('progress-status');
@@ -3100,7 +3237,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 progressBar.style.boxShadow = "none";
                 progressBar.style.animation = "";
             } else if (st < metaVisual) {
-                progressStatus.innerHTML = totalDiasAusente > 0 ? `Meta ajustada por ausencias/vacaciones.` : "";
+                progressStatus.innerHTML = diasAusenciaJustificada > 0 ? `Meta ajustada por licencias/vacaciones.` : "";
                 progressBar.style.background = "linear-gradient(90deg, var(--accent), #818cf8)";
                 progressBar.style.boxShadow = "none";
                 progressBar.style.animation = "";
@@ -3111,10 +3248,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }
         }
 
-        // Notas explicativas del sueldo
         const txtNotaSueldo = document.getElementById('txt-nota-sueldo');
         const netoTitleLabel = document.getElementById('neto-title-label');
-        if (st >= valMes.horasBase) {
+        if (st >= horasBaseAjustada) {
             if (netoTitleLabel) netoTitleLabel.innerText = 'NETO EN MANO (Estimado)';
             if (txtNotaSueldo) {
                 txtNotaSueldo.style.display = '';
