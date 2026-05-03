@@ -269,6 +269,60 @@
         }
         .falta-full input { width: auto; margin: 0; cursor: pointer; }
         .falta-full span { font-size: 0.85rem; color: var(--danger); font-weight: 600; }
+
+        /* ── CUSTOM NOVEDAD DROPDOWN ── */
+        #novedad-dropdown-wrap { grid-column: span 2; margin-top: 5px; position: relative; }
+
+        .novedad-trigger {
+            display: flex; align-items: center; gap: 10px; padding: 13px 16px;
+            border-radius: 12px; background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer; font-weight: 700; font-size: 0.88rem; color: var(--text-main);
+            transition: border-color 0.2s, box-shadow 0.2s; user-select: none;
+            width: 100%; box-sizing: border-box;
+        }
+        .novedad-trigger:hover { box-shadow: 0 0 0 1px rgba(56,189,248,0.25); }
+        .novedad-trigger.open { border-color: rgba(56,189,248,0.4); }
+        .novedad-arrow {
+            margin-left: auto; font-size: 0.75rem; color: var(--text-dim);
+            transition: transform 0.2s; flex-shrink: 0;
+        }
+        .novedad-trigger.open .novedad-arrow { transform: rotate(180deg); }
+        #novedad-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+        .novedad-options {
+            position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 200;
+            background: #0f1e36; border: 1px solid rgba(56,189,248,0.2); border-radius: 14px;
+            padding: 6px; overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.08);
+            animation: novedadOpen 0.18s cubic-bezier(.16,1,.3,1);
+        }
+        @keyframes novedadOpen {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)  scale(1); }
+        }
+        .novedad-option {
+            display: flex; align-items: center; gap: 11px; padding: 11px 14px;
+            border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+            transition: background 0.12s; color: var(--text-dim); user-select: none;
+        }
+        .novedad-option:hover { background: rgba(255,255,255,0.07); }
+        .novedad-option.selected { background: rgba(255,255,255,0.05); }
+        .novedad-option .nov-emoji { font-size: 1.05rem; flex-shrink: 0; }
+        .novedad-none  { color: var(--text-main); }
+        .novedad-none.selected  { background: rgba(56,189,248,0.08); }
+        .novedad-vac   { color: #22c55e; }
+        .novedad-vac.selected   { background: rgba(34,197,94,0.1); }
+        .novedad-lic   { color: #38bdf8; }
+        .novedad-lic.selected   { background: rgba(56,189,248,0.1); }
+        .novedad-falta { color: #ef4444; }
+        .novedad-falta.selected { background: rgba(239,68,68,0.1); }
+        .novedad-susp  { color: #94a3b8; }
+        .novedad-susp.selected  { background: rgba(100,116,139,0.1); }
+        .novedad-sep   { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 6px; }
+        .novedad-badge-check { margin-left: auto; color: var(--success); font-size: 0.85rem; opacity: 0; }
+        .novedad-option.selected .novedad-badge-check { opacity: 1; }
+
         /* Estilo para la tarjeta en el historial */
         .shift-card.falta { 
             border-color: var(--danger); 
@@ -1001,28 +1055,49 @@
                 </select>
             </div>
             
-            <label class="vacaciones-full">
-                <input type="checkbox" id="esVacaciones">
-                <span>🌴 Marcar si es VACACIONES</span>
-            </label>
-            
-            <label class="licencia-full">
-                <input type="checkbox" id="esLicencia">
-                <span>🏥 Marcar si es LICENCIA / CARPETA</span>
-            </label>
+            <!-- Checkboxes ocultos — mantienen toda la lógica JS intacta -->
+            <input type="checkbox" id="esVacaciones" style="display:none">
+            <input type="checkbox" id="esLicencia"   style="display:none">
+            <input type="checkbox" id="esFalta"      style="display:none">
+            <input type="checkbox" id="esSuspension" style="display:none">
 
-            <label class="falta-full" id="label-falta">
-                <input type="checkbox" id="esFalta">
-                <span>⚠️ Marcar solo si es FALTA SIN AVISO</span>
-            </label>
+            <!-- Dropdown visual de novedad -->
+            <div id="novedad-dropdown-wrap">
+                <div id="novedad-trigger" class="novedad-trigger">
+                    <span id="novedad-icon">✅</span>
+                    <span id="novedad-label" style="flex:1;">Normal / Sin ausencia</span>
+                    <span class="novedad-arrow">▾</span>
+                </div>
+                <div id="novedad-options" class="novedad-options" style="display:none;">
+                    <div class="novedad-option novedad-none selected" data-value="none">
+                        <span class="nov-emoji">✅</span><span>Normal / Sin ausencia</span>
+                        <span class="novedad-badge-check">✔</span>
+                    </div>
+                    <div class="novedad-sep"></div>
+                    <div class="novedad-option novedad-vac" data-value="vac">
+                        <span class="nov-emoji">🌴</span><span>VACACIONES</span>
+                        <span class="novedad-badge-check">✔</span>
+                    </div>
+                    <div class="novedad-option novedad-lic" data-value="lic">
+                        <span class="nov-emoji">🏥</span><span>LICENCIA / CARPETA</span>
+                        <span class="novedad-badge-check">✔</span>
+                    </div>
+                    <div class="novedad-sep"></div>
+                    <div class="novedad-option novedad-falta" data-value="falta">
+                        <span class="nov-emoji">⚠️</span><span>FALTA SIN AVISO</span>
+                        <span class="novedad-badge-check">✔</span>
+                    </div>
+                    <div class="novedad-option novedad-susp" data-value="susp">
+                        <span class="nov-emoji">🚫</span><span>SUSPENSIÓN DISCIPLINARIA</span>
+                        <span class="novedad-badge-check">✔</span>
+                    </div>
+                </div>
+            </div>
+
             <div id="msj-falta" style="display: none; grid-column: span 2; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: var(--text-main); padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 0.85rem; line-height: 1.4;">
                 <b>⚠️ ¡OJO!</b> Faltar sin aviso te hace perder el <b>Presentismo completo</b> y el cobro del <b>día no trabajado</b>.<br>
                 El descuento total estimado será de: <b id="monto-descuento-dia" style="color: var(--danger); font-size: 1.05rem; display: block; margin-top: 5px;">-$0,00</b>
             </div>
-            <label class="falta-full" id="label-suspension" style="background: rgba(100, 116, 139, 0.1); border-color: rgba(100, 116, 139, 0.2); margin-top: 5px;">
-                <input type="checkbox" id="esSuspension">
-                <span style="color: #94a3b8;">🚫 Marcar si es SUSPENSIÓN DISCIPLINARIA</span>
-            </label>
             <div id="msj-suspension" style="display: none; grid-column: span 2; background: rgba(100, 116, 139, 0.15); border: 1px solid #94a3b8; color: var(--text-main); padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 0.85rem; line-height: 1.4;">
                 <b>🚫 SUSPENSIÓN:</b> Se descuenta el valor del día y se pierde el <b>Presentismo completo</b>.<br>
                 El descuento del día estimado será de: <b id="monto-descuento-suspension" style="color: #94a3b8; font-size: 1.05rem; display: block; margin-top: 5px;">-$0,00</b>
@@ -1352,6 +1427,7 @@
                     chkVacaciones.checked = false; chkLicencia.checked = false;
                     if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
                     if(chkSuspension) { chkSuspension.checked = false; if(msjSuspension) msjSuspension.style.display = 'none'; }
+                    if(window.sincronizarDropdownNovedad) window.sincronizarDropdownNovedad();
                 }
                 actualizarEstadoHoras();
             });
@@ -1420,6 +1496,85 @@
                     actualizarEstadoHoras();
                 });
             }
+
+            // ── LÓGICA DEL DROPDOWN VISUAL DE NOVEDAD ──
+            const novedadTrigger  = document.getElementById('novedad-trigger');
+            const novedadOptions  = document.getElementById('novedad-options');
+            const novedadLabel    = document.getElementById('novedad-label');
+            const novedadIconEl   = document.getElementById('novedad-icon');
+
+            const NOVEDAD_CFG = {
+                none:  { icon: '✅', label: 'Normal / Sin ausencia',      color: 'var(--text-main)', border: 'rgba(255,255,255,0.1)' },
+                vac:   { icon: '🌴', label: 'VACACIONES',               color: '#22c55e',          border: 'rgba(34,197,94,0.45)'  },
+                lic:   { icon: '🏥', label: 'LICENCIA / CARPETA',       color: '#38bdf8',          border: 'rgba(56,189,248,0.45)' },
+                falta: { icon: '⚠️', label: 'FALTA SIN AVISO',          color: '#ef4444',          border: 'rgba(239,68,68,0.45)'  },
+                susp:  { icon: '🚫', label: 'SUSPENSIÓN DISCIPLINARIA', color: '#94a3b8',          border: 'rgba(100,116,139,0.45)'},
+            };
+
+            window.sincronizarDropdownNovedad = function() {
+                let val = 'none';
+                if (chkVacaciones && chkVacaciones.checked) val = 'vac';
+                else if (chkLicencia && chkLicencia.checked) val = 'lic';
+                else if (chkFalta && chkFalta.checked) val = 'falta';
+                else if (chkSuspension && chkSuspension.checked) val = 'susp';
+
+                const cfg = NOVEDAD_CFG[val];
+                novedadIconEl.textContent  = cfg.icon;
+                novedadLabel.textContent   = cfg.label;
+                novedadLabel.style.color   = cfg.color;
+                novedadTrigger.style.borderColor = cfg.border;
+
+                document.querySelectorAll('#novedad-options .novedad-option').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value === val);
+                });
+            };
+
+            // Abrir / cerrar
+            novedadTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = novedadOptions.style.display !== 'none';
+                novedadOptions.style.display = isOpen ? 'none' : 'block';
+                novedadTrigger.classList.toggle('open', !isOpen);
+            });
+            document.addEventListener('click', () => {
+                novedadOptions.style.display = 'none';
+                novedadTrigger.classList.remove('open');
+            });
+            novedadOptions.addEventListener('click', e => e.stopPropagation());
+
+            // Selección de opción
+            document.querySelectorAll('#novedad-options .novedad-option').forEach(el => {
+                el.addEventListener('click', () => {
+                    const val = el.dataset.value;
+                    novedadOptions.style.display = 'none';
+                    novedadTrigger.classList.remove('open');
+
+                    // Uncheck all y ocultar mensajes
+                    if (chkVacaciones) chkVacaciones.checked = false;
+                    if (chkLicencia)   chkLicencia.checked   = false;
+                    if (chkFalta)      { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
+                    if (chkSuspension) { chkSuspension.checked = false; if(msjSuspension) msjSuspension.style.display = 'none'; }
+
+                    const chkMap = { vac: chkVacaciones, lic: chkLicencia, falta: chkFalta, susp: chkSuspension };
+                    if (val !== 'none' && chkMap[val]) {
+                        chkMap[val].checked = true;
+                        chkMap[val].dispatchEvent(new Event('change'));
+                    } else {
+                        // Ocultar carteles de advertencia y disparar change para actualizar estado de horas
+                        if (msjFalta)      msjFalta.style.display      = 'none';
+                        if (msjSuspension) msjSuspension.style.display = 'none';
+                        if (chkVacaciones) chkVacaciones.dispatchEvent(new Event('change'));
+                    }
+                    window.sincronizarDropdownNovedad();
+                });
+            });
+
+            // Mantener dropdown sincronizado con cambios externos (edición de turno, limpieza)
+            [chkVacaciones, chkLicencia, chkFalta, chkSuspension].forEach(chk => {
+                if (chk) chk.addEventListener('change', () => window.sincronizarDropdownNovedad());
+            });
+
+            window.sincronizarDropdownNovedad();
         }
     });
 
@@ -2791,8 +2946,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
         if(document.getElementById('esFalta')) document.getElementById('esFalta').dispatchEvent(ev);
         if(document.getElementById('esSuspension')) document.getElementById('esSuspension').dispatchEvent(ev);
-        
-        document.getElementById('form-titulo-modo').innerHTML = "✏️ EDITANDO GUARDIA";
+        if(window.sincronizarDropdownNovedad) window.sincronizarDropdownNovedad();
         document.getElementById('btn-submit-turno').innerText = "GUARDAR CAMBIOS";
         document.getElementById('btn-submit-turno').style.background = "var(--warning)";
         document.getElementById('btn-cancel-edit').style.display = "block";
@@ -2821,8 +2975,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').dispatchEvent(ev);
         if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').dispatchEvent(ev);
         if(document.getElementById('esLicencia')) document.getElementById('esLicencia').dispatchEvent(ev);
-        
-        document.getElementById('form-titulo-modo').innerHTML = "➕ REGISTRAR GUARDIA";
+        if(window.sincronizarDropdownNovedad) window.sincronizarDropdownNovedad();
         document.getElementById('btn-submit-turno').innerText = "AGENDAR GUARDIA";
         document.getElementById('btn-submit-turno').style.background = "var(--accent)";
         document.getElementById('btn-cancel-edit').style.display = "none";
@@ -2951,8 +3104,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
                 if(document.getElementById('esFalta')) { document.getElementById('esFalta').checked = false; document.getElementById('msj-falta').style.display = 'none'; }
                 if(document.getElementById('esSuspension')) { document.getElementById('esSuspension').checked = false; document.getElementById('msj-suspension').style.display = 'none'; }
-                document.getElementById('entrada').disabled = false;
+                if(window.sincronizarDropdownNovedad) window.sincronizarDropdownNovedad();
+                
+                document.getElementById('entrada').disabled = false; // <-- FALTABA ESTA LÍNEA
                 document.getElementById('salida').disabled = false;
+                
                 document.getElementById('entrada').value = '';
                 document.getElementById('salida').value = '';
                 window.showToast("✅ Turno guardado"); 
