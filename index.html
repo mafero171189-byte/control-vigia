@@ -1292,9 +1292,11 @@
     window.feriadosGlobales = [];
 
     window.detectarFeriadoAutomatico = function() {
-        if (window.turnoEnEdicion || document.getElementById('esVacaciones').checked || 
-            document.getElementById('esLicencia').checked || document.getElementById('esFalta').checked ||
-            (document.getElementById('esSuspension') && document.getElementById('esSuspension').checked)) return;
+        if (window.turnoEnEdicion ||
+            document.getElementById('esVacaciones')?.checked ||
+            document.getElementById('esLicencia')?.checked ||
+            document.getElementById('esFalta')?.checked ||
+            document.getElementById('esSuspension')?.checked) return;
 
         const fStr = document.getElementById('fecha').value;
         const eStr = document.getElementById('entrada').value;
@@ -3021,6 +3023,19 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         // ========================================================
         // 🔥 VALIDACIÓN ESTRICTA DE SUPERPOSICIÓN DE HORARIOS
         // ========================================================
+
+        // Guard: si se edita un turno y se cambia el mes, window.turnos no tiene
+        // los datos del mes destino → no se puede validar solapamiento.
+        // En ese caso bloqueamos el guardado y pedimos que se elimine y recree.
+        if (window.turnoEnEdicion) {
+            const turnoOriginal = window.turnos.find(t => t.id === window.turnoEnEdicion);
+            if (turnoOriginal && turnoOriginal.f.substring(0, 7) !== f.substring(0, 7)) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "GUARDAR CAMBIOS";
+                return window.showToast("⚠️ Para cambiar el mes de un turno, eliminalo y creá uno nuevo.", "danger");
+            }
+        }
+
         const esAusencia = vac || lic || falta || susp;
 
         const esDuplicadoOSuperpuesto = window.turnos.some(t => {
@@ -3157,7 +3172,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
     
     // 🔴 CORRECCIÓN: Actualizar la suscripción de Firebase al cambiar de mes
-    window.cambiarMes = function(delta) { 
+    window.cambiarMes = function(delta) {
+        // 🔴 FIX: Siempre limpiar el formulario al cambiar de mes.
+        // Cancela ediciones activas Y limpia mensajes de falta/suspension
+        // que quedaban visibles aunque no se hubiera guardado nada todavia.
+        window.cancelarEdicion();
+
         // 👇 ESTA LÍNEA EVITA EL BUG DEL DÍA 31
         window.fechaFiltro.setDate(1); 
         
@@ -3238,7 +3258,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 }
             }
 
-            if (pagaPuentes === "no") {
+            // 🔴 FIX: solo ignorar puentes si el turno está en modo automático.
+            // Si el usuario lo marcó manualmente, su elección tiene prioridad.
+            if (pagaPuentes === "no" && (!t.mF || t.mF === 'auto')) {
                 if (puentesOficiales.includes(t.f)) esFerEntrada = false;
                 let dSalida = new Date(t.f + "T12:00:00");
                 dSalida.setDate(dSalida.getDate() + 1);
