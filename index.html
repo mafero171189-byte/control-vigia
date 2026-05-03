@@ -1443,12 +1443,13 @@
 
                        // Función para verificar si el presentismo ya voló este mes
             const comprobarPresentismoPerdido = () => {
+                const fechaTurno = new Date((document.getElementById('fecha').value || window.fechaFiltro.toISOString().split('T')[0]) + "T00:00:00");
                 return window.turnos.some(t => {
                     // Ignora el turno que se está editando actualmente
                     if (window.turnoEnEdicion && t.id === window.turnoEnEdicion) return false;
                     const fObj = new Date(t.f + "T00:00:00");
-                    return fObj.getMonth() === window.fechaFiltro.getMonth() && 
-                           fObj.getFullYear() === window.fechaFiltro.getFullYear() && 
+                    return fObj.getMonth() === fechaTurno.getMonth() && 
+                           fObj.getFullYear() === fechaTurno.getFullYear() && 
                            (t.falta || t.susp);
                 });
             };
@@ -1459,7 +1460,8 @@
                         selectFeriado.value = 'normal'; chkVacaciones.checked = false; chkLicencia.checked = false;
                         if(chkSuspension) { chkSuspension.checked = false; if(msjSuspension) msjSuspension.style.display = 'none'; }
 
-                        const v = window.obtenerValoresMes(window.fechaFiltro);
+                        const fechaFormulario = new Date((document.getElementById('fecha').value || window.fechaFiltro.toISOString().split('T')[0]) + "T00:00:00");
+                        const v = window.obtenerValoresMes(fechaFormulario);
                         const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
 
                         const yaPerdio = comprobarPresentismoPerdido();
@@ -1481,7 +1483,8 @@
                         selectFeriado.value = 'normal'; chkVacaciones.checked = false; chkLicencia.checked = false;
                         if(chkFalta) { chkFalta.checked = false; if(msjFalta) msjFalta.style.display = 'none'; }
 
-                        const v = window.obtenerValoresMes(window.fechaFiltro);
+                        const fechaFormulario = new Date((document.getElementById('fecha').value || window.fechaFiltro.toISOString().split('T')[0]) + "T00:00:00");
+                        const v = window.obtenerValoresMes(fechaFormulario);
                         const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
 
                         const yaPerdio = comprobarPresentismoPerdido();
@@ -1620,7 +1623,7 @@
         if (partes.length > 1) input.value = entero + "," + partes[1].substring(0, 2); else input.value = entero;
     }
 
-    const limpiar = (str) => { if(!str || str.trim() === "") return ""; return str.toString().replace(/\./g, "").replace(",", "."); };
+    const limpiar = (str) => { if(!str || str.trim() === "") return ""; return str.toString().replace(/\./g, "").replace(/,/g, "."); };
 
     window.valoresUPSRA = window.valoresUPSRA || {}; 
     window.obtenerValoresMes = function(fObj, categoriaForzada = null) {
@@ -2930,7 +2933,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('entrada').value = turno.e;
         document.getElementById('salida').value = turno.s;
         if (document.getElementById('estadoFeriado')) {
-            if (turno.ferE && turno.ferS) document.getElementById('estadoFeriado').value = 'ambos';
+            if (turno.mF === 'auto') document.getElementById('estadoFeriado').value = 'auto';
+            else if (turno.ferE && turno.ferS) document.getElementById('estadoFeriado').value = 'ambos';
             else if (turno.ferS) document.getElementById('estadoFeriado').value = 'salida';
             else if (turno.ferE || turno.fer) document.getElementById('estadoFeriado').value = 'entrada';
             else document.getElementById('estadoFeriado').value = 'normal';
@@ -3304,7 +3308,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if (isNaN(valorNocturnoFinal)) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
 
         let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
-        let horaExtraVal = (valMes.hora !== undefined && valMes.hora !== "") ? Number(valMes.hora) : (valorHoraNormal * 1.5);
+        let horaExtraVal = !isNaN(valMes.hora) ? Number(valMes.hora) : (valorHoraNormal * 1.5);
         let recargoFeriado = valMes.tipoFeriado === "50" ? 0.5 : 1;
         let horaFeriadoVal = valorHoraNormal * recargoFeriado;
         let pagoFeriados = sf * horaFeriadoVal;
@@ -3406,7 +3410,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
         const txtNotaSueldo = document.getElementById('txt-nota-sueldo');
         const netoTitleLabel = document.getElementById('neto-title-label');
-        if (st >= horasBaseAjustada) {
+        if (st > 0 && st >= horasBaseAjustada) {
             if (netoTitleLabel) netoTitleLabel.innerText = 'NETO EN MANO (Estimado)';
             if (txtNotaSueldo) {
                 txtNotaSueldo.style.display = '';
