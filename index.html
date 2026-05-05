@@ -1464,7 +1464,7 @@
 
                         const fechaFormulario = new Date((document.getElementById('fecha').value || window.fechaFiltro.toISOString().split('T')[0]) + "T00:00:00");
                         const v = window.obtenerValoresMes(fechaFormulario);
-                        const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
+                        const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 25; // Art. 33 CCT 507/07: salario diario = sueldo / 25
 
                         const yaPerdio = comprobarPresentismoPerdido();
                         const montoAMostrar = yaPerdio ? descuentoDia : (descuentoDia + v.presentismo);
@@ -1487,7 +1487,7 @@
 
                         const fechaFormulario = new Date((document.getElementById('fecha').value || window.fechaFiltro.toISOString().split('T')[0]) + "T00:00:00");
                         const v = window.obtenerValoresMes(fechaFormulario);
-                        const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 30;
+                        const descuentoDia = (v.basico + (v.basico * (v.antiguedadAños / 100))) / 25; // Art. 33 CCT 507/07: salario diario = sueldo / 25
 
                         const yaPerdio = comprobarPresentismoPerdido();
                         const montoAMostrar = yaPerdio ? descuentoDia : (descuentoDia + v.presentismo);
@@ -3388,7 +3388,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         }
 
         const presentismoReal = (diasFaltaSinAviso > 0 || diasSuspension > 0) ? 0 : valMes.presentismo;
-        const descuentoFaltaYSuspension = ((valMes.basico + montoAntiguedad) / 30) * (diasFaltaSinAviso + diasSuspension);
+        const descuentoFaltaYSuspension = ((valMes.basico + montoAntiguedad) / 25) * (diasFaltaSinAviso + diasSuspension); // Art. 33 CCT 507/07: salario diario = sueldo / 25
         const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFaltaYSuspension;
         
         const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
