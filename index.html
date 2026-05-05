@@ -545,7 +545,6 @@
             <label style="color: var(--accent);">Categoría de Vigilador</label>
             <select id="valCategoria" class="auth-input" style="margin-bottom: 5px; padding: 10px; font-weight: bold; color: var(--accent);" onchange="cambiarCategoriaConfig()">
                 <option value="general">Vigilador General</option>
-                <option value="arma">Vigilador con Arma</option>
             </select>
         </div>
 
@@ -1657,21 +1656,13 @@
         let auto = window.valoresUPSRA[claveMes];
 
         if (!auto && año === 2026) {
-            if (categoria === 'arma') {
-                if (mes === 0) auto = { b: 887200, p: 165000, v: 473800, nr: 10000, vac: 18552 };
-                else if (mes === 1) auto = { b: 896000, p: 165000, v: 473800, nr: 25000, vac: 18952 };
-                else if (mes === 2) auto = { b: 904800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
-                else if (mes === 3) auto = { b: 913650, p: 165000, v: 480500, nr: 25000, vac: 19220 };
-                else if (mes === 4) auto = { b: 922600, p: 165000, v: 487000, nr: 30000, vac: 19480 };
-                else auto = { b: 931650, p: 165000, v: 498000, nr: 70000, vac: 19920 }; 
-            } else {
-                if (mes === 0) auto = { b: 867200, p: 165000, v: 473800, nr: 10000, vac: 18552 };
+            if (categoria === 'arma') categoria = 'general'; // CCT 507/07 + paritaria 2026: no existe distinción armado/desarmado
+            if (mes === 0) auto = { b: 867200, p: 165000, v: 473800, nr: 10000, vac: 18952 }; // Cláusula Cuarta: $18.952 ene-mar
                 else if (mes === 1) auto = { b: 876000, p: 165000, v: 473800, nr: 25000, vac: 18952 };
                 else if (mes === 2) auto = { b: 884800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
                 else if (mes === 3) auto = { b: 893650, p: 165000, v: 480500, nr: 25000, vac: 19220 };
                 else if (mes === 4) auto = { b: 902600, p: 165000, v: 487000, nr: 30000, vac: 19480 };
-                else auto = { b: 911650, p: 165000, v: 498000, nr: 70000, vac: 19920 }; 
-            }
+                else auto = { b: 911650, p: 165000, v: 498000, nr: 70000, vac: 19920 };
         }
         
         if (auto) {
@@ -3330,7 +3321,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if (isNaN(valorNocturnoFinal)) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
 
         let valorHoraNormal = (valMes.basico + valMes.presentismo + montoAntiguedad) / valMes.horasBase;
-        let horaExtraVal = !isNaN(valMes.hora) ? Number(valMes.hora) : (valorHoraNormal * 1.5);
+        // horaExtraVal: manual si el usuario lo configuró; null = calcular proporcional abajo (LCT Art. 201)
+        let horaExtraVal = !isNaN(valMes.hora) ? Number(valMes.hora) : null;
         let recargoFeriado = valMes.tipoFeriado === "50" ? 0.5 : 1;
         let horaFeriadoVal = valorHoraNormal * recargoFeriado;
         let pagoFeriados = sf * horaFeriadoVal;
@@ -3359,8 +3351,18 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
         let pagoHorasTotales = 0, hsExtra = 0;
         if (st > horasBaseAjustada) { 
-            hsExtra = st - horasBaseAjustada; 
-            pagoHorasTotales = hsExtra * horaExtraVal; 
+            hsExtra = st - horasBaseAjustada;
+            if (horaExtraVal !== null) {
+                // Valor manual configurado por el usuario → usar directo
+                pagoHorasTotales = hsExtra * horaExtraVal;
+            } else {
+                // LCT Art. 201: 50% extra diurno (×1.5), 100% extra nocturno/domingo (×2)
+                // Proporción basada en horas nocturnas reales del mes
+                const ratioNoct = (st > 0) ? Math.min(sn / st, 1) : 0;
+                const hsExtraNoc = hsExtra * ratioNoct;
+                const hsExtraDia = hsExtra - hsExtraNoc;
+                pagoHorasTotales = (hsExtraDia * valorHoraNormal * 1.5) + (hsExtraNoc * valorHoraNormal * 2.0);
+            }
         }
 
         // --- DIVISOR INTELIGENTE DE VIÁTICOS ---
@@ -3393,7 +3395,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
         const descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
-        const sumaNoRemunerativa = viaticoFinal + valMes.noRem;
+        // Suma NR: proporcional si hay faltas injustificadas o suspensiones (Cláusula Tercera, Acta 2026)
+        const noRemFinal = diasReducenViatico === 0 ? valMes.noRem : (valMes.noRem / divisorInteligente) * diasTrabajados;
+        const sumaNoRemunerativa = viaticoFinal + noRemFinal;
 
         const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
         const totalNeto = totalBruto - descuentosLey;
