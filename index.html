@@ -245,6 +245,24 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-dim); margin-bottom: 4px; }
         input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text-main); font-size: 0.95rem; box-sizing: border-box; }
+        .time-picker-trigger { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text-dim); font-size: 0.95rem; box-sizing: border-box; text-align: center; letter-spacing: 1px; cursor: pointer; user-select: none; }
+        .time-picker-trigger.con-valor { color: var(--text-main); font-weight: 600; }
+        .time-picker-trigger.deshabilitado { opacity: 0.5; pointer-events: none; }
+        #modal-rueda-hora { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2500; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; }
+        .reloj-readout { text-align: center; font-size: 2.4rem; font-weight: 800; color: var(--text-dim); margin-bottom: 16px; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+        .reloj-parte { cursor: pointer; padding: 2px 10px; border-radius: 10px; transition: background 0.15s, color 0.15s; }
+        .reloj-parte.activo { color: var(--accent); background: rgba(56, 189, 248, 0.14); }
+        .reloj-formato { font-size: 0.7rem; vertical-align: super; color: var(--text-dim); margin-left: 4px; }
+        .reloj-dial-wrap { display: flex; justify-content: center; margin-bottom: 6px; }
+        .reloj-dial { position: relative; width: 260px; height: 260px; max-width: 100%; border-radius: 50%; background: radial-gradient(circle at 50% 42%, rgba(56, 189, 248, 0.07), var(--input-bg) 72%); border: 1px solid var(--border); box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.3); touch-action: none; }
+        .reloj-centro { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px rgba(56, 189, 248, 0.7); z-index: 3; pointer-events: none; }
+        .reloj-manecilla { position: absolute; top: 50%; left: 50%; width: 3px; margin-left: -1.5px; background: linear-gradient(to bottom, var(--accent), rgba(56, 189, 248, 0.4)); border-radius: 3px; transform-origin: top center; z-index: 2; pointer-events: none; box-shadow: 0 0 6px rgba(56, 189, 248, 0.5); transition: transform 0.2s cubic-bezier(.34, 1.4, .64, 1), height 0.2s ease; }
+        .reloj-num { position: absolute; width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 50%; font-size: 0.9rem; font-weight: 500; color: var(--text-main); transform: translate(-50%, -50%); pointer-events: none; transition: background 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s; }
+        .reloj-num.inner { font-size: 0.72rem; font-weight: 400; color: var(--text-dim); }
+        .reloj-num.sel { background: var(--accent); color: #00131c; font-weight: 700; box-shadow: 0 0 12px rgba(56, 189, 248, 0.55); transform: translate(-50%, -50%) scale(1.1); }
+        .reloj-num.inner.sel { font-size: 0.85rem; }
+        .reloj-num.minor { font-size: 0; width: 6px; height: 6px; background: var(--text-dim); opacity: 0.35; transition: opacity 0.15s, background 0.15s, box-shadow 0.15s, width 0.15s, height 0.15s; }
+        .reloj-num.minor.sel { opacity: 1; background: var(--accent); width: 10px; height: 10px; box-shadow: 0 0 8px rgba(56, 189, 248, 0.6); }
         
         .feriado-full { grid-column: span 2; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); margin-top: 5px; cursor: pointer; width: 100%; box-sizing: border-box; }
         .feriado-full input { width: auto; margin: 0; cursor: pointer; }
@@ -534,6 +552,26 @@
 
 <div id="loading-overlay"><div class="lo-ring"><div class="lo-icon">🛡️</div></div><div class="lo-text">Verificando sesión<span class="lo-dots"><span>.</span><span>.</span><span>.</span></span></div><div class="lo-bar-wrap"><div class="lo-bar"></div></div></div>
 <div id="toast"></div>
+
+<div id="modal-rueda-hora">
+    <div class="modal-content" style="max-width: 300px;">
+        <h3 id="reloj-titulo" style="color: var(--accent); margin-top:0; margin-bottom: 5px; text-align:center;">Elegir hora</h3>
+        <div class="reloj-readout">
+            <span id="reloj-hh-txt" class="reloj-parte activo" onclick="cambiarModoReloj('h')">--</span><span>:</span><span id="reloj-mm-txt" class="reloj-parte" onclick="cambiarModoReloj('m')">--</span>
+        </div>
+        <div class="reloj-dial-wrap">
+            <div class="reloj-dial" id="reloj-dial">
+                <div class="reloj-manecilla" id="reloj-manecilla"></div>
+                <div class="reloj-centro"></div>
+            </div>
+        </div>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="borrarRelojHora()">Borrar</button>
+            <button class="btn-cancel" onclick="cerrarRelojHora()">Cancelar</button>
+            <button class="btn-send" onclick="confirmarRelojHora()">Establecer</button>
+        </div>
+    </div>
+</div>
 
 <div id="modal-cambiar-clave">
     <div class="modal-content">
@@ -1096,8 +1134,16 @@
             <div><label>Objetivo</label><input type="text" id="lugar" placeholder="Puesto"></div>
         </div>
         <div class="form-row">
-            <div><label>Entrada</label><input type="time" id="entrada" onchange="detectarFeriadoAutomatico()"></div>
-            <div><label>Salida</label><input type="time" id="salida" onchange="detectarFeriadoAutomatico()"></div>
+            <div>
+                <label>Entrada</label>
+                <div class="time-picker-trigger" id="entrada-display" onclick="abrirRelojHora('entrada')">-- : --</div>
+                <input type="hidden" id="entrada" onchange="detectarFeriadoAutomatico()">
+            </div>
+            <div>
+                <label>Salida</label>
+                <div class="time-picker-trigger" id="salida-display" onclick="abrirRelojHora('salida')">-- : --</div>
+                <input type="hidden" id="salida" onchange="detectarFeriadoAutomatico()">
+            </div>
             
             <div id="box-feriado" style="grid-column: span 2; margin-top: 5px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 12px; box-sizing: border-box;">
                 <label style="color: var(--warning); font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block;">🚩 Estado del Feriado</label>
@@ -3369,6 +3415,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             lista.appendChild(card);
         });
 
+        ajustarTodosLosPuestos();
+
         document.getElementById('totH').innerText = fmtH(st); 
         document.getElementById('totN').innerText = fmtH(sn); 
         document.getElementById('totF').innerText = fmtH(sf);
@@ -3517,6 +3565,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const visible = lista.style.display !== 'none';
         lista.style.display = visible ? 'none' : 'block';
         label.innerText = visible ? 'MOSTRAR HISTORIAL DE TURNOS' : 'OCULTAR HISTORIAL DE TURNOS';
+        if (!visible) ajustarTodosLosPuestos(); // se está mostrando: recalculamos por si se renderizó estando oculto
     }
 
     // Variable global para guardar el mensaje temporalmente
@@ -3749,5 +3798,256 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         </div>
     </div>
 </div>
+<script>
+    // ===== Auto-ajuste de letra para nombres de puesto largos en el historial =====
+    function ajustarTamanioTexto(el, maxRem = 0.85, minRem = 0.6, paso = 0.02) {
+        if (!el) return;
+        el.style.fontSize = maxRem + 'rem';
+        let actual = maxRem;
+        while (el.scrollWidth > el.clientWidth && actual > minRem) {
+            actual = Math.round((actual - paso) * 100) / 100;
+            el.style.fontSize = actual + 'rem';
+        }
+    }
+
+    function ajustarTodosLosPuestos() {
+        const lista = document.getElementById('lista');
+        if (!lista || lista.style.display === 'none') return; // si está oculto no se puede medir bien
+        lista.querySelectorAll('.shift-location').forEach(el => ajustarTamanioTexto(el));
+    }
+
+    // ===== Reloj circular en 24hs (reemplaza el input type="time" nativo) =====
+    // Los input[type=hidden] #entrada y #salida siguen funcionando EXACTAMENTE
+    // igual que antes para todo el resto del código: .value sigue devolviendo
+    // "HH:MM", .disabled sigue funcionando, y "turno.e"/"turno.s" se siguen
+    // pudiendo asignar directo. No hace falta tocar ninguna otra parte del JS.
+    let campoRelojActual = null;
+    let modoRelojActual = 'h'; // 'h' = hora (0-23), 'm' = minuto (0-59)
+    let horaSeleccionada = 0;
+    let minutoSeleccionado = 0;
+    let arrastrandoReloj = false;
+
+    const RADIO_EXT = 102; // radio del anillo exterior (horas 1-12)
+    const RADIO_INT = 62;  // radio del anillo interior (horas 13-23 y 00)
+    const RADIO_MIN = 100; // radio del anillo de minutos
+
+    function sectorDeHora(valor) {
+        // Devuelve el sector 0-11 (0 = arriba, en sentido horario) para un valor de hora 0-23
+        if (valor === 12 || valor === 0) return 0;
+        if (valor <= 11) return valor;      // anillo exterior: 1-11
+        return valor - 12;                  // anillo interior: 13-23
+    }
+
+    function construirDialReloj(modo) {
+        const dial = document.getElementById('reloj-dial');
+        if (!dial) return;
+        Array.from(dial.querySelectorAll('.reloj-num')).forEach(n => n.remove());
+
+        const cx = 130, cy = 130;
+
+        if (modo === 'h') {
+            // Anillo doble: exterior 12,1,2...11 / interior 00,13,14...23 (como el picker nativo)
+            for (let i = 0; i < 12; i++) {
+                const anguloRad = (i * 30) * Math.PI / 180;
+                const valorExt = (i === 0) ? 12 : i;
+                const valorInt = (i === 0) ? 0 : i + 12;
+
+                const numExt = document.createElement('div');
+                numExt.className = 'reloj-num';
+                numExt.dataset.valor = valorExt;
+                numExt.textContent = String(valorExt).padStart(2, '0');
+                numExt.style.left = (cx + RADIO_EXT * Math.sin(anguloRad)) + 'px';
+                numExt.style.top = (cy - RADIO_EXT * Math.cos(anguloRad)) + 'px';
+                dial.appendChild(numExt);
+
+                const numInt = document.createElement('div');
+                numInt.className = 'reloj-num inner';
+                numInt.dataset.valor = valorInt;
+                numInt.textContent = String(valorInt).padStart(2, '0');
+                numInt.style.left = (cx + RADIO_INT * Math.sin(anguloRad)) + 'px';
+                numInt.style.top = (cy - RADIO_INT * Math.cos(anguloRad)) + 'px';
+                dial.appendChild(numInt);
+            }
+        } else {
+            // Anillo simple de minutos: etiquetas cada 5, puntitos el resto
+            for (let i = 0; i < 60; i++) {
+                const esMayor = i % 5 === 0;
+                const anguloRad = (i * 6) * Math.PI / 180;
+                const num = document.createElement('div');
+                num.className = 'reloj-num' + (esMayor ? '' : ' minor');
+                num.dataset.valor = i;
+                if (esMayor) num.textContent = String(i).padStart(2, '0');
+                num.style.left = (cx + RADIO_MIN * Math.sin(anguloRad)) + 'px';
+                num.style.top = (cy - RADIO_MIN * Math.cos(anguloRad)) + 'px';
+                dial.appendChild(num);
+            }
+        }
+    }
+
+    function actualizarManecillaReloj(valor, modo) {
+        const man = document.getElementById('reloj-manecilla');
+        if (!man) return;
+        let deg, largo;
+        if (modo === 'h') {
+            deg = sectorDeHora(valor) * 30;
+            largo = (valor === 0 || valor > 12) ? RADIO_INT : RADIO_EXT;
+        } else {
+            deg = valor * 6;
+            largo = RADIO_MIN - 10;
+        }
+        man.style.height = largo + 'px';
+        // La barra nace apuntando hacia abajo (sur); compensamos 180° para que
+        // 0° (arriba) coincida con el número elegido.
+        man.style.transform = `rotate(${deg + 180}deg)`;
+    }
+
+    function actualizarSeleccionNumeros(valor) {
+        document.querySelectorAll('.reloj-num').forEach(n => {
+            n.classList.toggle('sel', parseInt(n.dataset.valor, 10) === valor);
+        });
+    }
+
+    function seleccionarValorReloj(valor) {
+        if (modoRelojActual === 'h') {
+            horaSeleccionada = valor;
+            document.getElementById('reloj-hh-txt').textContent = String(valor).padStart(2, '0');
+        } else {
+            minutoSeleccionado = valor;
+            document.getElementById('reloj-mm-txt').textContent = String(valor).padStart(2, '0');
+        }
+        actualizarManecillaReloj(valor, modoRelojActual);
+        actualizarSeleccionNumeros(valor);
+    }
+
+    function anguloAValorReloj(clientX, clientY, modo) {
+        const dial = document.getElementById('reloj-dial');
+        const rect = dial.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const escala = rect.width / 260; // el dial fue diseñado sobre una caja de 260px
+        let deg = Math.atan2(clientX - cx, -(clientY - cy)) * 180 / Math.PI;
+        if (deg < 0) deg += 360;
+
+        if (modo === 'h') {
+            const sector = Math.round(deg / 30) % 12; // 0-11
+            const distancia = Math.sqrt((clientX - cx) ** 2 + (clientY - cy) ** 2) / escala;
+            const radioMedio = (RADIO_EXT + RADIO_INT) / 2;
+            const esInterno = distancia < radioMedio;
+            if (esInterno) return sector === 0 ? 0 : sector + 12;
+            return sector === 0 ? 12 : sector;
+        }
+        return Math.round(deg / 6) % 60;
+    }
+
+    function manejarPunteroReloj(e) {
+        const punto = e.touches ? e.touches[0] : e;
+        seleccionarValorReloj(anguloAValorReloj(punto.clientX, punto.clientY, modoRelojActual));
+    }
+
+    function cambiarModoReloj(modo) {
+        modoRelojActual = modo;
+        document.getElementById('reloj-hh-txt').classList.toggle('activo', modo === 'h');
+        document.getElementById('reloj-mm-txt').classList.toggle('activo', modo === 'm');
+        construirDialReloj(modo);
+        const valorActual = modo === 'h' ? horaSeleccionada : minutoSeleccionado;
+        actualizarManecillaReloj(valorActual, modo);
+        actualizarSeleccionNumeros(valorActual);
+    }
+
+    function abrirRelojHora(campo) {
+        const hidden = document.getElementById(campo);
+        if (!hidden || hidden.disabled) return;
+        campoRelojActual = campo;
+
+        const actual = hidden.value || '00:00';
+        const partes = actual.split(':');
+        horaSeleccionada = parseInt(partes[0], 10) || 0;
+        minutoSeleccionado = parseInt(partes[1], 10) || 0;
+
+        document.getElementById('reloj-titulo').textContent = campo === 'entrada' ? '⏰ Hora de Entrada' : '⏰ Hora de Salida';
+        document.getElementById('reloj-hh-txt').textContent = String(horaSeleccionada).padStart(2, '0');
+        document.getElementById('reloj-mm-txt').textContent = String(minutoSeleccionado).padStart(2, '0');
+        document.getElementById('modal-rueda-hora').style.display = 'flex';
+        cambiarModoReloj('h');
+    }
+
+    function cerrarRelojHora() {
+        document.getElementById('modal-rueda-hora').style.display = 'none';
+        campoRelojActual = null;
+    }
+
+    function confirmarRelojHora() {
+        if (!campoRelojActual) return;
+        const hh = String(horaSeleccionada).padStart(2, '0');
+        const mm = String(minutoSeleccionado).padStart(2, '0');
+        const hidden = document.getElementById(campoRelojActual);
+        hidden.value = `${hh}:${mm}`;
+        hidden.dispatchEvent(new Event('change'));
+        cerrarRelojHora();
+    }
+
+    function borrarRelojHora() {
+        if (!campoRelojActual) return;
+        const hidden = document.getElementById(campoRelojActual);
+        hidden.value = '';
+        hidden.dispatchEvent(new Event('change'));
+        cerrarRelojHora();
+    }
+
+    function armarCampoHoraOculto(hiddenId, displayId) {
+        const hidden = document.getElementById(hiddenId);
+        const display = document.getElementById(displayId);
+        if (!hidden || !display) return;
+        let valorInterno = '';
+        let deshabilitado = false;
+
+        function refrescarDisplay() {
+            display.textContent = valorInterno ? valorInterno : '-- : --';
+            display.classList.toggle('con-valor', !!valorInterno);
+            display.classList.toggle('deshabilitado', deshabilitado);
+        }
+
+        // Redefinimos .value y .disabled del input oculto para que reflejen
+        // y controlen automáticamente el recuadro visible + el reloj.
+        Object.defineProperty(hidden, 'value', {
+            configurable: true,
+            get() { return valorInterno; },
+            set(v) { valorInterno = v || ''; refrescarDisplay(); }
+        });
+        Object.defineProperty(hidden, 'disabled', {
+            configurable: true,
+            get() { return deshabilitado; },
+            set(v) { deshabilitado = !!v; refrescarDisplay(); }
+        });
+
+        refrescarDisplay();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        armarCampoHoraOculto('entrada', 'entrada-display');
+        armarCampoHoraOculto('salida', 'salida-display');
+
+        const dial = document.getElementById('reloj-dial');
+        if (dial) {
+            dial.addEventListener('pointerdown', (e) => {
+                arrastrandoReloj = true;
+                dial.setPointerCapture(e.pointerId);
+                manejarPunteroReloj(e);
+            });
+            dial.addEventListener('pointermove', (e) => {
+                if (arrastrandoReloj) manejarPunteroReloj(e);
+            });
+            dial.addEventListener('pointerup', () => {
+                if (!arrastrandoReloj) return;
+                arrastrandoReloj = false;
+                if (modoRelojActual === 'h') setTimeout(() => cambiarModoReloj('m'), 150);
+            });
+        }
+
+        document.getElementById('modal-rueda-hora').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-rueda-hora') cerrarRelojHora();
+        });
+    });
+</script>
 </body>
 </html>
