@@ -658,6 +658,12 @@
             <div><label>Adi. No Rem. ($)</label><input type="text" inputmode="decimal" id="valNoRem" oninput="formatearMiles(this)"></div>
             <div><label>Desc. por Ley (%)</label><input type="number" id="valDescuentos"></div>
         </div>
+        <div class="form-row" style="text-align: left; margin-bottom: 10px; align-items: center;">
+            <div style="grid-column: span 2; display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="valAporteSolidario" style="width:18px; height:18px; margin:0;">
+                <label for="valAporteSolidario" style="margin:0; font-size:0.85rem; line-height:1.3;">Aplicar <b>Aporte Solidario 2%</b> sobre el básico (Cláusula 15ª, Acta UPSRA Jul-Dic 2026 — aplica a <b>todos</b>, afiliados o no)</label>
+            </div>
+        </div>
         <div class="form-row" style="text-align: left; margin-bottom: 15px;">
             <div><label>Horas Base Mes</label><input type="number" id="valHorasBase"></div>
             <div><label>Plus Vacacional ($)</label><input type="text" inputmode="decimal" id="valPlusVacManual" oninput="formatearMiles(this)"></div>
@@ -1747,6 +1753,7 @@
             noRem: parseFloat(p.noRem),
             plusVac: parseFloat(p.plusVacManual),
             descuentos: parseFloat(p.descuentos),
+            aporteSolidario: p.aporteSolidario !== false,
             feriadoPct: parseFloat(p.feriadoPct) || 100,
             horasBase: parseFloat(p.horasBase) || 200,
             tipoFeriado: p.tipoFeriado || "100",
@@ -1764,7 +1771,14 @@
                 else if (mes === 2) auto = { b: 884800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
                 else if (mes === 3) auto = { b: 893650, p: 165000, v: 480500, nr: 25000, vac: 19220 };
                 else if (mes === 4) auto = { b: 902600, p: 165000, v: 487000, nr: 30000, vac: 19480 };
-                else auto = { b: 911650, p: 165000, v: 498000, nr: 70000, vac: 19920 };
+                else if (mes === 5) auto = { b: 911650, p: 165000, v: 498000, nr: 70000, vac: 19920 };
+                // Acta Acuerdo 2026 CAESI-UPSRA (RE-2026-66453610) - Vigilador General
+                else if (mes === 6) auto = { b: 1001300, p: 180000, v: 505500, nr: 20000, vac: 20220 }; // Julio
+                else if (mes === 7) auto = { b: 1020300, p: 180000, v: 514500, nr: 30000, vac: 20580 }; // Agosto
+                else if (mes === 8) auto = { b: 1037600, p: 180000, v: 524000, nr: 50000, vac: 20960 }; // Septiembre
+                else if (mes === 9) auto = { b: 1053200, p: 180000, v: 534000, nr: 60000, vac: 21360 }; // Octubre
+                else if (mes === 10) auto = { b: 1069000, p: 180000, v: 545000, nr: 70000, vac: 21800 }; // Noviembre
+                else auto = { b: 1085000, p: 180000, v: 545000, nr: 120000, vac: 21800 }; // Diciembre
         }
         
         if (auto) {
@@ -1876,6 +1890,9 @@
             document.getElementById('valNoRem').value = formatearAUI(p.noRem);
         }
         
+        if(document.getElementById('valAporteSolidario')) {
+            document.getElementById('valAporteSolidario').checked = p.aporteSolidario !== false;
+        }
         if(document.getElementById('valDescuentos')) {
             document.getElementById('valDescuentos').placeholder = "Auto: 17%";
             document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "";
@@ -2990,6 +3007,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             noRem: getVal('valNoRem'), 
             plusVacManual: getVal('valPlusVacManual'), 
             descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", 
+            aporteSolidario: document.getElementById('valAporteSolidario') ? document.getElementById('valAporteSolidario').checked : false,
             horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "",
             tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "100",
             pagaPuentes: document.getElementById('valPagaPuentes') ? document.getElementById('valPagaPuentes').value : "no"
@@ -3503,8 +3521,13 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const noRemFinal = diasReducenViatico === 0 ? valMes.noRem : (valMes.noRem / divisorInteligente) * diasTrabajados;
         const sumaNoRemunerativa = viaticoFinal + noRemFinal;
 
+        // Aporte Solidario 2% (Cláusula 15ª, Acta CAESI-UPSRA Jul-Dic 2026): 2% del básico de convenio,
+        // retenido por la empresa, aplica solo a trabajadores NO afiliados al sindicato. Se activa manualmente
+        // desde Configuración porque el acta no aclara excepción para afiliados con cuota sindical propia.
+        const aporteSolidario = valMes.aporteSolidario ? (valMes.basico * 0.02) : 0;
+
         const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
-        const totalNeto = totalBruto - descuentosLey;
+        const totalNeto = totalBruto - descuentosLey - aporteSolidario;
         
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
