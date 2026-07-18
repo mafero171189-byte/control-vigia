@@ -3522,8 +3522,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const sumaNoRemunerativa = viaticoFinal + noRemFinal;
 
         // Aporte Solidario 2% (Cláusula 15ª, Acta CAESI-UPSRA Jul-Dic 2026): 2% del básico de convenio,
-        // retenido por la empresa, aplica solo a trabajadores NO afiliados al sindicato. Se activa manualmente
-        // desde Configuración porque el acta no aclara excepción para afiliados con cuota sindical propia.
+        // retenido por la empresa a todos los trabajadores (afiliados o no). Activado por defecto;
+        // se puede destildar en Configuración para algún caso puntual que lo amerite.
         const aporteSolidario = valMes.aporteSolidario ? (valMes.basico * 0.02) : 0;
 
         const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
