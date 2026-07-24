@@ -827,7 +827,7 @@
             <div style="background: rgba(34, 197, 94, 0.07); border-left: 3px solid var(--success); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
                 El sistema calcula el viático de forma inteligente según tu situación del mes:<br><br>
                 • <b>Sin ausencias y horas incompletas:</b> Si no llegás a las horas base por falta de servicios asignados (no por falta tuya), la empresa <b>está obligada por ley</b> a pagarte el viático mensual completo. El sistema lo detecta y te lo garantiza.<br>
-                • <b>Con ausencias (licencia, vacaciones o falta):</b> El viático se liquida proporcionalmente: <b>viático mensual ÷ 22 × días trabajados</b>.<br>
+                • <b>Con faltas injustificadas o suspensiones:</b> Se descuentan únicamente esos días, al <b>valor diario fijo del acta</b> (viático mensual ÷ 25, Art. 33 CCT 507/07). Licencias y vacaciones <b>no</b> reducen el viático.<br>
                 • <b>Horas completas:</b> Se liquida proporcional por día trabajado.
             </div>
 
@@ -3487,28 +3487,29 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }
         }
 
-        // --- DIVISOR INTELIGENTE DE VIÁTICOS ---
-        // Horas Base / Promedio de horas del turno → cantidad real de turnos en el mes
-        // 12hs → 200/12 = 17 días | 8hs → 200/8 = 25 días
-        let divisorInteligente = Math.round(valMes.horasBase / promedioHorasTurno);
-        if (divisorInteligente < 14) divisorInteligente = 16;
-        if (divisorInteligente > 26) divisorInteligente = 22;
+        // --- VIÁTICO: VALOR DIARIO FIJO (Cláusula 10ª, Acta CAESI-UPSRA Jul-Dic 2026) ---
+        // El acta fija un viático POR DÍA EFECTIVAMENTE TRABAJADO, igual para todas las
+        // categorías y sin importar la duración del turno:
+        //   Jul $20.220 | Ago $20.580 | Sep $20.960 | Oct $21.360 | Nov-Dic $21.800
+        // El monto "mensual" de las tablas resumen del acta es simplemente ese diario × 25
+        // (divisor del Art. 33 CCT 507/07), NO un valor distinto.
+        // Por eso el diario se deriva SIEMPRE con /25 y nunca con un divisor estimado por
+        // duración de turno: un turno de 12hs no genera un viático diario más caro.
+        const DIVISOR_VIATICO = 25; // Art. 33 CCT 507/07
+        const viaticoDiario = valMes.viatico / DIVISOR_VIATICO;
 
-        const diasTrabajados = conteoTurnosParaPromedio;
         let viaticoFinal;
         // FIX Bug 1: solo faltas y suspensiones reducen el viático (no vacaciones ni licencias)
         const diasReducenViatico = diasFaltaSinAviso + diasSuspension;
         if (diasReducenViatico === 0) {
-            // Sin faltas/suspensiones: viático completo siempre
-            // Si además se pasó de horas, se paga el mayor entre el mensual y el proporcional
-            if (st >= valMes.horasBase) {
-                viaticoFinal = Math.max(valMes.viatico, (valMes.viatico / divisorInteligente) * diasTrabajados);
-            } else {
-                viaticoFinal = valMes.viatico;
-            }
+            // Sin faltas ni suspensiones: viático mensual completo garantizado.
+            // Si no llegás a las horas base porque la empresa no te asignó servicios,
+            // la reducción no es imputable al trabajador → se paga el mes entero.
+            viaticoFinal = valMes.viatico;
         } else {
-            // Con faltas o suspensiones: proporcional por días efectivamente trabajados
-            viaticoFinal = (valMes.viatico / divisorInteligente) * diasTrabajados;
+            // Con faltas injustificadas o suspensiones: se descuentan SOLO esos días,
+            // al valor diario del acta. No se recalcula todo el mes desde cero.
+            viaticoFinal = Math.max(0, valMes.viatico - (viaticoDiario * diasReducenViatico));
         }
 
         const presentismoReal = (diasFaltaSinAviso > 0 || diasSuspension > 0) ? 0 : valMes.presentismo;
@@ -3518,7 +3519,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
         const descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
         // Suma NR: proporcional si hay faltas injustificadas o suspensiones (Cláusula Tercera, Acta 2026)
-        const noRemFinal = diasReducenViatico === 0 ? valMes.noRem : (valMes.noRem / divisorInteligente) * diasTrabajados;
+        const noRemFinal = diasReducenViatico === 0
+            ? valMes.noRem
+            : Math.max(0, valMes.noRem - ((valMes.noRem / DIVISOR_VIATICO) * diasReducenViatico));
         const sumaNoRemunerativa = viaticoFinal + noRemFinal;
 
         // Aporte Solidario 2% (Cláusula 15ª, Acta CAESI-UPSRA Jul-Dic 2026): 2% del básico de convenio,
