@@ -630,7 +630,7 @@
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-main); text-align: left; line-height: 1.4;">
     <b style="color: var(--warning);">⚙️ Ajustes Universales:</b><br>
     • <b>Feriados Puente:</b> Si tu empresa "se hace la boluda" y no te los paga, cambialo a "No los paga". El sistema los tratará como días normales solo para vos.<br>
-    • <b>Viáticos:</b> El sistema detecta si te corresponde el viático completo o el proporcional por día trabajado según tus horas.<br>
+    • <b>Viáticos:</b> Se paga el mes completo salvo que tengas faltas sin aviso o suspensiones. No llegar a las horas base <b>no</b> te reduce el viático.<br>
     • <b>Cálculo Feriado:</b> Elegí 100% (Ley) o 50% según te liquide tu empresa.
 </div>
 
@@ -661,7 +661,7 @@
         <div class="form-row" style="text-align: left; margin-bottom: 10px; align-items: center;">
             <div style="grid-column: span 2; display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" id="valAporteSolidario" style="width:18px; height:18px; margin:0;">
-                <label for="valAporteSolidario" style="margin:0; font-size:0.85rem; line-height:1.3;">Aplicar <b>Aporte Solidario 2%</b> sobre el básico (Cláusula 15ª, Acta UPSRA Jul-Dic 2026 — aplica a <b>todos</b>, afiliados o no)</label>
+                <label for="valAporteSolidario" style="margin:0; font-size:0.85rem; line-height:1.3;">Aplicar <b>Aporte Solidario 2%</b> sobre el básico (Cláusula 15ª, Acta UPSRA Jul-Dic 2026 — aplica a <b>todos</b>, afiliados o no). Solo se descuenta de <b>julio a diciembre 2026</b>, según la homologación DI-2026-897 del 17/07/2026.</label>
             </div>
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 15px;">
@@ -792,7 +792,7 @@
             <!-- SECCIÓN 1: CONFIGURACIÓN -->
             <p style="margin-bottom: 6px;"><b style="color: var(--accent);">⚙️ 1. Configurar Valores de Cobro</b></p>
             <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                La app ya tiene precargada la <b>escala salarial UPSRA 2026</b> (básico, presentismo, viático y no remunerativo). Desde <b>Configuración</b> podés:<br><br>
+                La app ya tiene precargada la <b>escala salarial UPSRA 2026</b> (básico, presentismo, viático y no remunerativo), actualizada al <b>Acta CAESI-UPSRA julio-diciembre 2026</b>, homologada por Disposición DI-2026-897 del 17/07/2026. Desde <b>Configuración</b> podés:<br><br>
                 • <b>Antigüedad:</b> Solo ingresá tus años. El sistema calcula el adicional automáticamente (1% por año sobre el básico).<br>
                 • <b>Valores manuales:</b> Si tu empresa paga diferente a la escala UPSRA, podés pisar cualquier valor. Dejando el campo vacío, vuelve al automático UPSRA.<br>
                 • <b>Horas base:</b> Por defecto 200hs. Cambialo si tu cronograma es diferente.<br>
@@ -828,7 +828,16 @@
                 El sistema calcula el viático de forma inteligente según tu situación del mes:<br><br>
                 • <b>Sin ausencias y horas incompletas:</b> Si no llegás a las horas base por falta de servicios asignados (no por falta tuya), la empresa <b>está obligada por ley</b> a pagarte el viático mensual completo. El sistema lo detecta y te lo garantiza.<br>
                 • <b>Con faltas injustificadas o suspensiones:</b> Se descuentan únicamente esos días, al <b>valor diario fijo del acta</b> (viático mensual ÷ 25, Art. 33 CCT 507/07). Licencias y vacaciones <b>no</b> reducen el viático.<br>
-                • <b>Horas completas:</b> Se liquida proporcional por día trabajado.
+                • <b>Valor diario (Cláusula 10ª, Acta Jul-Dic 2026):</b> $20.220 julio · $20.580 agosto · $20.960 septiembre · $21.360 octubre · $21.800 nov-dic. Es fijo por día trabajado y <b>no cambia</b> según dure tu turno 8 o 12 horas.
+            </div>
+
+            <!-- SECCIÓN 4B: APORTE SOLIDARIO -->
+            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🏛️ 4b. Aporte Solidario 2% (nuevo)</b></p>
+            <div style="background: rgba(245, 158, 11, 0.07); border-left: 3px solid var(--warning); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
+                La <b>Cláusula 15ª</b> del acta obliga a las empresas a retener un <b>2% del básico de convenio</b> a <b>todos</b> los trabajadores del CCT 507/07, estés afiliado o no al sindicato.<br><br>
+                • <b>Vigencia:</b> solo de <b>julio a diciembre de 2026</b>. Empieza a devengarse recién con la homologación (17/07/2026) y vence el 31/12/2026. En meses fuera de esa ventana la app no descuenta nada.<br>
+                • <b>Se calcula sobre el básico puro</b>, sin presentismo, antigüedad ni ningún otro adicional.<br>
+                • Si tu recibo no lo trae, podés destildarlo desde <b>Configuración</b>.
             </div>
 
             <!-- SECCIÓN 5: LICENCIAS Y VACACIONES -->
@@ -883,7 +892,7 @@
                     </div>
                     <div style="background: rgba(56, 189, 248, 0.07); padding: 8px 10px; border-radius: 8px; border-left: 3px solid var(--accent);">
                         🏥 <b style="color: var(--accent);">Licencia / Carpeta Médica</b><br>
-                        <span style="font-size: 0.8rem;">Registra el día como ausencia justificada. <b>No descuenta del básico</b>, pero ajusta la meta mensual de horas proporcionalmente y activa el cálculo proporcional de viáticos.</span>
+                        <span style="font-size: 0.8rem;">Registra el día como ausencia justificada. <b>No descuenta del básico ni el viático</b>, solo ajusta la meta mensual de horas proporcionalmente.</span>
                     </div>
                     <div style="background: rgba(239, 68, 68, 0.07); padding: 8px 10px; border-radius: 8px; border-left: 3px solid var(--danger);">
                         ⚠️ <b style="color: var(--danger);">Falta Sin Aviso</b><br>
@@ -3527,7 +3536,14 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         // Aporte Solidario 2% (Cláusula 15ª, Acta CAESI-UPSRA Jul-Dic 2026): 2% del básico de convenio,
         // retenido por la empresa a todos los trabajadores (afiliados o no). Activado por defecto;
         // se puede destildar en Configuración para algún caso puntual que lo amerite.
-        const aporteSolidario = valMes.aporteSolidario ? (valMes.basico * 0.02) : 0;
+        // VIGENCIA: la cláusula dice que "recién comenzará a devengarse una vez homologada la presente
+        // y tendrá vigencia hasta el 31 de diciembre de 2026". La homologación es la Disposición
+        // DI-2026-897-APN-DNRYRT#MCH del 17/07/2026 → el aporte solo corre de julio a diciembre 2026.
+        // Fuera de esa ventana no se descuenta (revisar con la próxima paritaria, Cláusula 16ª).
+        const anioVista = window.fechaFiltro.getFullYear();
+        const mesVista = window.fechaFiltro.getMonth(); // 0 = enero, 6 = julio, 11 = diciembre
+        const aporteSolidarioVigente = (anioVista === 2026 && mesVista >= 6);
+        const aporteSolidario = (valMes.aporteSolidario && aporteSolidarioVigente) ? (valMes.basico * 0.02) : 0;
 
         const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
         const totalNeto = totalBruto - descuentosLey - aporteSolidario;
