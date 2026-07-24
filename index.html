@@ -844,7 +844,7 @@
             <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🏥 5. Licencias y Vacaciones</b></p>
             <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
                 • <b>Enfermedad / Licencia:</b> Al marcarlo, el sistema ajusta tu meta mensual proporcionalmente, permitiéndote generar horas extras con los días que sí trabajaste.<br>
-                • <b>Vacaciones:</b> Aplica el <b>Art. 155 de la LCT</b>. El plus vacacional se calcula sobre tu <b>base habitual</b> (Básico + Antigüedad + Presentismo) dividida por 25.<br>
+                • <b>Vacaciones:</b> Aplica el <b>Art. 155 de la LCT</b>. El plus vacacional se calcula sobre tu <b>base habitual</b> (Básico + Antigüedad + Presentismo) dividida por 25.<br>&nbsp;&nbsp;↳ <b>Tope de 21 días por año</b> (Cláusula 13ª del acta): a partir del día 22 ya no suma adicional vacacional, aunque sí sigue ajustando tu meta de horas. El conteo se arrastra entre meses, así que si te tomás días partidos (por ejemplo 15 en diciembre y 10 en enero) el tope se respeta igual.<br>
                 • <b>Falta sin aviso:</b> Elimina el 100% del presentismo y descuenta el valor del día del básico.
             </div>
 
@@ -2593,6 +2593,41 @@ window.formatearEnlaces = function(texto) {
         btn.innerText = "Guardar Mes";
     };
 
+    // --- TOPE ANUAL DEL ADICIONAL VACACIONAL (Cláusula 13ª, Acta Jul-Dic 2026) ---
+    // El tope de 21 días es del PERÍODO vacacional, no del mes calendario. Como la app
+    // solo carga en memoria los turnos del mes visible, acá se consultan aparte los días
+    // de vacaciones ya gozados en meses anteriores del mismo año, para arrastrar el conteo.
+    // Se cachea por mes y se invalida cuando cambian los turnos, así no repite lecturas.
+    window._vacPreviasCache = window._vacPreviasCache || {};
+
+    async function obtenerDiasVacacionalesPrevios(anio, mes) {
+        if (mes === 0) return 0; // enero: no hay meses previos dentro del año
+        const clave = `${anio}-${mes}`;
+        if (window._vacPreviasCache[clave] !== undefined) return window._vacPreviasCache[clave];
+        if (!window.currentUser) return 0;
+        try {
+            const mesStr = String(mes + 1).padStart(2, '0');
+            const inicioMes = `${anio}-${mesStr}-01`;
+            const turnosRef = collection(db, "usuarios", window.currentUser.uid, "turnos");
+            const q = query(
+                turnosRef,
+                where("f", ">=", `${anio}-01-01`),
+                where("f", "<", inicioMes),
+                orderBy("f", "asc")
+            );
+            const snap = await getDocs(q);
+            let dias = 0;
+            snap.forEach((d) => { if (d.data().vac) dias++; });
+            window._vacPreviasCache[clave] = dias;
+            return dias;
+        } catch (e) {
+            // Si falla la consulta (sin señal, permisos, etc.) se cae al conteo mensual:
+            // peor caso, el tope se aplica por mes como antes. Nunca rompe el render.
+            console.warn("No se pudieron leer los días de vacaciones previos del año:", e);
+            return 0;
+        }
+    }
+
     // 🔴 CORRECCIÓN: Suscripción directa para garantizar tiempo real a usuarios nuevos
     async function suscribirTurnosMes(fechaObj) {
         if (!window.currentUser) return;
@@ -2619,6 +2654,7 @@ window.formatearEnlaces = function(texto) {
             querySnapshot.forEach((doc) => nuevosTurnos.push({ id: doc.id, ...doc.data() }));
 
             window.turnos = nuevosTurnos;
+            window._vacPreviasCache = {}; // los turnos cambiaron: recontar vacaciones previas
             
             const claveMes = `${año}-${mesStr}`;
             window._turnosCache[claveMes] = {
@@ -3341,6 +3377,14 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const lista = document.getElementById('lista'); 
         let st = 0, sn = 0, sf = 0, plusVacacionalTotal = 0;
         let diasFaltaSinAviso = 0; let diasLicencia = 0; let diasVacaciones = 0; let diasSuspension = 0;   
+        // Cláusula 13ª, Acta CAESI-UPSRA Jul-Dic 2026: el adicional vacacional se paga por cada día
+        // de vacaciones gozadas "con un tope máximo de 21 días". Los días por encima del tope se
+        // siguen contando como ausencia justificada (ajustan la meta de horas) pero no suman plus.
+        const TOPE_DIAS_VACACIONAL = 21;
+        // Días de vacaciones ya gozados en meses anteriores del mismo año (0 si todavía no
+        // se resolvió la consulta; al resolverse se vuelve a renderizar con el número real).
+        const claveVacPrev = `${window.fechaFiltro.getFullYear()}-${window.fechaFiltro.getMonth()}`;
+        const diasVacacionalPrevios = window._vacPreviasCache[claveVacPrev] || 0;
         let diasUnicosTrabajados = new Set();
         lista.innerHTML = '';
         
@@ -3410,7 +3454,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
             if (t.vac) { 
                 const plusV = !isNaN(valMes.plusVac) ? Number(valMes.plusVac) : valorPlusLeyCorrecto;
-                plusVacacionalTotal += plusV; diasVacaciones++;
+                // Solo los primeros 21 días generan adicional vacacional (Cláusula 13ª)
+                if ((diasVacacionalPrevios + diasVacaciones) < TOPE_DIAS_VACACIONAL) plusVacacionalTotal += plusV;
+                diasVacaciones++;
             } else if (t.lic) {
                 diasLicencia++;
             } else if (t.falta) {
@@ -3458,6 +3504,18 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         let horaFeriadoVal = valorHoraNormal * recargoFeriado;
         let pagoFeriados = sf * horaFeriadoVal;
         
+        // Si el mes tiene vacaciones y todavía no sabemos cuántos días se gozaron antes en el
+        // año, se consulta una única vez y se vuelve a renderizar ya con el conteo arrastrado.
+        if (diasVacaciones > 0 && window._vacPreviasCache[claveVacPrev] === undefined) {
+            obtenerDiasVacacionalesPrevios(window.fechaFiltro.getFullYear(), window.fechaFiltro.getMonth())
+                .then((diasPrev) => {
+                    if (window._vacPreviasCache[claveVacPrev] === undefined) {
+                        window._vacPreviasCache[claveVacPrev] = diasPrev;
+                    }
+                    render(); // segundo render: ya encuentra la caché y no vuelve a disparar
+                });
+        }
+
         const totalDiasAusente = diasFaltaSinAviso + diasLicencia + diasVacaciones + diasSuspension;
         const diasAusenciaJustificada = diasLicencia + diasVacaciones;
 
