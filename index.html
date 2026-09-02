@@ -925,6 +925,62 @@
     </div>
 </div>
 
+<div id="modal-aguinaldo" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9500; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 400px; text-align: left; max-height: 85vh; overflow-y: auto;">
+        <h3 style="color: var(--success); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">🎁 Calculadora de Aguinaldo (SAC)</h3>
+        <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
+            <p style="background: rgba(34, 197, 94, 0.08); padding: 10px; border-radius: 8px; border-left: 4px solid var(--success); margin-top: 0;">
+                El SAC es el <b>50% de tu mejor remuneración bruta remunerativa</b> del semestre (Art. 121/122 LCT).<br><br>
+                <b>Incluye:</b> Básico + Antigüedad + Presentismo + Nocturnidad.<br>
+                <b>NO incluye:</b> Viático ni Adicional No Remunerativo — el acta aclara que esas sumas no cuentan para el SAC.
+            </p>
+            <div class="form-row" style="margin-bottom: 12px; gap: 8px;">
+                <select id="aguinaldoSemestre" style="flex:1.4;">
+                    <option value="1">1er Semestre (Ene-Jun) — se paga 30/06</option>
+                    <option value="2">2do Semestre (Jul-Dic) — se paga 18/12</option>
+                </select>
+                <input type="number" id="aguinaldoAnio" value="2026" style="flex:0.6; min-width:70px;">
+            </div>
+            <button class="btn-config-main" style="margin-bottom:12px; background: rgba(34, 197, 94, 0.08); color: var(--success); border-color: var(--success);" onclick="calcularAguinaldo()">Calcular</button>
+            <div id="aguinaldo-resultado"></div>
+        </div>
+        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalAguinaldo()">CERRAR</button>
+    </div>
+</div>
+
+<div id="modal-comparar" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9500; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 420px; text-align: left; max-height: 85vh; overflow-y: auto;">
+        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">📋 Comparar con Recibo Real</h3>
+        <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
+            <p style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; border-left: 4px solid var(--accent); margin-top: 0;">
+                Cargá los valores tal cual figuran en tu recibo. La app los compara contra lo que calculó para ese mes.
+            </p>
+            <div class="form-row" style="margin-bottom: 10px; gap: 8px;">
+                <select id="comparar-mes" style="flex:1.4;">
+                    <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                </select>
+                <input type="number" id="comparar-anio" style="flex:0.6; min-width:70px;">
+            </div>
+            <div class="form-row" style="margin-bottom: 8px;">
+                <input type="text" inputmode="numeric" id="comparar-basico" placeholder="Básico ($)" oninput="formatearMiles(this)">
+                <input type="text" inputmode="numeric" id="comparar-antig" placeholder="Antigüedad ($)" oninput="formatearMiles(this)">
+            </div>
+            <div class="form-row" style="margin-bottom: 8px;">
+                <input type="text" inputmode="numeric" id="comparar-presentismo" placeholder="Presentismo ($)" oninput="formatearMiles(this)">
+                <input type="text" inputmode="numeric" id="comparar-noct" placeholder="Nocturnidad ($)" oninput="formatearMiles(this)">
+            </div>
+            <div class="form-row" style="margin-bottom: 8px;">
+                <input type="text" inputmode="numeric" id="comparar-viatico" placeholder="Viático ($)" oninput="formatearMiles(this)">
+                <input type="text" inputmode="numeric" id="comparar-norem" placeholder="No Remunerativo ($)" oninput="formatearMiles(this)">
+            </div>
+            <input type="text" inputmode="numeric" id="comparar-bruto" placeholder="Total Bruto del recibo ($) — opcional" oninput="formatearMiles(this)" style="margin-bottom: 12px;">
+            <button class="btn-config-main" onclick="compararRecibo()">🔍 Comparar</button>
+            <div id="comparar-resultado"></div>
+        </div>
+        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalComparar()">CERRAR</button>
+    </div>
+</div>
+
 <div id="landing-page">
 
   <!-- Capas decorativas de fondo -->
@@ -1106,6 +1162,8 @@
 
     <div class="glass-form" id="main-form">
         <button class="btn-config-main" onclick="abrirModalConfig()">⚙️ Configurar Valores de Cobro</button>
+        <button class="btn-config-main" style="background: rgba(34, 197, 94, 0.08); color: var(--success); border-color: var(--success);" onclick="abrirModalAguinaldo()">🎁 Calcular Aguinaldo (SAC)</button>
+        <button class="btn-config-main" style="background: rgba(56, 189, 248, 0.08); color: var(--accent); border-color: var(--accent);" onclick="abrirModalComparar()">📋 Comparar con Recibo</button>
 
         <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
             <label>👤 MIS DATOS (Para el reporte)</label>
@@ -2834,6 +2892,174 @@ async function cargarDatosNube() {
         if (window.primerIngreso) {
             window.primerIngreso = false;
             setTimeout(() => window.abrirModalConfig(), 300);
+        }
+    }
+
+    // 🎁 CALCULADORA DE AGUINALDO (SAC) — Art. 121/122 LCT
+    async function obtenerTurnosMesEstatico(año, mes) {
+        if (!window.currentUser) return [];
+        const mesStr = String(mes + 1).padStart(2, '0');
+        const inicioMes = `${año}-${mesStr}-01`;
+        const ultimoDia = new Date(año, mes + 1, 0).getDate();
+        const finMes = `${año}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
+        const turnosRef = collection(db, "usuarios", window.currentUser.uid, "turnos");
+        const q = query(turnosRef, where("f", ">=", inicioMes), where("f", "<=", finMes));
+        try {
+            const snap = await getDocs(q);
+            const turnos = [];
+            snap.forEach(d => turnos.push({ id: d.id, ...d.data() }));
+            return turnos;
+        } catch (e) {
+            console.warn("No se pudieron leer turnos para el aguinaldo:", año, mes, e);
+            return [];
+        }
+    }
+
+    window.abrirModalAguinaldo = function() {
+        document.getElementById('aguinaldo-resultado').innerHTML = '';
+        document.getElementById('modal-aguinaldo').style.display = 'flex';
+    }
+    window.cerrarModalAguinaldo = function() {
+        document.getElementById('modal-aguinaldo').style.display = 'none';
+    }
+
+    window.calcularAguinaldo = async function() {
+        const semestre = parseInt(document.getElementById('aguinaldoSemestre').value);
+        const año = parseInt(document.getElementById('aguinaldoAnio').value) || new Date().getFullYear();
+        const mesesSemestre = semestre === 1 ? [0,1,2,3,4,5] : [6,7,8,9,10,11];
+        const nombresMes = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+        const resultDiv = document.getElementById('aguinaldo-resultado');
+        resultDiv.innerHTML = '<p style="text-align:center; color:var(--text-dim);">Calculando...</p>';
+
+        const hoy = new Date();
+        const inicioMesActual = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        let filas = [];
+        let mejor = 0;
+        let mejorMesNombre = '';
+
+        for (const mes of mesesSemestre) {
+            const fechaMes = new Date(año, mes, 1);
+            const esFuturo = fechaMes > inicioMesActual;
+
+            const v = window.obtenerValoresMes(fechaMes);
+            const antigMonto = v.basico * (v.antiguedadAños / 100);
+            const valorHoraNoct = (v.basico + antigMonto + v.presentismo) / 1000;
+
+            let totalNoct = 0, tieneTurnos = false;
+            if (!esFuturo) {
+                const turnos = await obtenerTurnosMesEstatico(año, mes);
+                tieneTurnos = turnos.length > 0;
+                totalNoct = turnos.reduce((acc, t) => acc + (parseFloat(t.n) || 0), 0);
+            }
+            const montoNoct = totalNoct * valorHoraNoct;
+            const totalMes = v.basico + antigMonto + v.presentismo + montoNoct;
+
+            if (!esFuturo && totalMes > mejor) { mejor = totalMes; mejorMesNombre = nombresMes[mes]; }
+            filas.push({ mes: nombresMes[mes], total: totalMes, esFuturo, tieneTurnos });
+        }
+
+        const sac = mejor / 2;
+        let html = '<div style="margin-top:10px;">';
+        filas.forEach(f => {
+            const destacado = f.mes === mejorMesNombre;
+            html += `<div style="display:flex; justify-content:space-between; padding:6px 8px; border-radius:6px; margin-bottom:4px; background:${destacado ? 'rgba(34,197,94,0.15)' : 'rgba(30,41,59,0.5)'}; ${destacado ? 'border:1px solid var(--success);' : ''}">
+                <span>${f.esFuturo ? '⏳' : (destacado ? '⭐' : '')} ${f.mes}</span>
+                <span>${f.esFuturo ? 'Aún no ocurrió' : '$' + f.total.toLocaleString('es-AR', {maximumFractionDigits:0})}</span>
+            </div>`;
+        });
+        html += '</div>';
+        html += `<div style="margin-top:14px; padding:12px; background:rgba(34,197,94,0.1); border-radius:10px; border:1px solid var(--success); text-align:center;">
+            <div style="font-size:0.75rem; color:var(--text-dim);">Mejor remuneración: ${mejorMesNombre || '—'}</div>
+            <div style="font-size:1.3rem; font-weight:900; color:var(--success);">$${sac.toLocaleString('es-AR', {maximumFractionDigits:0})}</div>
+            <div style="font-size:0.7rem; color:var(--text-dim); margin-top:4px;">Aguinaldo estimado (50% de la mejor)</div>
+        </div>`;
+
+        if (filas.some(f => f.esFuturo)) {
+            html += `<p style="font-size:0.7rem; color:var(--warning); margin-top:10px;">⚠️ Este semestre todavía no terminó — el cálculo puede subir con los meses que faltan.</p>`;
+        }
+        if (filas.some(f => !f.esFuturo && !f.tieneTurnos)) {
+            html += `<p style="font-size:0.7rem; color:var(--text-dim); margin-top:6px;">ℹ️ Algún mes no tiene turnos cargados en la app — su nocturnidad se tomó como $0, así que ese mes puede estar subestimado.</p>`;
+        }
+        resultDiv.innerHTML = html;
+    }
+
+    // 📋 COMPARAR CON RECIBO REAL — carga manual, sin IA ni claves externas
+    window.abrirModalComparar = function() {
+        document.getElementById('comparar-resultado').innerHTML = '';
+        const hoy = new Date();
+        document.getElementById('comparar-mes').value = hoy.getMonth();
+        document.getElementById('comparar-anio').value = hoy.getFullYear();
+        ['comparar-basico','comparar-antig','comparar-presentismo','comparar-noct','comparar-viatico','comparar-norem','comparar-bruto'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('modal-comparar').style.display = 'flex';
+    }
+    window.cerrarModalComparar = function() {
+        document.getElementById('modal-comparar').style.display = 'none';
+    }
+
+    window.compararRecibo = async function() {
+        const resultDiv = document.getElementById('comparar-resultado');
+        const mes = parseInt(document.getElementById('comparar-mes').value);
+        const año = parseInt(document.getElementById('comparar-anio').value) || new Date().getFullYear();
+
+        const num = (id) => parseFloat(limpiar(document.getElementById(id).value)) || 0;
+        const rBasico = num('comparar-basico');
+        const rAntig = num('comparar-antig');
+        const rPresentismo = num('comparar-presentismo');
+        const rNoct = num('comparar-noct');
+        const rViatico = num('comparar-viatico');
+        const rNoRem = num('comparar-norem');
+        const rBruto = num('comparar-bruto');
+
+        resultDiv.innerHTML = '<p style="text-align:center; color:var(--text-dim); margin-top:10px;">Calculando...</p>';
+
+        try {
+            const fechaRecibo = new Date(año, mes, 1);
+            const v = window.obtenerValoresMes(fechaRecibo);
+            const antigMonto = v.basico * (v.antiguedadAños / 100);
+            const valorHoraNoct = (v.basico + antigMonto + v.presentismo) / 1000;
+
+            const turnos = await obtenerTurnosMesEstatico(año, mes);
+            const totalNoctHoras = turnos.reduce((acc, t) => acc + (parseFloat(t.n) || 0), 0);
+            const nocturnidadApp = totalNoctHoras * valorHoraNoct;
+
+            const filas = [
+                { nombre: "Básico", app: v.basico, recibo: rBasico },
+                { nombre: "Antigüedad", app: antigMonto, recibo: rAntig },
+                { nombre: "Presentismo", app: v.presentismo, recibo: rPresentismo },
+                { nombre: "Nocturnidad", app: nocturnidadApp, recibo: rNoct },
+                { nombre: "Viático", app: v.viatico, recibo: rViatico },
+                { nombre: "No Remunerativo", app: v.noRem, recibo: rNoRem },
+            ];
+
+            let html = '<div style="margin-top:10px;">';
+            filas.forEach(f => {
+                const diff = Math.round(f.recibo - f.app);
+                const ok = Math.abs(diff) < 500;
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-radius:6px; margin-bottom:4px; background:${ok ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'};">
+                    <span>${ok ? '✅' : '⚠️'} ${f.nombre}</span>
+                    <span style="text-align:right; font-size:0.72rem; line-height:1.3;">App: $${Math.round(f.app).toLocaleString('es-AR')}<br>Recibo: $${Math.round(f.recibo).toLocaleString('es-AR')}${!ok ? `<br><b style="color:${diff>0?'var(--success)':'var(--danger)'}">${diff>0?'+':''}$${diff.toLocaleString('es-AR')}</b>` : ''}</span>
+                </div>`;
+            });
+            html += '</div>';
+
+            const totalApp = v.basico + antigMonto + v.presentismo + nocturnidadApp + v.viatico + v.noRem;
+            if (rBruto > 0) {
+                const diffBruto = Math.round(rBruto - totalApp);
+                html += `<div style="margin-top:10px; padding:10px; background:rgba(56,189,248,0.1); border-radius:8px; text-align:center;">
+                    <div style="font-size:0.7rem; color:var(--text-dim);">Bruto: App vs Recibo</div>
+                    <div style="font-weight:900;">$${Math.round(totalApp).toLocaleString('es-AR')} &nbsp;vs&nbsp; $${Math.round(rBruto).toLocaleString('es-AR')}</div>
+                    ${Math.abs(diffBruto) >= 500 ? `<div style="font-size:0.8rem; margin-top:4px; color:${diffBruto>0?'var(--success)':'var(--danger)'};">Diferencia: ${diffBruto>0?'+':''}$${diffBruto.toLocaleString('es-AR')}</div>` : ''}
+                </div>`;
+            }
+            html += `<p style="font-size:0.65rem; color:var(--text-dim); margin-top:8px;">⚠️ El viático puede diferir si tuviste vacaciones o licencias ese mes (se paga solo por días trabajados, no el mes completo).</p>`;
+
+            resultDiv.innerHTML = html;
+        } catch (e) {
+            console.error("Error comparando recibo:", e);
+            resultDiv.innerHTML = '<p style="color:var(--danger); font-size:0.8rem; margin-top:10px;">Hubo un error calculando la comparación.</p>';
         }
     }
 
