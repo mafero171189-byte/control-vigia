@@ -976,8 +976,39 @@
             <input type="text" inputmode="numeric" id="comparar-bruto" placeholder="Total Bruto del recibo ($) — opcional" oninput="formatearMiles(this)" style="margin-bottom: 12px;">
             <button class="btn-config-main" onclick="compararRecibo()">🔍 Comparar</button>
             <div id="comparar-resultado"></div>
+            <div style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px;">
+                <button class="btn-toggle-lista" style="width:100%;" onclick="toggleHistorialComparaciones()">📜 <span id="toggle-historial-comp-label">Ver Historial Guardado</span></button>
+                <div id="historial-comparaciones" style="display:none; margin-top:8px;"></div>
+            </div>
         </div>
         <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalComparar()">CERRAR</button>
+    </div>
+</div>
+
+<div id="modal-exportar" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9500; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 400px; text-align: left; max-height: 85vh; overflow-y: auto;">
+        <h3 style="color: #8b5cf6; margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">📄 Exportar Reporte Anual</h3>
+        <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
+            <p style="background: rgba(139, 92, 246, 0.08); padding: 10px; border-radius: 8px; border-left: 4px solid #8b5cf6; margin-top: 0;">
+                Genera un PDF con el resumen mensual y el detalle de todos tus turnos del año — un respaldo permanente, útil para RRHH o para tus propios registros.
+            </p>
+            <input type="number" id="exportar-anio" style="margin-bottom: 12px;">
+            <button class="btn-config-main" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6; border-color: #8b5cf6;" onclick="exportarAnioPDF()">📄 Generar PDF</button>
+            <div id="exportar-resultado"></div>
+        </div>
+        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalExportar()">CERRAR</button>
+    </div>
+</div>
+
+<div id="modal-herramientas" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9500; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 380px; text-align: left;">
+        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">🛠️ Más Herramientas</h3>
+        <div style="margin-top: 15px;">
+            <button class="btn-config-main" style="background: rgba(34, 197, 94, 0.08); color: var(--success); border-color: var(--success);" onclick="cerrarModalHerramientas(); abrirModalAguinaldo();">🎁 Calcular Aguinaldo (SAC)</button>
+            <button class="btn-config-main" style="background: rgba(56, 189, 248, 0.08); color: var(--accent); border-color: var(--accent);" onclick="cerrarModalHerramientas(); abrirModalComparar();">📋 Comparar con Recibo</button>
+            <button class="btn-config-main" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6; border-color: #8b5cf6; margin-bottom: 0;" onclick="cerrarModalHerramientas(); abrirModalExportar();">📄 Exportar Reporte Anual</button>
+        </div>
+        <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalHerramientas()">CERRAR</button>
     </div>
 </div>
 
@@ -1162,8 +1193,7 @@
 
     <div class="glass-form" id="main-form">
         <button class="btn-config-main" onclick="abrirModalConfig()">⚙️ Configurar Valores de Cobro</button>
-        <button class="btn-config-main" style="background: rgba(34, 197, 94, 0.08); color: var(--success); border-color: var(--success);" onclick="abrirModalAguinaldo()">🎁 Calcular Aguinaldo (SAC)</button>
-        <button class="btn-config-main" style="background: rgba(56, 189, 248, 0.08); color: var(--accent); border-color: var(--accent);" onclick="abrirModalComparar()">📋 Comparar con Recibo</button>
+        <button class="btn-config-main" style="background: rgba(56, 189, 248, 0.08); color: var(--accent); border-color: var(--accent);" onclick="abrirModalHerramientas()">🛠️ Más Herramientas</button>
 
         <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
             <label>👤 MIS DATOS (Para el reporte)</label>
@@ -3057,10 +3087,274 @@ async function cargarDatosNube() {
             html += `<p style="font-size:0.65rem; color:var(--text-dim); margin-top:8px;">⚠️ El viático puede diferir si tuviste vacaciones o licencias ese mes (se paga solo por días trabajados, no el mes completo).</p>`;
 
             resultDiv.innerHTML = html;
+
+            // Guardamos la comparación en el historial (no bloquea el resultado si falla)
+            try {
+                await addDoc(collection(db, "usuarios", window.currentUser.uid, "comparaciones"), {
+                    mes, año, fecha: new Date().toISOString(),
+                    valores: filas.map(f => ({ nombre: f.nombre, app: f.app, recibo: f.recibo })),
+                    totalApp, totalBruto: rBruto
+                });
+                if (window._historialCompVisible) cargarHistorialComparaciones();
+            } catch (e) {
+                console.warn("No se pudo guardar la comparación en el historial:", e);
+            }
         } catch (e) {
             console.error("Error comparando recibo:", e);
             resultDiv.innerHTML = '<p style="color:var(--danger); font-size:0.8rem; margin-top:10px;">Hubo un error calculando la comparación.</p>';
         }
+    }
+
+    // 📜 HISTORIAL DE COMPARACIONES
+    window._historialCompVisible = false;
+    window.toggleHistorialComparaciones = async function() {
+        const cont = document.getElementById('historial-comparaciones');
+        const label = document.getElementById('toggle-historial-comp-label');
+        window._historialCompVisible = !window._historialCompVisible;
+        if (window._historialCompVisible) {
+            label.innerText = "Ocultar Historial";
+            cont.style.display = 'block';
+            await cargarHistorialComparaciones();
+        } else {
+            label.innerText = "Ver Historial Guardado";
+            cont.style.display = 'none';
+        }
+    }
+
+    async function cargarHistorialComparaciones() {
+        const cont = document.getElementById('historial-comparaciones');
+        cont.innerHTML = '<p style="text-align:center; color:var(--text-dim); font-size:0.75rem;">Cargando...</p>';
+        try {
+            const ref = collection(db, "usuarios", window.currentUser.uid, "comparaciones");
+            const q = query(ref, orderBy("fecha", "desc"), limit(24));
+            const snap = await getDocs(q);
+            if (snap.empty) {
+                cont.innerHTML = '<p style="text-align:center; color:var(--text-dim); font-size:0.75rem;">Todavía no guardaste ninguna comparación.</p>';
+                return;
+            }
+            const nombresMesCorto = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+            let html = '';
+            snap.forEach(docSnap => {
+                const d = docSnap.data();
+                const diffCount = (d.valores || []).filter(v => Math.abs(Math.round((v.recibo||0) - (v.app||0))) >= 500).length;
+                const fechaGuardado = d.fecha ? new Date(d.fecha).toLocaleDateString('es-AR') : '';
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-radius:6px; margin-bottom:4px; background:rgba(30,41,59,0.6); font-size:0.75rem;">
+                    <span>${nombresMesCorto[d.mes]} ${d.año} ${diffCount > 0 ? `<span style="color:var(--danger);">(${diffCount} dif.)</span>` : '<span style="color:var(--success);">✓ ok</span>'}<br><span style="color:var(--text-dim); font-size:0.65rem;">Guardado ${fechaGuardado}</span></span>
+                    <button class="btn-del" onclick="borrarComparacion('${docSnap.id}')">✕</button>
+                </div>`;
+            });
+            html += `<button class="auth-btn" style="margin-top:8px; background: var(--danger); font-size:0.75rem; padding:8px;" onclick="borrarTodoHistorialComparaciones()">🗑️ Borrar todo el historial</button>`;
+            cont.innerHTML = html;
+        } catch (e) {
+            console.error("Error cargando historial:", e);
+            cont.innerHTML = '<p style="color:var(--danger); font-size:0.75rem;">No se pudo cargar el historial.</p>';
+        }
+    }
+
+    window.borrarComparacion = async function(id) {
+        try {
+            await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "comparaciones", id));
+            window.showToast("🗑️ Comparación borrada", "success");
+            cargarHistorialComparaciones();
+        } catch (e) {
+            window.showToast("⚠️ No se pudo borrar", "danger");
+        }
+    }
+
+    window.borrarTodoHistorialComparaciones = async function() {
+        if (!confirm("¿Borrar todo el historial de comparaciones? No se puede deshacer.")) return;
+        try {
+            const ref = collection(db, "usuarios", window.currentUser.uid, "comparaciones");
+            const snap = await getDocs(ref);
+            const batch = writeBatch(db);
+            snap.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            window.showToast("🗑️ Historial borrado", "success");
+            cargarHistorialComparaciones();
+        } catch (e) {
+            window.showToast("⚠️ No se pudo borrar el historial", "danger");
+        }
+    }
+
+    // 📄 EXPORTAR REPORTE ANUAL A PDF — carga la librería solo cuando se usa (no pesa en el arranque de la app)
+    // Combo de versiones probada y estable: versiones más nuevas de autoTable cambiaron
+    // cómo se conecta con jsPDF y rompían el método clásico doc.autoTable().
+    window._pdfLibsLoaded = false;
+    function cargarLibreriaPDF() {
+        return new Promise((resolve, reject) => {
+            if (window._pdfLibsLoaded && typeof window.jsPDF === 'function') return resolve();
+            const s1 = document.createElement('script');
+            s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js';
+            s1.onload = () => {
+                const s2 = document.createElement('script');
+                s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.12/jspdf.plugin.autotable.min.js';
+                s2.onload = () => { window._pdfLibsLoaded = true; resolve(); };
+                s2.onerror = () => reject(new Error("No se pudo cargar la librería de tablas PDF"));
+                document.head.appendChild(s2);
+            };
+            s1.onerror = () => reject(new Error("No se pudo cargar la librería de PDF"));
+            document.head.appendChild(s1);
+        });
+    }
+
+    // Réplica aislada del cálculo de horas feriado por turno (no toca la función que usa el dashboard,
+    // así el export nunca puede romper el cálculo principal si algo sale mal acá).
+    function calcularHorasFeriadoTurnoPDF(t, pagaPuentes) {
+        const puentesOficiales = ["2026-03-23", "2026-07-10", "2026-12-07"];
+        let esFerEntrada, esFerSalida;
+        if (t.mF && t.mF !== 'auto') {
+            esFerEntrada = t.ferE || t.fer;
+            esFerSalida = t.ferS;
+        } else {
+            esFerEntrada = (window.feriadosGlobales || []).includes(t.f);
+            esFerSalida = false;
+            if (t.e && t.s) {
+                const [hE, mE] = t.e.split(':').map(Number);
+                const [hS, mS] = t.s.split(':').map(Number);
+                if (hS < hE || (hS === hE && mS < mE)) {
+                    let dSalida = new Date(t.f + "T12:00:00");
+                    dSalida.setDate(dSalida.getDate() + 1);
+                    const fSalidaStr = `${dSalida.getFullYear()}-${String(dSalida.getMonth() + 1).padStart(2, '0')}-${String(dSalida.getDate()).padStart(2, '0')}`;
+                    esFerSalida = (window.feriadosGlobales || []).includes(fSalidaStr);
+                }
+            }
+        }
+        if (pagaPuentes === "no" && (!t.mF || t.mF === 'auto')) {
+            if (puentesOficiales.includes(t.f)) esFerEntrada = false;
+            let dSalida = new Date(t.f + "T12:00:00");
+            dSalida.setDate(dSalida.getDate() + 1);
+            const fs = `${dSalida.getFullYear()}-${String(dSalida.getMonth() + 1).padStart(2, '0')}-${String(dSalida.getDate()).padStart(2, '0')}`;
+            if (puentesOficiales.includes(fs)) esFerSalida = false;
+        }
+        let horasFeriadoTurno = 0;
+        if (t.e && t.s) {
+            const [hE, mE] = t.e.split(':').map(Number);
+            const [hS, mS] = t.s.split(':').map(Number);
+            const minEntrada = hE * 60 + mE;
+            const minSalida = hS * 60 + mS;
+            let minFeriado = 0;
+            if (minSalida <= minEntrada) {
+                if (esFerEntrada) minFeriado += (1440 - minEntrada);
+                if (esFerSalida) minFeriado += minSalida;
+            } else if (esFerEntrada || esFerSalida) {
+                minFeriado += (minSalida - minEntrada);
+            }
+            horasFeriadoTurno = Number((minFeriado / 60).toFixed(2));
+        } else if (esFerEntrada || esFerSalida) {
+            horasFeriadoTurno = t.t;
+        }
+        return horasFeriadoTurno;
+    }
+
+    window.abrirModalExportar = function() {
+        document.getElementById('exportar-anio').value = new Date().getFullYear();
+        document.getElementById('exportar-resultado').innerHTML = '';
+        document.getElementById('modal-exportar').style.display = 'flex';
+    }
+    window.cerrarModalExportar = function() {
+        document.getElementById('modal-exportar').style.display = 'none';
+    }
+
+    window.exportarAnioPDF = async function() {
+        const resultDiv = document.getElementById('exportar-resultado');
+        const año = parseInt(document.getElementById('exportar-anio').value) || new Date().getFullYear();
+        resultDiv.innerHTML = '<p style="text-align:center; color:var(--text-dim); margin-top:10px;">Generando PDF... puede tardar unos segundos.</p>';
+
+        try {
+            await cargarLibreriaPDF();
+            if (typeof window.jsPDF !== 'function') {
+                throw new Error("jsPDF no cargó bien (window.jsPDF no es una función).");
+            }
+            const jsPDF = window.jsPDF;
+            const docPDF = new jsPDF();
+            if (typeof docPDF.autoTable !== 'function') {
+                throw new Error("El plugin de tablas cargó pero no se conectó con jsPDF (doc.autoTable no existe).");
+            }
+
+            const nombresMes = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+            const p = window.preciosGuardados || {};
+            const pagaPuentes = p.pagaPuentes || "no";
+            const nombreCompleto = `${(document.getElementById('vigiNombre')||{}).value || ''} ${(document.getElementById('vigiApellido')||{}).value || ''}`.trim() || "—";
+
+            const resumenFilas = [];
+            const detallePorMes = []; // un array de filas por cada mes, para poder separarlos en hojas distintas
+            let totH = 0, totN = 0, totF = 0, totTurnos = 0;
+
+            for (let mes = 0; mes < 12; mes++) {
+                const turnos = await obtenerTurnosMesEstatico(año, mes);
+                turnos.sort((a, b) => (a.f || '').localeCompare(b.f || ''));
+                let mH = 0, mN = 0, mF = 0;
+                const filasMes = [];
+                turnos.forEach(t => {
+                    const fechaFmt = (t.f || '').split('-').reverse().join('/');
+                    if (t.lic) { filasMes.push([fechaFmt, t.l || 'Puesto', '-', '-', '-', 'Licencia']); return; }
+                    if (t.falta) { filasMes.push([fechaFmt, t.l || 'Puesto', '-', '-', '-', 'Falta s/aviso']); return; }
+                    if (t.susp) { filasMes.push([fechaFmt, t.l || 'Puesto', '-', '-', '-', 'Suspensión']); return; }
+                    const h = parseFloat(t.t) || 0;
+                    const n = parseFloat(t.n) || 0;
+                    const f = calcularHorasFeriadoTurnoPDF(t, pagaPuentes);
+                    mH += h; mN += n; mF += f;
+                    const horario = (t.e && t.s) ? `${t.e}-${t.s}` : '';
+                    const marca = t.vac ? 'Vacaciones' : (f > 0 ? 'Feriado' : '');
+                    filasMes.push([fechaFmt, t.l || 'Puesto', horario, h.toFixed(1), n.toFixed(1), marca]);
+                });
+                totH += mH; totN += mN; totF += mF; totTurnos += turnos.length;
+                resumenFilas.push([nombresMes[mes], turnos.length, mH.toFixed(1), mN.toFixed(1), mF.toFixed(1)]);
+                detallePorMes.push({ mes, filas: filasMes, mH, mN, mF });
+            }
+
+            docPDF.setFontSize(16);
+            docPDF.text(`Control Vigia - Reporte Anual ${año}`, 14, 18);
+            docPDF.setFontSize(10);
+            docPDF.setTextColor(100);
+            docPDF.text(nombreCompleto, 14, 25);
+
+            docPDF.autoTable({
+                startY: 32,
+                head: [['Mes', 'Turnos', 'Hs Totales', 'Hs Nocturnas', 'Hs Feriado']],
+                body: resumenFilas,
+                foot: [['TOTAL', totTurnos, totH.toFixed(1), totN.toFixed(1), totF.toFixed(1)]],
+                theme: 'striped',
+                headStyles: { fillColor: [56, 189, 248] },
+                footStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9 }
+            });
+
+            // Detalle: una hoja nueva por cada mes que tenga turnos cargados
+            detallePorMes.forEach(dm => {
+                if (dm.filas.length === 0) return;
+                docPDF.addPage();
+                docPDF.setFontSize(14);
+                docPDF.setTextColor(0);
+                docPDF.text(`${nombresMes[dm.mes]} ${año}`, 14, 18);
+                docPDF.setFontSize(9);
+                docPDF.setTextColor(100);
+                docPDF.text(`${dm.mH.toFixed(1)} hs totales · ${dm.mN.toFixed(1)} hs nocturnas · ${dm.mF.toFixed(1)} hs feriado`, 14, 24);
+                docPDF.autoTable({
+                    startY: 29,
+                    head: [['Fecha', 'Puesto', 'Horario', 'Hs', 'Noct.', 'Marca']],
+                    body: dm.filas,
+                    theme: 'striped',
+                    headStyles: { fillColor: [56, 189, 248] },
+                    styles: { fontSize: 8 }
+                });
+            });
+
+            docPDF.save(`ControlVigia_Reporte_${año}.pdf`);
+            resultDiv.innerHTML = '<p style="color:var(--success); font-size:0.85rem; margin-top:10px; text-align:center;">✅ PDF generado y descargado.</p>';
+
+        } catch (e) {
+            console.error("Error exportando PDF:", e);
+            resultDiv.innerHTML = `<p style="color:var(--danger); font-size:0.8rem; margin-top:10px;">No se pudo generar el PDF.<br><b>Detalle:</b> ${(e && e.message) ? e.message : 'error desconocido'}</p>`;
+        }
+    }
+
+    // 🔄 GENERAR PATRÓN DE TURNOS (2x2, 4x2, 6x1, o cualquier ciclo trabajo/descanso)
+    window.abrirModalHerramientas = function() {
+        document.getElementById('modal-herramientas').style.display = 'flex';
+    }
+    window.cerrarModalHerramientas = function() {
+        document.getElementById('modal-herramientas').style.display = 'none';
     }
 
     window.cerrarPagoLicencia = function() { document.getElementById('modal-pago-licencia').style.display = 'none'; }
