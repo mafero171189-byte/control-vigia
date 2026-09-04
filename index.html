@@ -4575,7 +4575,14 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const hidden = document.getElementById(campoRelojActual);
         hidden.value = `${hh}:${mm}`;
         hidden.dispatchEvent(new Event('change'));
-        cerrarRelojHora();
+
+        // Al confirmar la Entrada, saltamos directo a elegir la Salida sin cerrar el reloj
+        const salidaHidden = document.getElementById('salida');
+        if (campoRelojActual === 'entrada' && salidaHidden && !salidaHidden.disabled) {
+            abrirRelojHora('salida');
+        } else {
+            cerrarRelojHora();
+        }
     }
 
     function borrarRelojHora() {
