@@ -371,7 +371,7 @@
         .btn-submit { flex: 1; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.3s; }
 
         .shift-card { background: var(--card-bg); margin-bottom: 10px; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
-        .shift-date { font-weight: 800; font-size: 0.95rem; display: block; }
+        .shift-date { font-weight: 800; font-size: 0.95rem; display: block; margin-bottom: 4px; }
         .shift-location { font-size: 0.85rem; color: var(--text-dim); display: block; font-weight: 500; }
         .total-h { font-size: 1.1rem; font-weight: 800; display: block; }
         .noct-h { font-size: 0.65rem; color: var(--accent); font-weight: bold; }
@@ -3818,6 +3818,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
 
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
+    const DIAS_ABREV = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+    function diaAbrev(fObj) { return DIAS_ABREV[fObj.getDay()] + "."; }
     
     // 🔴 CORRECCIÓN: Actualizar la suscripción de Firebase al cambiar de mes
     window.cambiarMes = function(delta) {
@@ -3966,16 +3968,16 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
             if (t.lic) {
                 card.className = 'shift-card licencia';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else if (t.falta) {
                 card.className = 'shift-card falta';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else if (t.susp) {
                 card.className = 'shift-card suspension';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="suspension-badge">🚫 SUSPENSIÓN</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="suspension-badge">🚫 SUSPENSIÓN</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else {
                 card.className = t.vac ? 'shift-card vacaciones' : (esAlgunFeriadoCalculado ? 'shift-card feriado' : 'shift-card');
-                card.innerHTML = `<div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;"><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1}</span><span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span></div>${esAlgunFeriadoCalculado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}<div style="display:flex; align-items:center;"><div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;"><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span></div>${esAlgunFeriadoCalculado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}<div style="display:flex; align-items:center;"><div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             }
             lista.appendChild(card);
         });
@@ -4575,14 +4577,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const hidden = document.getElementById(campoRelojActual);
         hidden.value = `${hh}:${mm}`;
         hidden.dispatchEvent(new Event('change'));
-
-        // Al confirmar la Entrada, saltamos directo a elegir la Salida sin cerrar el reloj
-        const salidaHidden = document.getElementById('salida');
-        if (campoRelojActual === 'entrada' && salidaHidden && !salidaHidden.disabled) {
-            abrirRelojHora('salida');
-        } else {
-            cerrarRelojHora();
-        }
+        cerrarRelojHora();
     }
 
     function borrarRelojHora() {
