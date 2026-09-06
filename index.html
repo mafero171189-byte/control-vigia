@@ -240,6 +240,7 @@
         .glass-form.edit-mode { border-color: var(--warning); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
         
         .btn-config-main { width: 100%; background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-config-main:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-config-main:hover { background: rgba(56, 189, 248, 0.2); }
 
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -931,7 +932,7 @@
         <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
             <p style="background: rgba(34, 197, 94, 0.08); padding: 10px; border-radius: 8px; border-left: 4px solid var(--success); margin-top: 0;">
                 El SAC es el <b>50% de tu mejor remuneración bruta remunerativa</b> del semestre (Art. 121/122 LCT).<br><br>
-                <b>Incluye:</b> Básico + Antigüedad + Presentismo + Nocturnidad.<br>
+                <b>Incluye:</b> Básico + Antigüedad + Presentismo + Nocturnidad + plus por feriados trabajados + horas extra + adicional vacacional (si tuviste vacaciones ese mes).<br>
                 <b>NO incluye:</b> Viático ni Adicional No Remunerativo — el acta aclara que esas sumas no cuentan para el SAC.
             </p>
             <div class="form-row" style="margin-bottom: 12px; gap: 8px;">
@@ -941,7 +942,7 @@
                 </select>
                 <input type="number" id="aguinaldoAnio" value="2026" style="flex:0.6; min-width:70px;">
             </div>
-            <button class="btn-config-main" style="margin-bottom:12px; background: rgba(34, 197, 94, 0.08); color: var(--success); border-color: var(--success);" onclick="calcularAguinaldo()">Calcular</button>
+            <button class="btn-config-main" style="margin-bottom:12px; background: rgba(34, 197, 94, 0.08); color: var(--success); border-color: var(--success);" onclick="calcularAguinaldo(this)">Calcular</button>
             <div id="aguinaldo-resultado"></div>
         </div>
         <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalAguinaldo()">CERRAR</button>
@@ -974,7 +975,7 @@
                 <input type="text" inputmode="numeric" id="comparar-norem" placeholder="No Remunerativo ($)" oninput="formatearMiles(this)">
             </div>
             <input type="text" inputmode="numeric" id="comparar-bruto" placeholder="Total Bruto del recibo ($) — opcional" oninput="formatearMiles(this)" style="margin-bottom: 12px;">
-            <button class="btn-config-main" onclick="compararRecibo()">🔍 Comparar</button>
+            <button class="btn-config-main" onclick="compararRecibo(this)">🔍 Comparar</button>
             <div id="comparar-resultado"></div>
             <div style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px;">
                 <button class="btn-toggle-lista" style="width:100%;" onclick="toggleHistorialComparaciones()">📜 <span id="toggle-historial-comp-label">Ver Historial Guardado</span></button>
@@ -993,7 +994,7 @@
                 Genera un PDF con el resumen mensual y el detalle de todos tus turnos del año — un respaldo permanente, útil para RRHH o para tus propios registros.
             </p>
             <input type="number" id="exportar-anio" style="margin-bottom: 12px;">
-            <button class="btn-config-main" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6; border-color: #8b5cf6;" onclick="exportarAnioPDF()">📄 Generar PDF</button>
+            <button class="btn-config-main" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6; border-color: #8b5cf6;" onclick="exportarAnioPDF(this)">📄 Generar PDF</button>
             <div id="exportar-resultado"></div>
         </div>
         <button class="auth-btn" style="margin-top: 15px; background: var(--accent);" onclick="cerrarModalExportar()">CERRAR</button>
@@ -2508,6 +2509,9 @@
     // filtrarUsuariosAdmin reemplazada por buscarUsuarioPorEmail (búsqueda por email exacto en Firestore)
     
 window.formatearEnlaces = function(texto) {
+    // 🔒 Escapamos cualquier HTML ANTES de procesar, para que el aviso global nunca pueda
+    // ejecutar código en la pantalla de otros usuarios, sin importar quién lo haya escrito.
+    texto = texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     
     // 1. Primero procesamos los enlaces y los convertimos en botones
@@ -2926,9 +2930,18 @@ async function cargarDatosNube() {
     }
 
     // 🎁 CALCULADORA DE AGUINALDO (SAC) — Art. 121/122 LCT
+    window._turnosEstaticoCache = {}; // caché en memoria por sesión, para Aguinaldo y Exportar Anual
     async function obtenerTurnosMesEstatico(año, mes) {
         if (!window.currentUser) return [];
         const mesStr = String(mes + 1).padStart(2, '0');
+        const clave = `${año}-${mesStr}`;
+
+        // 1. Si el mes coincide con el que ya está siendo mirado en el dashboard, lo reusamos gratis
+        if (window._turnosCache[clave]) return window._turnosCache[clave].data;
+
+        // 2. Si ya lo consultamos antes en esta sesión (otro cálculo de Aguinaldo/Exportar), lo reusamos
+        if (window._turnosEstaticoCache[clave]) return window._turnosEstaticoCache[clave];
+
         const inicioMes = `${año}-${mesStr}-01`;
         const ultimoDia = new Date(año, mes + 1, 0).getDate();
         const finMes = `${año}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
@@ -2938,6 +2951,7 @@ async function cargarDatosNube() {
             const snap = await getDocs(q);
             const turnos = [];
             snap.forEach(d => turnos.push({ id: d.id, ...d.data() }));
+            window._turnosEstaticoCache[clave] = turnos;
             return turnos;
         } catch (e) {
             console.warn("No se pudieron leer turnos para el aguinaldo:", año, mes, e);
@@ -2953,7 +2967,9 @@ async function cargarDatosNube() {
         document.getElementById('modal-aguinaldo').style.display = 'none';
     }
 
-    window.calcularAguinaldo = async function() {
+    window.calcularAguinaldo = async function(btn) {
+        if (btn) { if (btn.disabled) return; btn.disabled = true; }
+        try {
         const semestre = parseInt(document.getElementById('aguinaldoSemestre').value);
         const año = parseInt(document.getElementById('aguinaldoAnio').value) || new Date().getFullYear();
         const mesesSemestre = semestre === 1 ? [0,1,2,3,4,5] : [6,7,8,9,10,11];
@@ -2974,16 +2990,67 @@ async function cargarDatosNube() {
 
             const v = window.obtenerValoresMes(fechaMes);
             const antigMonto = v.basico * (v.antiguedadAños / 100);
-            const valorHoraNoct = (v.basico + antigMonto + v.presentismo) / 1000;
+            const baseHabitual = v.basico + v.presentismo + antigMonto;
+            const valorHoraNoct = baseHabitual / 1000;
+            const valorHoraNormal = baseHabitual / v.horasBase;
+            const recargoFeriado = v.tipoFeriado === "50" ? 0.5 : 1;
+            const valorPlusLeyCorrecto = (baseHabitual / 25) - (baseHabitual / 30);
+            const plusVUnitario = !isNaN(v.plusVac) ? Number(v.plusVac) : valorPlusLeyCorrecto;
+            const TOPE_DIAS_VACACIONAL = 21;
 
-            let totalNoct = 0, tieneTurnos = false;
+            let st = 0, totalNoct = 0, totalFeriado = 0, tieneTurnos = false;
+            let diasLic = 0, diasVac = 0, diasFaltaSA = 0, diasSusp = 0;
+            let plusVacacionalTotal = 0;
+            let sumaHorasParaPromedio = 0, conteoTurnosParaPromedio = 0;
+
             if (!esFuturo) {
                 const turnos = await obtenerTurnosMesEstatico(año, mes);
                 tieneTurnos = turnos.length > 0;
-                totalNoct = turnos.reduce((acc, t) => acc + (parseFloat(t.n) || 0), 0);
+                const diasVacacionalPrevios = await obtenerDiasVacacionalesPrevios(año, mes);
+                let diasVacContador = 0;
+
+                turnos.forEach(t => {
+                    if (t.vac) {
+                        if ((diasVacacionalPrevios + diasVacContador) < TOPE_DIAS_VACACIONAL) plusVacacionalTotal += plusVUnitario;
+                        diasVacContador++; diasVac++;
+                        return;
+                    }
+                    if (t.lic) { diasLic++; return; }
+                    if (t.falta) { diasFaltaSA++; return; }
+                    if (t.susp) { diasSusp++; return; }
+                    const h = parseFloat(t.t) || 0;
+                    const n = parseFloat(t.n) || 0;
+                    st += h;
+                    totalNoct += n;
+                    totalFeriado += calcularHorasFeriadoTurnoPDF(t, v.pagaPuentes);
+                    if (h > 0) { sumaHorasParaPromedio += h; conteoTurnosParaPromedio++; }
+                });
             }
+
+            const promedioHorasTurno = conteoTurnosParaPromedio > 0 ? (sumaHorasParaPromedio / conteoTurnosParaPromedio) : 8;
+            const diasAusenciaJustificada = diasLic + diasVac;
+            let horasBaseAjustada = Math.max(0, v.horasBase - (promedioHorasTurno * diasAusenciaJustificada));
+            horasBaseAjustada = Math.round(horasBaseAjustada);
+
+            let pagoHorasExtra = 0;
+            if (st > horasBaseAjustada) {
+                const hsExtra = st - horasBaseAjustada;
+                if (!isNaN(v.hora)) {
+                    pagoHorasExtra = hsExtra * Number(v.hora);
+                } else {
+                    const ratioNoct = st > 0 ? Math.min(totalNoct / st, 1) : 0;
+                    const hsExtraNoc = hsExtra * ratioNoct;
+                    const hsExtraDia = hsExtra - hsExtraNoc;
+                    pagoHorasExtra = (hsExtraDia * valorHoraNormal * 1.5) + (hsExtraNoc * valorHoraNormal * 2.0);
+                }
+            }
+
             const montoNoct = totalNoct * valorHoraNoct;
-            const totalMes = v.basico + antigMonto + v.presentismo + montoNoct;
+            const montoFeriado = totalFeriado * valorHoraNormal * recargoFeriado;
+            const presentismoReal = (diasFaltaSA > 0 || diasSusp > 0) ? 0 : v.presentismo;
+            const descuentoFaltaYSuspension = ((v.basico + antigMonto) / 25) * (diasFaltaSA + diasSusp);
+
+            const totalMes = v.basico + presentismoReal + antigMonto + pagoHorasExtra + montoFeriado + plusVacacionalTotal + montoNoct - descuentoFaltaYSuspension;
 
             if (!esFuturo && totalMes > mejor) { mejor = totalMes; mejorMesNombre = nombresMes[mes]; }
             filas.push({ mes: nombresMes[mes], total: totalMes, esFuturo, tieneTurnos });
@@ -3012,6 +3079,9 @@ async function cargarDatosNube() {
             html += `<p style="font-size:0.7rem; color:var(--text-dim); margin-top:6px;">ℹ️ Algún mes no tiene turnos cargados en la app — su nocturnidad se tomó como $0, así que ese mes puede estar subestimado.</p>`;
         }
         resultDiv.innerHTML = html;
+        } finally {
+            if (btn) btn.disabled = false;
+        }
     }
 
     // 📋 COMPARAR CON RECIBO REAL — carga manual, sin IA ni claves externas
@@ -3023,13 +3093,19 @@ async function cargarDatosNube() {
         ['comparar-basico','comparar-antig','comparar-presentismo','comparar-noct','comparar-viatico','comparar-norem','comparar-bruto'].forEach(id => {
             document.getElementById(id).value = '';
         });
+        // Reseteamos el historial colapsado cada vez que se abre, para que el botón
+        // no quede diciendo "Ocultar" cuando en realidad ya está oculto
+        window._historialCompVisible = false;
+        document.getElementById('historial-comparaciones').style.display = 'none';
+        document.getElementById('toggle-historial-comp-label').innerText = 'Ver Historial Guardado';
         document.getElementById('modal-comparar').style.display = 'flex';
     }
     window.cerrarModalComparar = function() {
         document.getElementById('modal-comparar').style.display = 'none';
     }
 
-    window.compararRecibo = async function() {
+    window.compararRecibo = async function(btn) {
+        if (btn) { if (btn.disabled) return; btn.disabled = true; }
         const resultDiv = document.getElementById('comparar-resultado');
         const mes = parseInt(document.getElementById('comparar-mes').value);
         const año = parseInt(document.getElementById('comparar-anio').value) || new Date().getFullYear();
@@ -3102,6 +3178,8 @@ async function cargarDatosNube() {
         } catch (e) {
             console.error("Error comparando recibo:", e);
             resultDiv.innerHTML = '<p style="color:var(--danger); font-size:0.8rem; margin-top:10px;">Hubo un error calculando la comparación.</p>';
+        } finally {
+            if (btn) btn.disabled = false;
         }
     }
 
@@ -3166,9 +3244,14 @@ async function cargarDatosNube() {
         try {
             const ref = collection(db, "usuarios", window.currentUser.uid, "comparaciones");
             const snap = await getDocs(ref);
-            const batch = writeBatch(db);
-            snap.forEach(d => batch.delete(d.ref));
-            await batch.commit();
+            const docs = snap.docs;
+            // Firestore permite hasta 500 escrituras por lote — dividimos de a 400 por las dudas
+            for (let i = 0; i < docs.length; i += 400) {
+                const lote = docs.slice(i, i + 400);
+                const batch = writeBatch(db);
+                lote.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
             window.showToast("🗑️ Historial borrado", "success");
             cargarHistorialComparaciones();
         } catch (e) {
@@ -3255,7 +3338,8 @@ async function cargarDatosNube() {
         document.getElementById('modal-exportar').style.display = 'none';
     }
 
-    window.exportarAnioPDF = async function() {
+    window.exportarAnioPDF = async function(btn) {
+        if (btn) { if (btn.disabled) return; btn.disabled = true; }
         const resultDiv = document.getElementById('exportar-resultado');
         const año = parseInt(document.getElementById('exportar-anio').value) || new Date().getFullYear();
         resultDiv.innerHTML = '<p style="text-align:center; color:var(--text-dim); margin-top:10px;">Generando PDF... puede tardar unos segundos.</p>';
@@ -3346,6 +3430,8 @@ async function cargarDatosNube() {
         } catch (e) {
             console.error("Error exportando PDF:", e);
             resultDiv.innerHTML = `<p style="color:var(--danger); font-size:0.8rem; margin-top:10px;">No se pudo generar el PDF.<br><b>Detalle:</b> ${(e && e.message) ? e.message : 'error desconocido'}</p>`;
+        } finally {
+            if (btn) btn.disabled = false;
         }
     }
 
@@ -3757,6 +3843,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
         const mesTurno = f.substring(0, 7);
         delete window._turnosCache[mesTurno];
+        delete window._turnosEstaticoCache[mesTurno];
         
         try {
             if (window.turnoEnEdicion) {
@@ -3806,6 +3893,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             if (t) {
                 const mesTurno = t.f.substring(0, 7);
                 delete window._turnosCache[mesTurno];
+                delete window._turnosEstaticoCache[mesTurno];
             }
             await deleteDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", id)); 
             window.showToast("🗑️ Turno eliminado"); 
@@ -3820,6 +3908,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
     const DIAS_ABREV = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
     function diaAbrev(fObj) { return DIAS_ABREV[fObj.getDay()] + "."; }
+    function escapeHTML(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     
     // 🔴 CORRECCIÓN: Actualizar la suscripción de Firebase al cambiar de mes
     window.cambiarMes = function(delta) {
@@ -3968,16 +4057,16 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
             if (t.lic) {
                 card.className = 'shift-card licencia';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${escapeHTML(t.l || "Puesto")}</span></div><div style="flex:1; text-align:center;"><span class="licencia-badge">🏥 LICENCIA</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else if (t.falta) {
                 card.className = 'shift-card falta';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${escapeHTML(t.l || "Puesto")}</span></div><div style="flex:1; text-align:center;"><span class="falta-badge">⚠️ FALTA S/AVISO</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else if (t.susp) {
                 card.className = 'shift-card suspension';
-                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${t.l || "Puesto"}</span></div><div style="flex:1; text-align:center;"><span class="suspension-badge">🚫 SUSPENSIÓN</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location">${escapeHTML(t.l || "Puesto")}</span></div><div style="flex:1; text-align:center;"><span class="suspension-badge">🚫 SUSPENSIÓN</span></div><div style="display:flex; align-items:center;"><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             } else {
                 card.className = t.vac ? 'shift-card vacaciones' : (esAlgunFeriadoCalculado ? 'shift-card feriado' : 'shift-card');
-                card.innerHTML = `<div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;"><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.l || "Puesto"} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span></div>${esAlgunFeriadoCalculado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}<div style="display:flex; align-items:center;"><div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
+                card.innerHTML = `<div style="min-width:0; flex-shrink:1; max-width:42%; overflow:hidden;"><span class="shift-date">${fObj.getDate()}/${fObj.getMonth()+1} <b style="color:var(--text-dim); font-weight:600; font-size:0.7rem;">${diaAbrev(fObj)}</b></span><span class="shift-location" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(t.l || "Puesto")} <b style="color:var(--text-dim); font-size:0.65rem;">${horarioTexto}</b></span></div>${esAlgunFeriadoCalculado ? '<div style="flex:1; text-align:center;"><span class="feriado-badge">🚩 FERIADO</span></div>' : ''}${t.vac ? '<div style="flex:1; text-align:center;"><span class="vacaciones-badge">🌴 VACACIONES</span></div>' : ''}<div style="display:flex; align-items:center;"><div style="text-align:right; margin-right: 15px;"><span class="total-h">${fmtH(t.t)}hs</span><span class="noct-h">🌙 ${fmtH(t.n)}h</span>${horasFeriadoTurno > 0 ? `<span class="noct-h" style="color:var(--warning); display:block;">🚩 ${fmtH(horasFeriadoTurno)}h</span>` : ''}</div><div style="display:flex; gap: 8px;"><button class="btn-del" style="background: rgba(56, 189, 248, 0.1); color: var(--accent);" onclick="editarTurno('${t.id}')">✎</button><button class="btn-del" onclick="abrirModalBorrar('${t.id}', '${t.f}', '${locEscaped}')">✕</button></div></div>`;
             }
             lista.appendChild(card);
         });
