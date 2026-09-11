@@ -4666,6 +4666,17 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const hidden = document.getElementById(campoRelojActual);
         hidden.value = `${hh}:${mm}`;
         hidden.dispatchEvent(new Event('change'));
+
+        // Si acabamos de establecer la Entrada, pasamos directo al reloj de Salida
+        // (sirve tanto para agregar turno como para editar, ya que ambos usan
+        // los mismos campos #entrada / #salida y este mismo modal).
+        if (campoRelojActual === 'entrada') {
+            const salidaHidden = document.getElementById('salida');
+            if (salidaHidden && !salidaHidden.disabled) {
+                abrirRelojHora('salida');
+                return;
+            }
+        }
         cerrarRelojHora();
     }
 
