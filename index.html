@@ -1388,6 +1388,7 @@
                 <button onclick="agregarFeriadoAdmin()" style="background: var(--accent); color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">AÑADIR</button>
             </div>
             <label style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Feriados Activos (Toca para eliminar):</label>
+            <div id="admin-aviso-feriados-anio" style="display:none; margin-top:10px; padding:10px 12px; background:rgba(245,158,11,0.12); border:1px solid var(--warning); border-radius:10px; font-size:0.72rem; color:var(--warning); line-height:1.45;"></div>
             <div id="admin-lista-feriados" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid var(--border); min-height: 50px;"></div>
             <button class="btn-msg" style="margin-top:15px; background: var(--success);" onclick="guardarFeriadosGlobal()">💾 GUARDAR CALENDARIO GLOBAL</button>
             <button class="btn-msg" style="margin-top:8px; background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid var(--accent);" onclick="resetearFeriados2026()">🔄 RESETEAR A FERIADOS OFICIALES 2026</button>
@@ -2034,7 +2035,15 @@
             document.getElementById('recuperar-step-2').style.display = 'block';
         } catch (error) {
             btnEnviar.innerText = "Enviar Enlace";
-            window.showToast("⚠️ Error: Correo no encontrado.", "danger");
+            // No todos los fallos son "correo no encontrado": sin internet decía lo mismo
+            // y mandaba a la gente a buscar un problema que no existía.
+            if (error && error.code === 'auth/network-request-failed') {
+                window.showToast("⚠️ Sin conexión. Revisá tu internet.", "danger");
+            } else if (error && error.code === 'auth/invalid-email') {
+                window.showToast("⚠️ El correo no tiene un formato válido.", "danger");
+            } else {
+                window.showToast("⚠️ Error: Correo no encontrado.", "danger");
+            }
         }
     }
 
@@ -2069,6 +2078,9 @@
             }
         }
         if(!email || !pass || (esModoRegistro && !nombre)) return window.showToast("Completá todos los campos", "danger");
+        // Firebase exige 6 caracteres mínimo: lo chequeamos acá para avisar claro
+        // en vez de que vuelva un error genérico desde el servidor.
+        if (esModoRegistro && pass.length < 6) return window.showToast("⚠️ La clave debe tener al menos 6 caracteres", "danger");
         
         document.getElementById('btn-action-auth').innerText = "Cargando...";
         try {
@@ -2130,7 +2142,19 @@
                 window.showToast("¡Bienvenido a Control Vigía!");
             }
         } catch (error) {
-            window.showToast("Error: Revisa tus datos", "danger");
+            // Antes cualquier fallo mostraba "Revisa tus datos", incluso cuando el problema
+            // era claro y accionable (mail ya registrado, sin internet, demasiados intentos).
+            const mensajes = {
+                'auth/email-already-in-use': "⚠️ Ese correo ya tiene una cuenta. Probá ingresando.",
+                'auth/invalid-email': "⚠️ El correo no tiene un formato válido.",
+                'auth/weak-password': "⚠️ La clave debe tener al menos 6 caracteres.",
+                'auth/user-not-found': "⚠️ No existe una cuenta con ese correo.",
+                'auth/wrong-password': "⚠️ La contraseña es incorrecta.",
+                'auth/invalid-credential': "⚠️ Correo o contraseña incorrectos.",
+                'auth/too-many-requests': "⚠️ Demasiados intentos. Esperá un rato y probá de nuevo.",
+                'auth/network-request-failed': "⚠️ Sin conexión. Revisá tu internet."
+            };
+            window.showToast(mensajes[error && error.code] || "Error: Revisa tus datos", "danger");
             document.getElementById('btn-action-auth').innerText = esModoRegistro ? "REGISTRARME" : "INGRESAR";
             window.isRegistering = false;
         }
@@ -2235,7 +2259,7 @@
     });
 
     // 🚀 CACHÉ DE USUARIOS: evita recargar la lista si no hubo nuevos registros
-    window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null };
+    window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null, diaGuardado: null };
     // Memoria para evitar recargar turnos si el conteo no cambió
     window._turnosCache = {};
 
@@ -2267,8 +2291,12 @@
             txtContador.innerText = `⚠️ Error`;
         }
 
-        // Si el total no cambió y ya tenemos caché, restauramos desde memoria (0 lecturas)
-        if (totalActual !== null && totalActual === window._adminCache.totalGuardado && window._adminCache.htmlGuardado) {
+        // Si el total no cambió y ya tenemos caché, restauramos desde memoria (0 lecturas).
+        // Ojo: el HTML cacheado tiene congelado el "Vence en X días" de cada licencia, así que
+        // la caché solo vale dentro del mismo día — si cambió la fecha, se recarga sí o sí.
+        const hoyClave = new Date().toDateString();
+        const cacheDelMismoDia = window._adminCache.diaGuardado === hoyClave;
+        if (totalActual !== null && totalActual === window._adminCache.totalGuardado && window._adminCache.htmlGuardado && cacheDelMismoDia) {
             lista.innerHTML = window._adminCache.htmlGuardado;
             window.ultimoUsuarioDoc = window._adminCache.ultimoDoc;
             // Re-asignar los listeners de los botones ya renderizados
@@ -2366,10 +2394,10 @@
             if (totalActual !== null && !window._adminCache.htmlGuardado) {
                 // Pequeño delay para que el botón "ver más" ya esté en el DOM
                 setTimeout(() => {
-                    const btnCargarMas = document.getElementById('btn-cargar-mas-admin');
                     window._adminCache.htmlGuardado = lista.innerHTML;
                     window._adminCache.ultimoDoc = window.ultimoUsuarioDoc;
                     window._adminCache.totalGuardado = totalActual;
+                    window._adminCache.diaGuardado = new Date().toDateString();
                 }, 50);
             }
         } catch (e) {
@@ -2519,7 +2547,7 @@
             await batch.commit();
             
             window.showToast("🗑️ Usuario y todos sus turnos eliminados", "success");
-            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null }; // Invalida caché
+            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null, diaGuardado: null }; // Invalida caché
             window.cerrarModalEliminarUsuario();
             window.abrirAdmin(); 
         } catch (e) {
@@ -2592,6 +2620,22 @@ window.formatearEnlaces = function(texto) {
     window.renderizarFeriadosAdmin = function() {
         const lista = document.getElementById('admin-lista-feriados');
         if (!lista) return;
+
+        // Aviso: si no hay feriados cargados del año en curso, el cálculo de recargos
+        // de todos los usuarios queda sin feriados para ese año. Hay que cargarlos a mano
+        // cuando salga el calendario oficial (no se inventan fechas solas).
+        const aviso = document.getElementById('admin-aviso-feriados-anio');
+        if (aviso) {
+            const anioActual = new Date().getFullYear();
+            const cantAnioActual = window.feriadosGlobales.filter(f => String(f).startsWith(anioActual + '-')).length;
+            if (cantAnioActual === 0) {
+                aviso.innerHTML = `⚠️ No hay ningún feriado cargado para <b>${anioActual}</b>. Hasta que los cargues, los turnos de este año no van a computar recargo por feriado para ningún usuario.`;
+                aviso.style.display = 'block';
+            } else {
+                aviso.style.display = 'none';
+            }
+        }
+
         lista.innerHTML = "";
         window.feriadosGlobales.forEach(f => {
             const btn = document.createElement('span');
@@ -2893,7 +2937,11 @@ async function cargarDatosNube() {
         // 4. SUSCRIPCIÓN DE FERIADOS GLOBALES
         try {
             onSnapshot(doc(db, "global", "feriados"), async (docSnap) => {
-                if (docSnap.exists() && docSnap.data().lista?.length > 0) {
+                // Solo auto-sembramos si el documento NO existe o no tiene el campo 'lista'.
+                // Antes se sembraba también con la lista vacía, así que si el admin borraba
+                // todos los feriados y guardaba, se le volvían a escribir los de 2026 solos.
+                const tieneLista = docSnap.exists() && Array.isArray(docSnap.data().lista);
+                if (tieneLista) {
                     window.feriadosGlobales = docSnap.data().lista;
                 } else {
                     // Primera vez: auto-sembramos la base con los feriados 2026 oficiales
@@ -3643,7 +3691,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             }, { merge: true });
 
             window.showToast("✅ Días actualizados y Licencia Mensual activada", "success");
-            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null }; 
+            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null, diaGuardado: null }; 
             
             if (document.getElementById('admin-buscar-usuario').value.trim() !== "") {
                 window.buscarUsuarioPorEmail();
@@ -3697,7 +3745,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         try { 
             await setDoc(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), { precios: p, perfil: u }, {merge: true}); 
             await setDoc(doc(db, "directorio_usuarios", window.currentUser.uid), { nombre: nombreNuevo + " " + apellidoNuevo }, {merge: true});
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            // Antes solo iba a la consola: el usuario creía que se había guardado el perfil.
+            console.error("No se pudo guardar el perfil:", e);
+            window.showToast("⚠️ No se pudo guardar el perfil. Revisá tu conexión.", "danger");
+        }
     }
 
     window.editarTurno = function(id) {
@@ -4348,6 +4400,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if (!nom || !ape) return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger");
         
         const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
+        const anioText = window.fechaFiltro.getFullYear();
         const v = window.obtenerValoresMes(window.fechaFiltro);
         
         let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
@@ -4356,7 +4409,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             : "";
         
         // Generamos el mensaje
-        window.mensajeReporteTemporal = `📋 *REPORTE DE HORAS - ${mesText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n\n_Generado por Control Vigía_`;
+        window.mensajeReporteTemporal = `📋 *REPORTE DE HORAS - ${mesText} ${anioText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n\n_Generado por Control Vigía_`;
         
         // Inyectamos el texto en el modal (limpiando los asteriscos de negrita para que se vea bien en el preview)
         document.getElementById('cuerpo-reporte-preview').innerText = window.mensajeReporteTemporal.replace(/\*/g, "");
