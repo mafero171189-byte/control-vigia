@@ -1210,7 +1210,7 @@
         <label id="form-titulo-modo">➕ REGISTRAR GUARDIA</label>
         <div class="form-row">
             <div><label>Fecha</label><input type="date" id="fecha" onchange="detectarFeriadoAutomatico()"></div>
-            <div><label>Objetivo</label><input type="text" id="lugar" placeholder="Puesto"></div>
+            <div style="position: relative;"><label>Objetivo</label><input type="text" id="lugar" placeholder="Puesto" autocomplete="off"><div id="sugerencias-puesto" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:50; background:var(--card-bg, #1e293b); border:1px solid var(--accent); border-top:none; border-radius:0 0 12px 12px; max-height:180px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,0.5);"></div></div>
         </div>
         <div class="form-row">
             <div>
@@ -2608,6 +2608,134 @@ window.formatearEnlaces = function(texto) {
     return textoProcesado.replace(/\n/g, '<br>');
 }
 
+    // 📍 ÚLTIMO PUESTO USADO: se guarda por usuario para precargar el campo "Objetivo",
+    // que en la práctica es casi siempre el mismo día tras día.
+    window.claveUltimoPuesto = function() {
+        const uid = window.currentUser ? window.currentUser.uid : 'anon';
+        return 'ultimo_puesto_' + uid;
+    };
+    window.recordarUltimoPuesto = function(lugar) {
+        if (!lugar) return;
+        try { localStorage.setItem(window.claveUltimoPuesto(), lugar); } catch (e) { /* modo privado */ }
+    };
+    window.precargarUltimoPuesto = function() {
+        const campo = document.getElementById('lugar');
+        if (!campo || campo.value.trim() !== '') return; // no pisamos lo que el usuario ya escribió
+        try {
+            const ultimo = localStorage.getItem(window.claveUltimoPuesto());
+            if (ultimo) campo.value = ultimo;
+        } catch (e) { /* modo privado */ }
+    };
+    // Puestos que el usuario decidió no volver a ver sugeridos (ej: variantes mal tipeadas).
+    // Es solo una lista de ocultos: NO modifica los turnos ya guardados, que conservan su puesto.
+    window.clavePuestosOcultos = function() {
+        const uid = window.currentUser ? window.currentUser.uid : 'anon';
+        return 'puestos_ocultos_' + uid;
+    };
+    window.obtenerPuestosOcultos = function() {
+        try {
+            const raw = localStorage.getItem(window.clavePuestosOcultos());
+            const arr = raw ? JSON.parse(raw) : [];
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) { return []; }
+    };
+    window.ocultarPuestoSugerido = function(puesto) {
+        try {
+            const ocultos = window.obtenerPuestosOcultos();
+            if (!ocultos.includes(puesto)) ocultos.push(puesto);
+            localStorage.setItem(window.clavePuestosOcultos(), JSON.stringify(ocultos));
+        } catch (e) { /* modo privado */ }
+        // Si el que ocultó era el "último puesto" precargado, lo soltamos para que no vuelva
+        try {
+            if (localStorage.getItem(window.claveUltimoPuesto()) === puesto) {
+                localStorage.removeItem(window.claveUltimoPuesto());
+            }
+        } catch (e) { /* modo privado */ }
+        window.actualizarSugerenciasPuestos();
+    };
+
+    // Lista de puestos ya usados, para el autocompletado propio del campo "Objetivo"
+    window.puestosConocidos = [];
+    window.actualizarSugerenciasPuestos = function() {
+        const ocultos = window.obtenerPuestosOcultos();
+        const vistos = [];
+        (window.turnos || []).forEach(t => {
+            if (t.l && t.l !== "Puesto General" && !vistos.includes(t.l) && !ocultos.includes(t.l)) vistos.push(t.l);
+        });
+        // Sumamos el último puesto guardado por si este mes todavía no tiene turnos cargados
+        try {
+            const ultimo = localStorage.getItem(window.claveUltimoPuesto());
+            if (ultimo && !vistos.includes(ultimo) && !ocultos.includes(ultimo)) vistos.push(ultimo);
+        } catch (e) { /* modo privado */ }
+        window.puestosConocidos = vistos;
+    };
+
+    // Autocompletado inline: la lista NO se muestra al tocar el campo, solo aparece
+    // mientras se escribe y únicamente con lo que coincide.
+    window.inicializarAutocompletadoPuesto = function() {
+        const campo = document.getElementById('lugar');
+        const caja = document.getElementById('sugerencias-puesto');
+        if (!campo || !caja || campo.dataset.autocompleteListo === '1') return;
+        campo.dataset.autocompleteListo = '1';
+
+        const ocultar = () => { caja.style.display = 'none'; caja.innerHTML = ''; };
+
+        const mostrar = () => {
+            const texto = campo.value.trim().toLowerCase();
+            if (texto.length < 1) return ocultar(); // vacío: no molestamos
+
+            const coincidencias = window.puestosConocidos.filter(p => {
+                const pl = p.toLowerCase();
+                return pl.includes(texto) && pl !== texto; // si ya lo escribió entero, no sugerimos
+            }).slice(0, 6);
+
+            if (coincidencias.length === 0) return ocultar();
+
+            caja.innerHTML = '';
+            coincidencias.forEach(p => {
+                const item = document.createElement('div');
+                item.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; cursor:pointer; font-size:0.9rem; color:var(--text-main); border-bottom:1px solid var(--border);';
+
+                const etiqueta = document.createElement('span');
+                etiqueta.textContent = p;
+                etiqueta.style.cssText = 'flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+
+                const borrar = document.createElement('span');
+                borrar.textContent = '✕';
+                borrar.title = 'Quitar de las sugerencias';
+                borrar.style.cssText = 'color:var(--danger); font-size:0.85rem; padding:2px 8px; flex-shrink:0;';
+
+                // mousedown/touchstart (no click): el blur del input se dispara antes que el
+                // click y cerraría la lista antes de que se registre el toque.
+                const elegir = (ev) => {
+                    ev.preventDefault();
+                    campo.value = p;
+                    ocultar();
+                };
+                const quitar = (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation(); // que no dispare también el "elegir" del item
+                    window.ocultarPuestoSugerido(p);
+                    mostrar(); // redibujamos la lista ya sin ese puesto
+                };
+
+                etiqueta.addEventListener('mousedown', elegir);
+                etiqueta.addEventListener('touchstart', elegir, { passive: false });
+                borrar.addEventListener('mousedown', quitar);
+                borrar.addEventListener('touchstart', quitar, { passive: false });
+
+                item.appendChild(etiqueta);
+                item.appendChild(borrar);
+                caja.appendChild(item);
+            });
+            caja.style.display = 'block';
+        };
+
+        campo.addEventListener('input', mostrar);
+        campo.addEventListener('blur', () => setTimeout(ocultar, 150));
+        campo.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === 'Escape') ocultar(); });
+    };
+
     window.cerrarAviso = function() { document.getElementById('aviso-global').style.display = 'none'; }
 
     window.agregarFeriadoAdmin = function() {
@@ -2958,6 +3086,8 @@ async function cargarDatosNube() {
         } catch(e) { console.warn("No se pudo cargar feriados globales:", e); }
 
         // 5. SUSCRIPCIÓN DE TURNOS (Esto ahora se ejecuta siempre, garantizando que la UI cargue)
+        window.precargarUltimoPuesto();
+        window.inicializarAutocompletadoPuesto();
         suscribirTurnosMes(window.fechaFiltro);
     }
 
@@ -3797,6 +3927,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
         
         document.getElementById('lugar').value = '';
+        window.precargarUltimoPuesto(); // deja el puesto habitual listo para el próximo alta
         document.getElementById('entrada').value = '';
         document.getElementById('salida').value = '';
         if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'auto';
@@ -3984,7 +4115,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 cancelarEdicion();
             } else {
                 await addDoc(collection(db, "usuarios", window.currentUser.uid, "turnos"), nuevoTurno);
-                document.getElementById('lugar').value = ''; 
+                // Recordamos el puesto y lo dejamos cargado para el próximo turno,
+                // en vez de vaciar el campo y obligar a reescribirlo todos los días.
+                window.recordarUltimoPuesto(nuevoTurno.l);
+                document.getElementById('lugar').value = nuevoTurno.l === "Puesto General" ? '' : nuevoTurno.l;
                 if(document.getElementById('estadoFeriado')) document.getElementById('estadoFeriado').value = 'auto';
                 if(document.getElementById('esVacaciones')) document.getElementById('esVacaciones').checked = false;
                 if(document.getElementById('esLicencia')) document.getElementById('esLicencia').checked = false;
@@ -4335,6 +4469,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
         window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
+        window.actualizarSugerenciasPuestos();
 
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
@@ -4434,7 +4569,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     const manifestJSON = {
         "name": "Control Vigía",
         "short_name": "Control Vigía",
-        "start_url": location.href,
+        // location.href incluye query string y hash. Si el usuario instalaba la app estando
+        // en un link con parámetros (por ejemplo el de recuperar contraseña, que vuelve con
+        // ?mode=resetPassword&oobCode=...), esa URL quedaba grabada como inicio de la app
+        // instalada y cada vez que la abría caía en ese enlace viejo ya vencido.
+        "start_url": location.origin + location.pathname,
         "display": "standalone",
         "background_color": "#0f172a",
         "theme_color": "#0f172a",
