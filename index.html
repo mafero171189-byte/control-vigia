@@ -1166,6 +1166,9 @@
 
     <div class="salary-card">
         <div class="bruto-text">Bruto Estimado: <b id="totalBruto">$ 0,00</b></div>
+        <div id="aviso-valores-desactualizados" style="display:none; margin:8px 0; padding:8px 10px; background:rgba(245,158,11,0.12); border:1px solid var(--warning); border-radius:8px; font-size:0.68rem; color:var(--warning); line-height:1.4; text-align:left;">
+            ⚠️ Todavía no hay paritaria cargada para este mes. El cálculo usa los últimos valores conocidos (diciembre 2026), así que es solo una referencia. Podés cargar los valores reales en Configuración.
+        </div>
         <span id="neto-title-label" class="neto-title">SUELDO GARANTIZADO (MES COMPLETO)</span>
         <h2 id="totalNeto" style="margin-bottom: 5px;">$ 0,00</h2>
         <p id="txt-nota-sueldo" style="font-size: 0.65rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
@@ -1488,7 +1491,9 @@
             const [hE, mE] = eStr.split(':').map(Number);
             const [hS, mS] = sStr.split(':').map(Number);
             
-            if (hS < hE || (hS === hE && mS < mE)) {
+            // <= (no solo <) para que un turno de 24hs exactas (Entrada === Salida) también
+            // cuente como "cruza a la medianoche del día siguiente", igual que en el resto del código.
+            if (hS < hE || (hS === hE && mS <= mE)) {
                 let fechaS = new Date(fStr + "T12:00:00");
                 fechaS.setDate(fechaS.getDate() + 1);
                 const yyyy = fechaS.getFullYear();
@@ -1810,7 +1815,13 @@
         const año = fObj.getFullYear();
         const mes = fObj.getMonth();
         const p = window.preciosGuardados || {};
-        const categoria = categoriaForzada || p.categoria || 'general'; 
+        // 'let' (no 'const'): más abajo se normaliza la categoría legacy 'arma' → 'general'.
+        // Con const esa reasignación tiraba "Assignment to constant variable" y rompía todo el render.
+        let categoria = categoriaForzada || p.categoria || 'general'; 
+        // CCT 507/07 + paritaria 2026: no existe distinción armado/desarmado.
+        // Se normaliza acá arriba (antes de armar 'v') para que la categoría quede
+        // bien tanto en el objeto devuelto como en el resto de la función.
+        if (categoria === 'arma') categoria = 'general';
 
         let v = {
             categoria: categoria,
@@ -1835,7 +1846,6 @@
         let auto = window.valoresUPSRA[claveMes];
 
         if (!auto && año === 2026) {
-            if (categoria === 'arma') categoria = 'general'; // CCT 507/07 + paritaria 2026: no existe distinción armado/desarmado
             if (mes === 0) auto = { b: 867200, p: 165000, v: 473800, nr: 10000, vac: 18952 }; // Cláusula Cuarta: $18.952 ene-mar
                 else if (mes === 1) auto = { b: 876000, p: 165000, v: 473800, nr: 25000, vac: 18952 };
                 else if (mes === 2) auto = { b: 884800, p: 165000, v: 473800, nr: 25000, vac: 18952 };
@@ -1849,6 +1859,17 @@
                 else if (mes === 9) auto = { b: 1053200, p: 180000, v: 534000, nr: 60000, vac: 21360 }; // Octubre
                 else if (mes === 10) auto = { b: 1069000, p: 180000, v: 545000, nr: 70000, vac: 21800 }; // Noviembre
                 else auto = { b: 1085000, p: 180000, v: 545000, nr: 120000, vac: 21800 }; // Diciembre
+        }
+
+        // Después de dic-2026 todavía no hay paritaria cargada. Sin este arrastre la app
+        // mostraría $0 en todo a partir de enero 2027 (a menos que el admin cargue los valores
+        // o el usuario los ponga a mano). Arrastramos los últimos valores conocidos y marcamos
+        // el mes como desactualizado para poder avisarlo en pantalla.
+        if (!auto && (año > 2026 || (año === 2026 && mes > 11))) {
+            auto = { b: 1085000, p: 180000, v: 545000, nr: 120000, vac: 21800 }; // últimos conocidos: dic-2026
+            // Solo avisamos si el básico realmente sale del arrastre: si el usuario cargó
+            // sus valores a mano, los suyos mandan y no hay nada desactualizado que avisar.
+            if (isNaN(v.basico)) v.valoresDesactualizados = true;
         }
         
         if (auto) {
@@ -2474,13 +2495,16 @@
             const uid = window.idUsuarioAEliminar;
             const turnosRef = collection(db, "usuarios", uid, "turnos");
             const turnosSnapshot = await getDocs(turnosRef);
+            // La subcolección "comparaciones" se agregó después que esta función: sin esto
+            // quedaban huérfanas en Firestore al eliminar el usuario.
+            const compSnapshot = await getDocs(collection(db, "usuarios", uid, "comparaciones"));
             
             let batch = writeBatch(db);
             let count = 0;
             
             // FIX Bug "Borrado Incompleto": usar for...of con await para garantizar
             // que cada batch se confirme antes de crear el siguiente.
-            for (const docSnap of turnosSnapshot.docs) {
+            for (const docSnap of [...turnosSnapshot.docs, ...compSnapshot.docs]) {
                 batch.delete(docSnap.ref);
                 count++;
                 if (count === 490) { 
@@ -2747,7 +2771,10 @@ async function cargarDatosNube() {
         // 1. Cargamos el aviso global (Aislado por si falla)
         try {
             window.unsubAviso = onSnapshot(doc(db, "global", "aviso"), (docSnap) => {
-                if (docSnap.exists() && docSnap.data().texto.trim() !== "") {
+                // Optional chaining: si el documento existe pero no tiene el campo 'texto',
+                // el .trim() tiraba TypeError dentro del callback (que el try/catch de afuera
+                // NO atrapa, porque es asíncrono) y el aviso quedaba roto.
+                if (docSnap.exists() && (docSnap.data().texto || "").trim() !== "") {
                     const data = docSnap.data();
                     document.getElementById('texto-aviso-global').innerHTML = window.formatearEnlaces(data.texto);
                     document.getElementById('aviso-global').style.display = 'block';
@@ -2987,6 +3014,7 @@ async function cargarDatosNube() {
         for (const mes of mesesSemestre) {
             const fechaMes = new Date(año, mes, 1);
             const esFuturo = fechaMes > inicioMesActual;
+            const esEnCurso = fechaMes.getTime() === inicioMesActual.getTime(); // el mes actual todavía no terminó
 
             const v = window.obtenerValoresMes(fechaMes);
             const antigMonto = v.basico * (v.antiguedadAños / 100);
@@ -3053,16 +3081,18 @@ async function cargarDatosNube() {
             const totalMes = v.basico + presentismoReal + antigMonto + pagoHorasExtra + montoFeriado + plusVacacionalTotal + montoNoct - descuentoFaltaYSuspension;
 
             if (!esFuturo && totalMes > mejor) { mejor = totalMes; mejorMesNombre = nombresMes[mes]; }
-            filas.push({ mes: nombresMes[mes], total: totalMes, esFuturo, tieneTurnos });
+            filas.push({ mes: nombresMes[mes], total: totalMes, esFuturo, esEnCurso, tieneTurnos });
         }
 
         const sac = mejor / 2;
         let html = '<div style="margin-top:10px;">';
         filas.forEach(f => {
             const destacado = f.mes === mejorMesNombre;
+            const icono = f.esFuturo ? '⏳' : (f.esEnCurso ? '🔶' : (destacado ? '⭐' : ''));
+            const valorTxt = f.esFuturo ? 'Aún no ocurrió' : ('$' + f.total.toLocaleString('es-AR', {maximumFractionDigits:0}) + (f.esEnCurso ? ' (parcial)' : ''));
             html += `<div style="display:flex; justify-content:space-between; padding:6px 8px; border-radius:6px; margin-bottom:4px; background:${destacado ? 'rgba(34,197,94,0.15)' : 'rgba(30,41,59,0.5)'}; ${destacado ? 'border:1px solid var(--success);' : ''}">
-                <span>${f.esFuturo ? '⏳' : (destacado ? '⭐' : '')} ${f.mes}</span>
-                <span>${f.esFuturo ? 'Aún no ocurrió' : '$' + f.total.toLocaleString('es-AR', {maximumFractionDigits:0})}</span>
+                <span>${icono} ${f.mes}</span>
+                <span>${valorTxt}</span>
             </div>`;
         });
         html += '</div>';
@@ -3072,6 +3102,10 @@ async function cargarDatosNube() {
             <div style="font-size:0.7rem; color:var(--text-dim); margin-top:4px;">Aguinaldo estimado (50% de la mejor)</div>
         </div>`;
 
+        const mejorFila = filas.find(f => f.mes === mejorMesNombre);
+        if (mejorFila && mejorFila.esEnCurso) {
+            html += `<p style="font-size:0.7rem; color:var(--warning); margin-top:10px;">🔶 El mes elegido como "mejor remuneración" (${mejorMesNombre}) todavía está en curso — si te faltan turnos por cargar este mes, el aguinaldo puede terminar subestimado.</p>`;
+        }
         if (filas.some(f => f.esFuturo)) {
             html += `<p style="font-size:0.7rem; color:var(--warning); margin-top:10px;">⚠️ Este semestre todavía no terminó — el cálculo puede subir con los meses que faltan.</p>`;
         }
@@ -3239,8 +3273,15 @@ async function cargarDatosNube() {
         }
     }
 
-    window.borrarTodoHistorialComparaciones = async function() {
-        if (!confirm("¿Borrar todo el historial de comparaciones? No se puede deshacer.")) return;
+    window.borrarTodoHistorialComparaciones = function() {
+        document.getElementById('modal-title').innerText = "¿Borrar todo el historial?";
+        document.getElementById('modal-text').innerText = "Se van a borrar todas las comparaciones guardadas. No se puede deshacer.";
+        document.getElementById('confirm-btn').innerText = "Sí, borrar";
+        document.getElementById('custom-modal').style.display = 'flex';
+        confirmCallback = () => window.ejecutarBorradoHistorialComparaciones();
+    }
+
+    window.ejecutarBorradoHistorialComparaciones = async function() {
         try {
             const ref = collection(db, "usuarios", window.currentUser.uid, "comparaciones");
             const snap = await getDocs(ref);
@@ -3294,7 +3335,8 @@ async function cargarDatosNube() {
             if (t.e && t.s) {
                 const [hE, mE] = t.e.split(':').map(Number);
                 const [hS, mS] = t.s.split(':').map(Number);
-                if (hS < hE || (hS === hE && mS < mE)) {
+                // <= (no solo <): un turno de 24hs exactas también cruza a la medianoche del día siguiente
+                if (hS < hE || (hS === hE && mS <= mE)) {
                     let dSalida = new Date(t.f + "T12:00:00");
                     dSalida.setDate(dSalida.getDate() + 1);
                     const fSalidaStr = `${dSalida.getFullYear()}-${String(dSalida.getMonth() + 1).padStart(2, '0')}-${String(dSalida.getDate()).padStart(2, '0')}`;
@@ -3435,7 +3477,7 @@ async function cargarDatosNube() {
         }
     }
 
-    // 🔄 GENERAR PATRÓN DE TURNOS (2x2, 4x2, 6x1, o cualquier ciclo trabajo/descanso)
+    // 🛠️ MODAL "MÁS HERRAMIENTAS" (Aguinaldo, Comparar con Recibo, Exportar Anual)
     window.abrirModalHerramientas = function() {
         document.getElementById('modal-herramientas').style.display = 'flex';
     }
@@ -3772,23 +3814,38 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
         const esAusencia = vac || lic || falta || susp;
 
+        // Diferencia en días de calendario entre dos fechas "YYYY-MM-DD" (mediodía evita líos de huso horario/DST)
+        function diffEnDias(fechaA, fechaB) {
+            const dA = new Date(fechaA + "T12:00:00");
+            const dB = new Date(fechaB + "T12:00:00");
+            return Math.round((dA - dB) / 86400000);
+        }
+
         const esDuplicadoOSuperpuesto = window.turnos.some(t => {
             if (window.turnoEnEdicion && t.id === window.turnoEnEdicion) return false;
-            if (t.f !== f) return false;
+
+            // offsetDias: 0 = mismo día que el turno nuevo, -1 = día anterior, +1 = día siguiente.
+            // Un turno de un día adyacente puede cruzar la medianoche y pisar al nuevo igual,
+            // así que además de "mismo día" chequeamos los vecinos.
+            const offsetDias = diffEnDias(t.f, f);
+            if (offsetDias < -1 || offsetDias > 1) return false;
 
             const existenteEsAusencia = t.vac || t.lic || t.falta || t.susp;
 
-            if (esAusencia) return true;
-            if (existenteEsAusencia) return true;
+            // Las ausencias (vacaciones/licencia/falta/suspensión) solo chocan si son el mismo día exacto
+            if (offsetDias === 0) {
+                if (esAusencia) return true;
+                if (existenteEsAusencia) return true;
+            }
 
-            // Validación de cruce de horarios (Superposición)
+            // Validación de cruce de horarios (Superposición), en minutos relativos a la medianoche del turno nuevo
             if (t.e && t.s && e && s) {
                 const minEntradaNuevo = parseInt(e.split(':')[0]) * 60 + parseInt(e.split(':')[1]);
                 let minSalidaNuevo = parseInt(s.split(':')[0]) * 60 + parseInt(s.split(':')[1]);
                 if (minSalidaNuevo <= minEntradaNuevo) minSalidaNuevo += 1440; // Cruce de medianoche
 
-                const minEntradaExistente = parseInt(t.e.split(':')[0]) * 60 + parseInt(t.e.split(':')[1]);
-                let minSalidaExistente = parseInt(t.s.split(':')[0]) * 60 + parseInt(t.s.split(':')[1]);
+                let minEntradaExistente = (parseInt(t.e.split(':')[0]) * 60 + parseInt(t.e.split(':')[1])) + offsetDias * 1440;
+                let minSalidaExistente = (parseInt(t.s.split(':')[0]) * 60 + parseInt(t.s.split(':')[1])) + offsetDias * 1440;
                 if (minSalidaExistente <= minEntradaExistente) minSalidaExistente += 1440;
 
                 // Si el nuevo empieza antes de que termine el otro Y termina después de que empieza el otro = CHOCAN
@@ -3841,10 +3898,33 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         const nuevoTurno = { f, l, e, s, ferE, ferS, mF: estFeriado, vac, lic, falta, susp, t: diff, n: noct };
 
-        const mesTurno = f.substring(0, 7);
+        // ⚠️ Aviso de turno de 24hs: entrada y salida "iguales" (diff===24) suele ser
+        // un despiste (p.ej. quedó la Salida por defecto sin tocar), no lo que se quería cargar.
+        if (!esAusencia && diff === 24) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = window.turnoEnEdicion ? "GUARDAR CAMBIOS" : "AGENDAR GUARDIA";
+            document.getElementById('modal-title').innerText = "⚠️ ¿Turno de 24 horas?";
+            document.getElementById('modal-text').innerText = `Entrada ${e} y Salida ${s} dan un turno de 24hs completas. ¿Es correcto?`;
+            document.getElementById('confirm-btn').innerText = "Sí, es correcto";
+            document.getElementById('custom-modal').style.display = 'flex';
+            confirmCallback = () => {
+                document.getElementById('confirm-btn').innerText = "Sí, borrar"; // vuelve al texto default del modal de borrado
+                btnSubmit.disabled = true;
+                btnSubmit.innerText = "⏳ GUARDANDO...";
+                window.persistirTurno(nuevoTurno);
+            };
+            return;
+        }
+
+        window.persistirTurno(nuevoTurno);
+    }
+
+    window.persistirTurno = async function(nuevoTurno) {
+        const btnSubmit = document.getElementById('btn-submit-turno');
+        const mesTurno = nuevoTurno.f.substring(0, 7);
         delete window._turnosCache[mesTurno];
         delete window._turnosEstaticoCache[mesTurno];
-        
+
         try {
             if (window.turnoEnEdicion) {
                 await updateDoc(doc(db, "usuarios", window.currentUser.uid, "turnos", window.turnoEnEdicion), nuevoTurno);
@@ -3879,6 +3959,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     window.abrirModalBorrar = function(id, fecha, lugar) {
         document.getElementById('modal-title').innerText = "¿Eliminar Turno?";
         document.getElementById('modal-text').innerText = `${fecha} - ${lugar}`;
+        document.getElementById('confirm-btn').innerText = "Sí, borrar"; // por si quedó "Sí, es correcto" del aviso de 24hs
         document.getElementById('custom-modal').style.display = 'flex';
         confirmCallback = () => window.borrarTurnoNube(id);
     }
@@ -3901,7 +3982,12 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             // 🔴 FIX: Si estábamos editando este turno que acabamos de borrar, cancelamos la edición
             if (window.turnoEnEdicion === id) window.cancelarEdicion();
             
-        } catch (e) { }
+        } catch (e) {
+            // Antes esto se tragaba el error en silencio: si fallaba (sin señal, permisos),
+            // el turno seguía ahí y el usuario no se enteraba de nada.
+            console.error("No se pudo borrar el turno:", e);
+            window.showToast("⚠️ No se pudo borrar el turno. Revisá tu conexión.", "danger");
+        }
     }
 
 
@@ -3996,7 +4082,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 if (t.e && t.s) {
                     const [hE, mE] = t.e.split(':').map(Number);
                     const [hS, mS] = t.s.split(':').map(Number);
-                    if (hS < hE || (hS === hE && mS < mE)) {
+                    // <= (no solo <): un turno de 24hs exactas también cruza a la medianoche del día siguiente
+                    if (hS < hE || (hS === hE && mS <= mE)) {
                         let dSalida = new Date(t.f + "T12:00:00");
                         dSalida.setDate(dSalida.getDate() + 1);
                         const fSalidaStr = `${dSalida.getFullYear()}-${String(dSalida.getMonth() + 1).padStart(2, '0')}-${String(dSalida.getDate()).padStart(2, '0')}`;
@@ -4189,6 +4276,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const totalBruto = sumaRemunerativa + sumaNoRemunerativa;
         const totalNeto = totalBruto - descuentosLey - aporteSolidario;
         
+        const avisoDesact = document.getElementById('aviso-valores-desactualizados');
+        if (avisoDesact) avisoDesact.style.display = valMes.valoresDesactualizados ? 'block' : 'none';
+
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
@@ -4637,17 +4727,36 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         actualizarSeleccionNumeros(valorActual);
     }
 
-    function abrirRelojHora(campo) {
+    function abrirRelojHora(campo, esPasoEncadenado) {
         const hidden = document.getElementById(campo);
         if (!hidden || hidden.disabled) return;
         campoRelojActual = campo;
 
-        const actual = hidden.value || '00:00';
+        let actual = hidden.value;
+        // Si vamos a cargar la Salida y todavía no tiene valor, la prellenamos con
+        // Entrada + 12hs (el esquema habitual de guardia) en vez de arrancar en 00:00 —
+        // así hay menos riesgo de guardar sin querer un turno de 24hs completas.
+        if (!actual && campo === 'salida') {
+            const entradaHidden = document.getElementById('entrada');
+            if (entradaHidden && entradaHidden.value) {
+                const [hE, mE] = entradaHidden.value.split(':').map(Number);
+                actual = `${String((hE + 12) % 24).padStart(2, '0')}:${String(mE).padStart(2, '0')}`;
+            }
+        }
+        actual = actual || '00:00';
         const partes = actual.split(':');
         horaSeleccionada = parseInt(partes[0], 10) || 0;
         minutoSeleccionado = parseInt(partes[1], 10) || 0;
 
-        document.getElementById('reloj-titulo').textContent = campo === 'entrada' ? '⏰ Hora de Entrada' : '⏰ Hora de Salida';
+        // Etiqueta de "Paso 1/2" - "Paso 2/2" para que se entienda que el modal
+        // sigue abierto a propósito y no que se trabó.
+        let titulo = campo === 'entrada' ? '⏰ Hora de Entrada' : '⏰ Hora de Salida';
+        const salidaHidden = document.getElementById('salida');
+        const hayFlujoDeDosPasos = salidaHidden && !salidaHidden.disabled;
+        if (campo === 'entrada' && hayFlujoDeDosPasos) titulo += ' · Paso 1/2';
+        if (campo === 'salida' && esPasoEncadenado) titulo += ' · Paso 2/2';
+
+        document.getElementById('reloj-titulo').textContent = titulo;
         document.getElementById('reloj-hh-txt').textContent = String(horaSeleccionada).padStart(2, '0');
         document.getElementById('reloj-mm-txt').textContent = String(minutoSeleccionado).padStart(2, '0');
         document.getElementById('modal-rueda-hora').style.display = 'flex';
@@ -4673,7 +4782,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if (campoRelojActual === 'entrada') {
             const salidaHidden = document.getElementById('salida');
             if (salidaHidden && !salidaHidden.disabled) {
-                abrirRelojHora('salida');
+                abrirRelojHora('salida', true);
                 return;
             }
         }
