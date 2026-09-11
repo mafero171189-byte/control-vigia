@@ -400,6 +400,13 @@
         .admin-msg-box.collapsed .admin-section-arrow { transform: rotate(-90deg); }
         .admin-msg-box.collapsed { padding-bottom: 15px; }
         .admin-msg-box textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text-main); font-family: inherit; font-size: 0.9rem; resize: vertical; min-height: 80px; box-sizing: border-box; margin-bottom: 10px; outline: none; }
+
+        /* --- Mismo mecanismo de acordeón, para la Guía de Uso (evita el scroll infinito) --- */
+        .guia-box { background: var(--input-bg); border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: 0.3s; }
+        .guia-box.collapsed .admin-section-content { display: none; }
+        .guia-box.collapsed .admin-section-arrow { transform: rotate(-90deg); }
+        .guia-box .admin-section-header { padding: 10px 12px; }
+        .guia-box .admin-section-content { padding: 0 12px 12px 12px; }
         .btn-msg { background: var(--admin); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
 
         .user-list-card { background: var(--card-bg); border: 1px solid var(--border); padding: 15px; border-radius: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
@@ -789,132 +796,183 @@
             <p style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; border-left: 4px solid var(--accent); margin-top: 0;">
                 <b style="color: var(--accent);">⚖️ BASE LEGAL:</b> Ley de Contrato de Trabajo (LCT) + Convenio Colectivo 507/07 UPSRA. Datos precargados: <b>Acta CAESI-UPSRA julio-diciembre 2026</b>, homologada DI-2026-897 (17/07/2026).
             </p>
+            <p style="font-size:0.72rem; color:var(--text-dim); margin:0 0 10px 0;">👇 Tocá cada tema para abrirlo. Buscá el que te sirve, no hace falta leer todo de corrido.</p>
 
             <!-- SECCIÓN 1: CONFIGURACIÓN INICIAL -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">⚙️ 1. Configurar Valores Iniciales</b></p>
-            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                <b>Datos obligatorios:</b><br>
-                • <b>Antigüedad:</b> Ingresá solo los años (ej: 12). Sistema calcula +1% por año sobre el básico. Recalcula automáticamente cada mes.<br>
-                • <b>Horas base mensuales:</b> Por defecto 200hs. Cambialo solo si tu cronograma es diferente (ej: jornada reducida).<br><br>
-                <b>Opcional — Sobrescribir valores UPSRA:</b><br>
-                Si tu empresa paga diferente al acta 2026, podés pisar en <b>Configuración</b>: básico, viático, presentismo, nocturnidad, etc. Dejando vacío = vuelve al automático UPSRA.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--accent);">⚙️ 1. Configurar Valores Iniciales</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>Datos obligatorios:</b><br>
+                    • <b>Antigüedad:</b> Ingresá solo los años (ej: 12). Sistema calcula +1% por año sobre el básico. Recalcula automáticamente cada mes.<br>
+                    • <b>Horas base mensuales:</b> Por defecto 200hs. Cambialo solo si tu cronograma es diferente (ej: jornada reducida).<br><br>
+                    <b>Opcional — Sobrescribir valores UPSRA:</b><br>
+                    Si tu empresa paga diferente al acta 2026, podés pisar en <b>Configuración</b>: básico, viático, presentismo, nocturnidad, etc. Dejando vacío = vuelve al automático UPSRA.
+                </div>
             </div>
 
             <!-- SECCIÓN 2: REGISTRO DE GUARDIAS -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🛡️ 2. Registrar un Turno</b></p>
-            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                <b>Campos obligatorios:</b><br>
-                • Fecha (automáticamente detecta si es feriado).<br>
-                • Horario entrada → salida (ej: 19:00 → 07:00).<br>
-                • Puesto / Servicio (donde trabajaste).<br><br>
-                <b>Cálculos automáticos:</b><br>
-                • Horas totales del turno.<br>
-                • <b>Nocturnidad (AEN):</b> suma las horas que caen entre 21:00 y 06:00 hs. Multiplica por tu <b>valor hora real</b> (Básico+Antigüedad+Presentismo) ÷ 1000. Esto es <b>remunerativo</b> — aparece en tu recibo como "Ad.Esp.Nocturnidad AEN".
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--accent);">🛡️ 2. Registrar un Turno</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>Campos obligatorios:</b><br>
+                    • Fecha (automáticamente detecta si es feriado).<br>
+                    • Horario entrada → salida (ej: 19:00 → 07:00).<br>
+                    • Puesto / Servicio (donde trabajaste).<br><br>
+                    <b>Cálculos automáticos:</b><br>
+                    • Horas totales del turno.<br>
+                    • <b>Nocturnidad (AEN):</b> suma las horas que caen entre 21:00 y 06:00 hs. Multiplica por tu <b>valor hora real</b> (Básico+Antigüedad+Presentismo) ÷ 1000. Esto es <b>remunerativo</b> — aparece en tu recibo como "Ad.Esp.Nocturnidad AEN".
+                </div>
             </div>
 
             <!-- SECCIÓN 3: FERIADOS -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🚩 3. Feriados y Recargos</b></p>
-            <div style="background: rgba(245, 158, 11, 0.07); border-left: 3px solid var(--warning); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                <b>Detección automática:</b> Feriados nacionales 2026 ya están precargados. Al ingresar la fecha del turno, la app detecta sola si cae en feriado.<br><br>
-                <b>Corte a las 00:00 hs:</b> Si el turno cruza de un día normal a feriado (ej: entrada 19/7 a salida 20/7, siendo 20/7 feriado), solo las horas del 20/7 llevan recargo. Art. 30 LCT.<br><br>
-                <b>Feriados Puente 2026:</b> 23/3, 10/7, 7/12. Ley dice que se pagan doble. En <b>Configuración</b> elegís si tu empresa los reconoce o no — la app ajusta los cálculos.<br><br>
-                <b>Tipo de recargo:</b> También en <b>Configuración</b>:<br>
-                • <b>Doble (100% extra)</b> — ley estándar. Hora normal + 100% recargo.<br>
-                • <b>50% extra</b> — si tu empresa lo paga así, elegí esta opción.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--warning);">🚩 3. Feriados y Recargos</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>Detección automática:</b> Feriados nacionales 2026 ya están precargados. Al ingresar la fecha del turno, la app detecta sola si cae en feriado.<br><br>
+                    <b>Corte a las 00:00 hs:</b> Si el turno cruza de un día normal a feriado (ej: entrada 19/7 a salida 20/7, siendo 20/7 feriado), solo las horas del 20/7 llevan recargo. Art. 30 LCT.<br><br>
+                    <b>Feriados Puente 2026:</b> 23/3, 10/7, 7/12. Ley dice que se pagan doble. En <b>Configuración</b> elegís si tu empresa los reconoce o no — la app ajusta los cálculos.<br><br>
+                    <b>Tipo de recargo:</b> También en <b>Configuración</b>:<br>
+                    • <b>Doble (100% extra)</b> — ley estándar. Hora normal + 100% recargo.<br>
+                    • <b>50% extra</b> — si tu empresa lo paga así, elegí esta opción.
+                </div>
             </div>
 
             <!-- SECCIÓN 4: VIÁTICOS -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🚗 4. Viáticos — Pago por Día Trabajado</b></p>
-            <div style="background: rgba(34, 197, 94, 0.07); border-left: 3px solid var(--success); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                <b>Cláusula 10ª del Acta UPSRA Jul-Dic 2026:</b> Se paga <b>por cada día efectivamente trabajado</b>. Valor diario fijo:<br>
-                • Julio: $20.220 | Agosto: $20.580 | Septiembre: $20.960 | Octubre: $21.360 | Nov-Dic: $21.800<br><br>
-                <b>Regla clave:</b> Si el mes tiene vacaciones o licencias, el viático se paga SOLO por los días que trabajaste, no por el mes completo.<br>
-                Ej: 14 días de vacaciones + 8 días trabajados = viático por 8 días × $20.960 = $167.680 (en septiembre).<br><br>
-                <b>Excepciones (mes sin vacaciones):</b> Si trabajaste menos de 25 turnos pero fue por falta de servicios (no por falta tuya), la empresa debe pagarte el mes completo (25 días). Sistema lo calcula automáticamente.<br><br>
-                <b>No afectan el viático:</b> Licencia, vacaciones (como concepto separado), turnos de 8hs vs 12hs. Cada día = 1 unidad, sin importar la duración.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--success);">🚗 4. Viáticos — Pago por Día Trabajado</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>Cláusula 10ª del Acta UPSRA Jul-Dic 2026:</b> Se paga <b>por cada día efectivamente trabajado</b>. Valor diario fijo:<br>
+                    • Julio: $20.220 | Agosto: $20.580 | Septiembre: $20.960 | Octubre: $21.360 | Nov-Dic: $21.800<br><br>
+                    <b>Regla clave:</b> Si el mes tiene vacaciones o licencias, el viático se paga SOLO por los días que trabajaste, no por el mes completo.<br>
+                    Ej: 14 días de vacaciones + 8 días trabajados = viático por 8 días × $20.960 = $167.680 (en septiembre).<br><br>
+                    <b>Excepciones (mes sin vacaciones):</b> Si trabajaste menos de 25 turnos pero fue por falta de servicios (no por falta tuya), la empresa debe pagarte el mes completo (25 días). Sistema lo calcula automáticamente.<br><br>
+                    <b>No afectan el viático:</b> Licencia, vacaciones (como concepto separado), turnos de 8hs vs 12hs. Cada día = 1 unidad, sin importar la duración.
+                </div>
             </div>
 
             <!-- SECCIÓN 4B: APORTE SOLIDARIO 2% -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🏛️ 4b. Aporte Solidario 2% (Cláusula 15ª)</b></p>
-            <div style="background: rgba(245, 158, 11, 0.07); border-left: 3px solid var(--warning); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                <b>Retención sobre el básico puro:</b> 2% del sueldo básico de convenio (sin antigüedad, presentismo ni otros adicionales).<br><br>
-                <b>¿Quién lo paga?</b> SOLO trabajadores <b>NO afiliados a UPSRA</b>. Si estás afiliado, tu cuota sindical mensual ya contempla este concepto — no se descuenta aparte.<br><br>
-                <b>En la app:</b> En <b>Configuración</b> hay un checkbox "Aplicar Aporte Solidario 2%":<br>
-                • Tildado = descuenta (eres NO afiliado).<br>
-                • Destildado = no descuenta (eres afiliado).<br><br>
-                <b>Vigencia:</b> Solo julio-diciembre 2026 (homologación 17/07/2026). Fuera de esa ventana, la app no descuenta nada.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--warning);">🏛️ 4b. Aporte Solidario 2% (Cláusula 15ª)</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>Retención sobre el básico puro:</b> 2% del sueldo básico de convenio (sin antigüedad, presentismo ni otros adicionales).<br><br>
+                    <b>¿Quién lo paga?</b> SOLO trabajadores <b>NO afiliados a UPSRA</b>. Si estás afiliado, tu cuota sindical mensual ya contempla este concepto — no se descuenta aparte.<br><br>
+                    <b>En la app:</b> En <b>Configuración</b> hay un checkbox "Aplicar Aporte Solidario 2%":<br>
+                    • Tildado = descuenta (eres NO afiliado).<br>
+                    • Destildado = no descuenta (eres afiliado).<br><br>
+                    <b>Vigencia:</b> Solo julio-diciembre 2026 (homologación 17/07/2026). Fuera de esa ventana, la app no descuenta nada.
+                </div>
             </div>
 
             <!-- SECCIÓN 5: LICENCIAS, VACACIONES Y FALTAS -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🏥 5. Licencias, Vacaciones y Ausencias</b></p>
-            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                <b>Licencia Médica / Justificada:</b><br>
-                • No descuenta del sueldo básico ni viático. Solo reduce tu meta mensual de horas proporcionalmente. Ej: 1 licencia en mes de 20 días útiles → meta baja de 200hs a 190hs.<br><br>
-                <b>Vacaciones (Art. 155 LCT + Cláusula 13ª Acta):</b><br>
-                • <b>Plus Vacacional:</b> se paga por cada día de vacaciones gozadas, hasta máximo 21 días por año. Monto: tu base habitual (Básico+Antigüedad+Presentismo) ÷ 25.<br>
-                • <b>Tope de 21 días:</b> a partir del día 22, ya no suma plus vacacional. El conteo se arrastra entre meses (ej: 15 días en diciembre + 10 en enero = cuenta hacia el tope).<br>
-                • <b>Viático durante vacaciones:</b> se paga solo por los días trabajados (no es día trabajado = no cobra viático). Ej: 14 vac + 8 días trabajados = viático por 8 días.<br><br>
-                <b>Falta Sin Aviso:</b><br>
-                • Penalización completa: pierde 100% del presentismo del mes y se descuenta el valor de ese día del básico. Una sola falta en el mes aplica esto.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--accent);">🏥 5. Licencias, Vacaciones y Ausencias</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>Licencia Médica / Justificada:</b><br>
+                    • No descuenta del sueldo básico ni viático. Solo reduce tu meta mensual de horas proporcionalmente. Ej: 1 licencia en mes de 20 días útiles → meta baja de 200hs a 190hs.<br><br>
+                    <b>Vacaciones (Art. 155 LCT + Cláusula 13ª Acta):</b><br>
+                    • <b>Plus Vacacional:</b> se paga por cada día de vacaciones gozadas, hasta máximo 21 días por año. Monto: tu base habitual (Básico+Antigüedad+Presentismo) ÷ 25.<br>
+                    • <b>Tope de 21 días:</b> a partir del día 22, ya no suma plus vacacional. El conteo se arrastra entre meses (ej: 15 días en diciembre + 10 en enero = cuenta hacia el tope).<br>
+                    • <b>Viático durante vacaciones:</b> se paga solo por los días trabajados (no es día trabajado = no cobra viático). Ej: 14 vac + 8 días trabajados = viático por 8 días.<br><br>
+                    <b>Falta Sin Aviso:</b><br>
+                    • Penalización completa: pierde 100% del presentismo del mes y se descuenta el valor de ese día del básico. Una sola falta en el mes aplica esto.
+                </div>
             </div>
 
             <!-- SECCIÓN 6: BARRAS DE PROGRESO -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">📊 6. Entender las Barras de Progreso</b></p>
-            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                Tres contadores arriba del historial muestran el avance del mes:<br>
-                • <b>Horas totales:</b> Suma todas tus horas vs. la meta (por defecto 200).<br>
-                • <b>Horas nocturnas:</b> Horas entre 21-06 hs (para tu referencia).<br>
-                • <b>Horas de feriado:</b> Horas con recargo (para tu referencia).<br><br>
-                Cuando completás la meta, el sueldo mostrado pasa de <b>"Garantizado (mes completo)"</b> a <b>"Estimado neto"</b> incluyendo extras y nocturnidad real.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--accent);">📊 6. Entender las Barras de Progreso</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    Tres contadores arriba del historial muestran el avance del mes:<br>
+                    • <b>Horas totales:</b> Suma todas tus horas vs. la meta (por defecto 200).<br>
+                    • <b>Horas nocturnas:</b> Horas entre 21-06 hs (para tu referencia).<br>
+                    • <b>Horas de feriado:</b> Horas con recargo (para tu referencia).<br><br>
+                    Cuando completás la meta, el sueldo mostrado pasa de <b>"Garantizado (mes completo)"</b> a <b>"Estimado neto"</b> incluyendo extras y nocturnidad real.
+                </div>
             </div>
 
             <!-- SECCIÓN 7: SELECTOR DE ESTADO FERIADO -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">🔀 7. Selector de Estado Feriado</b></p>
-            <div style="background: rgba(245, 158, 11, 0.07); border-left: 3px solid var(--warning); padding: 10px; margin: 0 0 6px 0; border-radius: 0 8px 8px 0;">
-                Al registrar un turno, elige cómo se procesa ese día. <b>Automático</b> (por defecto) detecta si es feriado. Tres opciones:<br><br>
-                Si necesitás corregirlo, podés ponerlo manual con estas opciones:<br><br>
-                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
-                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
-                        🟢 <b>Automático</b> — la app decide sola. Recomendado para el 99% de los casos.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--warning);">🔀 7. Selector de Estado Feriado</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    Al registrar un turno, elige cómo se procesa ese día. <b>Automático</b> (por defecto) detecta si es feriado. Tres opciones:<br><br>
+                    Si necesitás corregirlo, podés ponerlo manual con estas opciones:<br><br>
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+                        <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                            🟢 <b>Automático</b> — la app decide sola. Recomendado para el 99% de los casos.
+                        </div>
+                        <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                            🔴 <b>Entrada en feriado</b> — el día que arrancaste el turno es feriado.
+                        </div>
+                        <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                            🔴 <b>Salida en feriado</b> — cruzaste la medianoche y saliste en un día feriado.
+                        </div>
+                        <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                            🔴 <b>Ambos</b> — entraste y saliste en feriado (turno completo en día feriado).
+                        </div>
+                        <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
+                            ⚪ <b>No es feriado</b> — para anular una detección automática incorrecta.
+                        </div>
                     </div>
-                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
-                        🔴 <b>Entrada en feriado</b> — el día que arrancaste el turno es feriado.
-                    </div>
-                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
-                        🔴 <b>Salida en feriado</b> — cruzaste la medianoche y saliste en un día feriado.
-                    </div>
-                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
-                        🔴 <b>Ambos</b> — entraste y saliste en feriado (turno completo en día feriado).
-                    </div>
-                    <div style="background: rgba(30,41,59,0.7); padding: 7px 10px; border-radius: 8px;">
-                        ⚪ <b>No es feriado</b> — para anular una detección automática incorrecta.
+                    <div style="background: rgba(30,41,59,0.5); padding: 8px 10px; border-radius: 8px; margin-top: 10px; font-size: 0.8rem; color: var(--text-dim);">
+                        💡 <i>El corte siempre es exacto a las 00:00 hs. Si marcás "Salida en feriado" y salís a las 07:00 am, solo esas 7 horas se pagan con recargo.</i>
                     </div>
                 </div>
             </div>
-            <div style="background: rgba(30,41,59,0.5); padding: 8px 10px; border-radius: 8px; margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-dim);">
-                💡 <i>El corte siempre es exacto a las 00:00 hs. Si marcás "Salida en feriado" y salís a las 07:00 am, solo esas 7 horas se pagan con recargo.</i>
-            </div>
 
             <!-- SECCIÓN 8: TILDES AL REGISTRAR UN TURNO -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">✅ 8. Tildes Especiales del Turno</b></p>
-            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                Al registrar un turno, tres opciones especiales cambian su liquidación:<br><br>
-                <b>🌴 Vacaciones:</b> Suma el plus vacacional de ese día (base habitual ÷ 25). Hasta máximo 21 días por año.<br><br>
-                <b>🏥 Licencia/Carpeta Médica:</b> No descuenta del básico ni viático, solo reduce tu meta mensual de horas proporcionalmente. Ej: 1 licencia en 20 días útiles = meta baja 10 horas.<br><br>
-                <b>⚠️ Falta Sin Aviso:</b> Penalización total: pierde 100% del presentismo del mes + se descuenta el valor de ese día del básico. Una sola falta en el mes aplica esto.
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--accent);">✅ 8. Tildes Especiales del Turno</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    Al registrar un turno, tres opciones especiales cambian su liquidación:<br><br>
+                    <b>🌴 Vacaciones:</b> Suma el plus vacacional de ese día (base habitual ÷ 25). Hasta máximo 21 días por año.<br><br>
+                    <b>🏥 Licencia/Carpeta Médica:</b> No descuenta del básico ni viático, solo reduce tu meta mensual de horas proporcionalmente. Ej: 1 licencia en 20 días útiles = meta baja 10 horas.<br><br>
+                    <b>⚠️ Falta Sin Aviso:</b> Penalización total: pierde 100% del presentismo del mes + se descuenta el valor de ese día del básico. Una sola falta en el mes aplica esto.
+                </div>
             </div>
 
             <!-- SECCIÓN 9: LECTURA DEL HISTORIAL -->
-            <p style="margin-bottom: 6px;"><b style="color: var(--accent);">📋 9. Lectura del Historial</b></p>
-            <div style="background: rgba(30,41,59,0.6); border-left: 3px solid var(--accent); padding: 10px; margin: 0 0 10px 0; border-radius: 0 8px 8px 0;">
-                Cada turno muestra:<br><br>
-                <b>📅 Fecha + Horario:</b> Día y rango (ej: 19:00 a 07:00).<br>
-                <b>⏱️ Xhs (grande):</b> Horas totales del turno (cuenta para tu meta).<br>
-                <b>🌙 Xh nocturnas:</b> Horas entre 21-06 hs (para calcular plus nocturno).<br>
-                <b>🚩 Xh feriado:</b> Horas con recargo (solo si hay feriado ese día).<br><br>
-                <b>Badges (marcas especiales):</b><br>
-                🌴 Vacaciones · 🏥 Licencia · ⚠️ Falta s/ aviso · ✎ Editar · ✕ Borrar<br><br>
-                Los totales del mes se ven en los 3 contadores arriba del historial (Horas totales, Nocturnas, Feriados).
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--accent);">📋 9. Lectura del Historial</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    Cada turno muestra:<br><br>
+                    <b>📅 Fecha + Horario:</b> Día y rango (ej: 19:00 a 07:00).<br>
+                    <b>⏱️ Xhs (grande):</b> Horas totales del turno (cuenta para tu meta).<br>
+                    <b>🌙 Xh nocturnas:</b> Horas entre 21-06 hs (para calcular plus nocturno).<br>
+                    <b>🚩 Xh feriado:</b> Horas con recargo (solo si hay feriado ese día).<br><br>
+                    <b>Badges (marcas especiales):</b><br>
+                    🌴 Vacaciones · 🏥 Licencia · ⚠️ Falta s/ aviso · ✎ Editar · ✕ Borrar<br><br>
+                    Los totales del mes se ven en los 3 contadores arriba del historial (Horas totales, Nocturnas, Feriados).
+                </div>
             </div>
 
             <p style="font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 15px; padding-top: 10px;">
