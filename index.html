@@ -3862,8 +3862,18 @@ window.guardarLicenciasGlobal = async function() {
 
     window.hacerLicenciaIlimitada = function() {
         if (!window.usuarioModificarUID) return;
-        window.actualizarDiasUsuario(window.usuarioModificarUID, "");
-        cerrarModalModificarDias();
+        // Confirmación antes de aplicar: antes se establecía de una con un solo toque,
+        // sin margen para deshacer un toque accidental.
+        document.getElementById('modal-title').innerText = "♾️ ¿Licencia ILIMITADA?";
+        document.getElementById('modal-text').innerText = "El usuario va a quedar sin fecha de vencimiento hasta que la modifiques manualmente.";
+        document.getElementById('confirm-btn').innerText = "Sí, poner ilimitada";
+        document.getElementById('custom-modal').style.display = 'flex';
+        const uidAConfirmar = window.usuarioModificarUID; // por si el modal de abajo se cierra antes de confirmar
+        confirmCallback = () => {
+            document.getElementById('confirm-btn').innerText = "Sí, borrar"; // vuelve al texto default del modal de borrado
+            window.actualizarDiasUsuario(uidAConfirmar, "");
+            cerrarModalModificarDias();
+        };
     }
 
 window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
