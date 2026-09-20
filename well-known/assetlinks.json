@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.pages.control_vigia.twa",
+        "sha256_cert_fingerprints": ["18:42:E6:B0:C8:DB:D8:3A:33:1D:F4:51:BC:40:F6:C4:56:59:57:94:05:9C:37:E8:03:43:5A:35:7D:A4:00:E1"]
+      }
+    }]
