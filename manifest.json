@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "Control Vigía",
+  "short_name": "Control Vigía",
+  "description": "Registro de horas y cálculo de sueldo para vigiladores (UPSRA / CCT 507/07): nocturnas, feriados, antigüedad, horas extra y aguinaldo.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

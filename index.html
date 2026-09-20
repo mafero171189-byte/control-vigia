@@ -10,6 +10,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     
     <style>
         :root {
@@ -5032,13 +5035,21 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     const stringManifest = JSON.stringify(manifestJSON);
     const blobManifest = new Blob([stringManifest], {type: 'application/json'});
     const manifestURL = URL.createObjectURL(blobManifest);
-    document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
+    // Manifest REAL (manifest.json subido junto al index.html): es el que leen PWA Builder y las tiendas.
+    // Si el archivo no está (o el hosting devuelve otra cosa, como el index.html), se usa el generado
+    // en memoria de siempre para que la instalación desde el navegador siga funcionando.
+    fetch('manifest.json', { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('sin manifest.json')))
+        .then(j => { if (!j || !j.name) throw new Error('manifest.json inválido'); })
+        .catch(() => {
+            const l = document.querySelector('link[rel="manifest"]');
+            if (l) l.href = manifestURL;
+            else document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
+        });
 // 2. Crear y registrar el Service Worker (Con filtro para evitar bloqueo en la PC)
-    const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('fetch', (e) => {});";
-    const blobSW = new Blob([swCode], {type: 'application/javascript'});
-    const swURL = URL.createObjectURL(blobSW);
+    // Antes se registraba desde una URL blob:, y el navegador lo rechaza (los service workers tienen que ser un archivo real).
     if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
-        navigator.serviceWorker.register(swURL).then(() => console.log('SW inyectado')).catch(console.error);
+        navigator.serviceWorker.register('sw.js').then(() => console.log('SW registrado')).catch(e => console.warn('No se pudo registrar sw.js (¿está subido junto al index.html?):', e && e.message));
     } else if (window.location.protocol === 'file:') {
         console.warn("Ejecutando en modo local (doble clic). Se omite el Service Worker para evitar pantalla en blanco.");
     }
