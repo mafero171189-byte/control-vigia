@@ -633,7 +633,7 @@
         <h3 style="color: var(--accent); margin-top:0; margin-bottom: 15px;">Valores de Cobro</h3>
         
         <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-main); text-align: left; line-height: 1.4;">
-            <b>💡 ¡Personalizá tu sueldo!</b> Elegí tu categoría y poné tus años de antigüedad. El sistema cargará los valores de UPSRA automáticamente.
+            <b>💡 ¡Personalizá tu sueldo!</b> Elegí tu categoría y poné tu fecha de ingreso (o tus años de antigüedad). El sistema cargará los valores de UPSRA automáticamente.
         </div>
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-main); text-align: left; line-height: 1.4;">
     <b style="color: var(--warning);">⚙️ Ajustes Universales:</b><br>
@@ -650,6 +650,14 @@
             </select>
         </div>
 
+        <div style="text-align: left; margin-bottom: 10px;">
+            <label style="color: var(--accent);">Fecha de ingreso (opcional)</label>
+            <input type="date" id="valFechaIngreso" oninput="actualizarAntiguedadConfigUI()" onchange="actualizarAntiguedadConfigUI()">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-top: 4px;">
+                <div id="antiguedad-auto-info" style="font-size: 0.72rem; color: var(--text-dim); line-height: 1.35;"></div>
+                <button type="button" id="btn-quitar-fecha-ingreso" onclick="quitarFechaIngreso()" style="display: none; flex-shrink: 0; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">✕ Quitar</button>
+            </div>
+        </div>
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
             <div><label>Sueldo Básico ($)</label><input type="text" inputmode="decimal" id="valBasico" oninput="formatearMiles(this)"></div>
             <div><label style="color: var(--accent);">Antigüedad (Años)</label><input type="number" id="valAntiguedad"></div>
@@ -665,12 +673,6 @@
         <div class="form-row" style="text-align: left; margin-bottom: 10px;">
             <div><label>Adi. No Rem. ($)</label><input type="text" inputmode="decimal" id="valNoRem" oninput="formatearMiles(this)"></div>
             <div><label>Desc. por Ley (%)</label><input type="number" id="valDescuentos"></div>
-        </div>
-        <div class="form-row" style="text-align: left; margin-bottom: 10px; align-items: center;">
-            <div style="grid-column: span 2; display:flex; align-items:center; gap:8px;">
-                <input type="checkbox" id="valAporteSolidario" style="width:18px; height:18px; margin:0;">
-                <label for="valAporteSolidario" style="margin:0; font-size:0.85rem; line-height:1.3;">Aplicar <b>Aporte Solidario 2%</b> sobre el básico (Cláusula 15ª, Acta UPSRA Jul-Dic 2026). Tildalo <b>solo si NO estás afiliado a UPSRA</b>: si ya estás afiliado, tu cuota sindical mensual ya cubre este concepto y no corresponde descontarlo aparte. Rige de <b>julio a diciembre 2026</b>, según la homologación DI-2026-897 del 17/07/2026.</label>
-            </div>
         </div>
         <div class="form-row" style="text-align: left; margin-bottom: 15px;">
             <div><label>Horas Base Mes</label><input type="number" id="valHorasBase"></div>
@@ -694,6 +696,17 @@
                     <option value="si">Me los pagan (Según Ley)</option>
                     <option value="no">Mi empresa NO los paga</option>
                 </select>
+            </div>
+        </div>
+
+        <div style="text-align: left; margin-bottom: 15px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" id="valAporteSolidario" style="width: 18px; height: 18px; margin: 1px 0 0 0; flex-shrink: 0;">
+                <div style="min-width: 0;">
+                    <label for="valAporteSolidario" style="display: inline; margin: 0; font-size: 0.85rem; line-height: 1.3; font-weight: 400; color: var(--text-main);">Aplicar <b>Aporte Solidario 2%</b> sobre el básico. Tildalo <b>solo si NO estás afiliado a UPSRA</b>.</label>
+                    <button type="button" onclick="toggleDetalleAporteSolidario(this)" style="background: none; border: none; padding: 0 0 0 4px; color: var(--accent); font-size: 0.8rem; text-decoration: underline; cursor: pointer;">Ver más</button>
+                    <div id="aporte-solidario-detalle" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-dim); line-height: 1.4;">Cláusula 15ª, Acta UPSRA Jul-Dic 2026. Si ya estás afiliado, tu cuota sindical mensual ya cubre este concepto y no corresponde descontarlo aparte. Rige de <b>julio a diciembre 2026</b>, según la homologación DI-2026-897 del 17/07/2026.</div>
+                </div>
             </div>
         </div>
 
@@ -806,7 +819,7 @@
                 </div>
                 <div class="admin-section-content">
                     <b>Datos obligatorios:</b><br>
-                    • <b>Antigüedad:</b> Ingresá solo los años (ej: 12). Sistema calcula +1% por año sobre el básico. Recalcula automáticamente cada mes.<br>
+                    • <b>Antigüedad:</b> Podés cargar tu <b>fecha de ingreso</b> (opcional) y se calcula sola: el año nuevo cuenta desde el mes en que lo cumplís (ej: ingreso 10/03/2015 → 12 años desde marzo 2027). Si no sabés la fecha, ingresá solo los años (ej: 12) y actualizalos vos cuando cambien. Si cargás la fecha, los años manuales no se usan. Sistema calcula +1% por año sobre el básico.<br>
                     • <b>Horas base mensuales:</b> Por defecto 200hs. Cambialo solo si tu cronograma es diferente (ej: jornada reducida).<br><br>
                     <b>Opcional — Sobrescribir valores UPSRA:</b><br>
                     Si tu empresa paga diferente al acta 2026, podés pisar en <b>Configuración</b>: básico, viático, presentismo, nocturnidad, etc. Dejando vacío = vuelve al automático UPSRA.
@@ -1251,7 +1264,7 @@
         </div>
         <p id="progress-status" style="font-size: 0.65rem; color: var(--text-dim); margin: 8px 0 0 0; text-align: center; font-style: italic;">Cargá turnos para ver tu avance</p>
     </div>
-    <button class="btn-whatsapp" onclick="enviarWhatsapp()"><span>📲 REPORTE DE <span id="mesBtnLabel">...</span></span></button>
+    <button class="btn-whatsapp" onclick="abrirReporte()"><span>📄 REPORTE DE <span id="mesBtnLabel">...</span></span></button>
 
     <div class="glass-form" id="main-form">
         <button class="btn-config-main" onclick="abrirModalConfig()">⚙️ Configurar Valores de Cobro</button>
@@ -1869,6 +1882,25 @@
     const limpiar = (str) => { if(!str || str.trim() === "") return ""; return str.toString().replace(/\./g, "").replace(/,/g, "."); };
 
     window.valoresUPSRA = window.valoresUPSRA || {}; 
+    // 🏅 ANTIGÜEDAD AUTOMÁTICA (opcional): si hay una fecha de ingreso válida, la antigüedad se calcula
+    // sola para el mes que se está mirando; si no, vale el número de años cargado a mano.
+    // Regla: el año nuevo cuenta desde el MES en que se cumple (ingreso 13/11/2013 -> 13 años desde noviembre 2026).
+    window.parsearFechaIngreso = function(str) {
+        if (!str || !/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
+        const [a, m, d] = str.split('-').map(Number);
+        const f = new Date(a, m - 1, d);
+        if (f.getFullYear() !== a || f.getMonth() !== m - 1 || f.getDate() !== d) return null; // fecha que no existe (ej. 31/02)
+        if (a < 1950 || f > new Date()) return null; // futura o absurda
+        return { año: a, mes: m - 1, dia: d };
+    };
+    window.calcularAntiguedadAños = function(fechaIngresoStr, fObj) {
+        const ing = window.parsearFechaIngreso(fechaIngresoStr);
+        if (!ing) return null; // sin fecha válida -> se usa el valor manual
+        let años = fObj.getFullYear() - ing.año;
+        if (fObj.getMonth() < ing.mes) años--; // todavía no llegó el mes del aniversario
+        return Math.max(0, años);
+    };
+
     window.obtenerValoresMes = function(fObj, categoriaForzada = null) {
         if (!fObj) fObj = new Date();
         const año = fObj.getFullYear();
@@ -1882,10 +1914,15 @@
         // bien tanto en el objeto devuelto como en el resto de la función.
         if (categoria === 'arma') categoria = 'general';
 
+        // Si hay fecha de ingreso válida manda sobre los años manuales (que quedan guardados, pero sin usarse)
+        const antAuto = window.calcularAntiguedadAños(p.fechaIngreso, fObj);
+
         let v = {
             categoria: categoria,
             basico: parseFloat(p.basico),
-            antiguedadAños: parseInt(p.antiguedad) || 0,
+            antiguedadAños: antAuto !== null ? antAuto : (parseInt(p.antiguedad) || 0),
+            antiguedadAutomatica: antAuto !== null,
+            fechaIngreso: antAuto !== null ? p.fechaIngreso : null,
             hora: parseFloat(p.hora),
             noct: parseFloat(p.noct),
             viatico: parseFloat(p.viatico),
@@ -1991,6 +2028,45 @@
         window.abrirModalConfig(selectCat);
     }
 
+    // Muestra/oculta el campo manual de años según haya una fecha de ingreso válida
+    window.actualizarAntiguedadConfigUI = function() {
+        const inpF = document.getElementById('valFechaIngreso');
+        const inpA = document.getElementById('valAntiguedad');
+        const info = document.getElementById('antiguedad-auto-info');
+        const btnQuitar = document.getElementById('btn-quitar-fecha-ingreso');
+        if (!inpF || !inpA || !info) return;
+        const ing = window.parsearFechaIngreso(inpF.value);
+        if (!ing) {
+            inpA.disabled = false;
+            inpA.style.opacity = '';
+            if (btnQuitar) btnQuitar.style.display = inpF.value ? 'inline-block' : 'none';
+            info.style.color = inpF.value ? 'var(--danger)' : 'var(--text-dim)';
+            info.innerHTML = inpF.value
+                ? '⚠️ Fecha no válida (no puede ser futura). Mientras tanto se usan los años manuales.'
+                : 'Opcional. Si la cargás, la antigüedad se calcula sola y no tenés que actualizarla cada año. Si no la sabés, cargá los años en el campo de abajo. Poné la fecha desde la que te reconocen la antigüedad.';
+            return;
+        }
+        const hoy = new Date();
+        const añosHoy = window.calcularAntiguedadAños(inpF.value, hoy);
+        inpA.disabled = true;
+        inpA.style.opacity = '0.5';
+        if (btnQuitar) btnQuitar.style.display = 'inline-block';
+        info.style.color = 'var(--success)';
+        info.innerHTML = `✅ Se calcula sola: <b>${añosHoy} ${añosHoy === 1 ? 'año' : 'años'}</b> hoy. Próximo aumento: <b>${window.meses[ing.mes].toLowerCase()} ${ing.año + añosHoy + 1}</b>. Los años manuales quedan guardados, pero no se usan.`;
+    }
+    window.toggleDetalleAporteSolidario = function(btn) {
+        const det = document.getElementById('aporte-solidario-detalle');
+        if (!det) return;
+        const abierto = det.style.display !== 'none';
+        det.style.display = abierto ? 'none' : 'block';
+        if (btn) btn.innerText = abierto ? 'Ver más' : 'Ver menos';
+    }
+    window.quitarFechaIngreso = function() {
+        const inpF = document.getElementById('valFechaIngreso');
+        if (inpF) inpF.value = '';
+        window.actualizarAntiguedadConfigUI();
+    }
+
     window.abrirModalConfig = function(categoriaForzada = null) {
         const p = window.preciosGuardados || {};
         const categoriaActual = categoriaForzada || p.categoria || 'general';
@@ -2012,8 +2088,14 @@
             document.getElementById('valAntiguedad').placeholder = "👉 Configurar tu antigüedad";
             document.getElementById('valAntiguedad').value = p.antiguedad !== undefined ? p.antiguedad : "";
         }
+        if (document.getElementById('valFechaIngreso')) {
+            const hoy = new Date();
+            document.getElementById('valFechaIngreso').max = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+            document.getElementById('valFechaIngreso').value = p.fechaIngreso || "";
+            window.actualizarAntiguedadConfigUI();
+        }
         
-        const montoAnt = auto.basico * ((parseInt(p.antiguedad) || 0) / 100);
+        const montoAnt = auto.basico * ((auto.antiguedadAños || 0) / 100);
         const autoHora = (auto.basico + auto.presentismo + montoAnt) / auto.horasBase;
         
         if(document.getElementById('valHora')) {
@@ -2042,6 +2124,12 @@
         
         if(document.getElementById('valAporteSolidario')) {
             document.getElementById('valAporteSolidario').checked = p.aporteSolidario !== false;
+        }
+        const detAporte = document.getElementById('aporte-solidario-detalle');
+        if (detAporte) {
+            detAporte.style.display = 'none';
+            const btnVerMas = detAporte.parentElement.querySelector('button');
+            if (btnVerMas) btnVerMas.innerText = 'Ver más';
         }
         if(document.getElementById('valDescuentos')) {
             document.getElementById('valDescuentos').placeholder = "Auto: 17%";
@@ -3658,10 +3746,10 @@ async function cargarDatosNube() {
                     mH += h; mN += n; mF += f;
                     const horario = (t.e && t.s) ? `${t.e}-${t.s}` : '';
                     const marca = t.vac ? 'Vacaciones' : (f > 0 ? 'Feriado' : '');
-                    filasMes.push([fechaFmt, t.l || 'Puesto', horario, h.toFixed(1), n.toFixed(1), marca]);
+                    filasMes.push([fechaFmt, t.l || 'Puesto', horario, fmtH(h), fmtH(n), marca]);
                 });
                 totH += mH; totN += mN; totF += mF; totTurnos += turnos.length;
-                resumenFilas.push([nombresMes[mes], turnos.length, mH.toFixed(1), mN.toFixed(1), mF.toFixed(1)]);
+                resumenFilas.push([nombresMes[mes], turnos.length, fmtH(mH), fmtH(mN), fmtH(mF)]);
                 detallePorMes.push({ mes, filas: filasMes, mH, mN, mF });
             }
 
@@ -3675,7 +3763,7 @@ async function cargarDatosNube() {
                 startY: 32,
                 head: [['Mes', 'Turnos', 'Hs Totales', 'Hs Nocturnas', 'Hs Feriado']],
                 body: resumenFilas,
-                foot: [['TOTAL', totTurnos, totH.toFixed(1), totN.toFixed(1), totF.toFixed(1)]],
+                foot: [['TOTAL', totTurnos, fmtH(totH), fmtH(totN), fmtH(totF)]],
                 theme: 'striped',
                 headStyles: { fillColor: [56, 189, 248] },
                 footStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
@@ -3691,7 +3779,7 @@ async function cargarDatosNube() {
                 docPDF.text(`${nombresMes[dm.mes]} ${año}`, 14, 18);
                 docPDF.setFontSize(9);
                 docPDF.setTextColor(100);
-                docPDF.text(`${dm.mH.toFixed(1)} hs totales · ${dm.mN.toFixed(1)} hs nocturnas · ${dm.mF.toFixed(1)} hs feriado`, 14, 24);
+                docPDF.text(`${fmtH(dm.mH)} hs totales · ${fmtH(dm.mN)} hs nocturnas · ${fmtH(dm.mF)} hs feriado`, 14, 24);
                 docPDF.autoTable({
                     startY: 29,
                     head: [['Fecha', 'Puesto', 'Horario', 'Hs', 'Noct.', 'Marca']],
@@ -3905,12 +3993,17 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
     window.guardarConfig = async function() {
         if (!window.currentUser) return;
+        const fechaIngresoVal = document.getElementById('valFechaIngreso') ? document.getElementById('valFechaIngreso').value : "";
+        if (fechaIngresoVal && !window.parsearFechaIngreso(fechaIngresoVal)) {
+            return window.showToast("⚠️ La fecha de ingreso no es válida (no puede ser futura)", "danger");
+        }
         const getVal = (id) => { const el = document.getElementById(id); if (!el || el.value.trim() === "") return ""; return limpiar(el.value); };
         
         const p = { 
             categoria: document.getElementById('valCategoria') ? document.getElementById('valCategoria').value : "general",
             basico: getVal('valBasico'), 
             antiguedad: document.getElementById('valAntiguedad') ? document.getElementById('valAntiguedad').value : "", 
+            fechaIngreso: fechaIngresoVal,
             hora: getVal('valHora'), 
             noct: getVal('valNoct'), 
             viatico: getVal('valViatico'), 
@@ -4245,7 +4338,9 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     }
 
 
-    function fmtH(val) { return Number.isInteger(val) || val % 1 === 0 ? val.toFixed(0) : val.toFixed(1); }
+    // Horas para mostrar: enteras sin decimales (16), y con 1 decimal solo si hace falta (16.5).
+    // Se redondea antes para que un resto de cálculo (16.000000000000004) no termine mostrándose como "16.0".
+    function fmtH(val) { const r = Math.round(val * 10) / 10; return Number.isInteger(r) ? r.toFixed(0) : r.toFixed(1); }
     const DIAS_ABREV = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
     function diaAbrev(fObj) { return DIAS_ABREV[fObj.getDay()] + "."; }
     function escapeHTML(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -4547,7 +4642,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             const porcentaje = Math.min((st / metaVisual) * 100, 100);
             
             progressBar.style.width = porcentaje + "%";
-            progressText.innerText = `${st.toFixed(1)} / ${metaVisual} hs`;
+            progressText.innerText = `${fmtH(st)} / ${metaVisual} hs`;
             
             if (st === 0) {
                 progressStatus.innerHTML = "Todavía no registraste horas este mes.";
@@ -4596,38 +4691,321 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         if (!visible) ajustarTodosLosPuestos(); // se está mostrando: recalculamos por si se renderizó estando oculto
     }
 
-    // Variable global para guardar el mensaje temporalmente
-    window.mensajeReporteTemporal = "";
-    window.enviarWhatsapp = function() {
+    // 📄 REPORTE MENSUAL: al tocar "REPORTE DE [MES]" se abre directo el visor con el PDF detallado
+    // (vista previa + Compartir + Descargar). Usa lo mismo que ya está en pantalla
+    // (window.turnos + window.totalStats), así los totales del PDF coinciden siempre con el dashboard.
+    async function generarReportePDF() {
+        await cargarLibreriaPDF();
+        if (typeof window.jsPDF !== 'function') {
+            throw new Error("jsPDF no cargó bien (window.jsPDF no es una función).");
+        }
+        const docPDF = new window.jsPDF();
+        if (typeof docPDF.autoTable !== 'function') {
+            throw new Error("El plugin de tablas cargó pero no se conectó con jsPDF (doc.autoTable no existe).");
+        }
+
+        const fMes = window.fechaFiltro;
+        const mesIdx = fMes.getMonth();
+        const anio = fMes.getFullYear();
+        const mesNombre = window.meses[mesIdx];
+        const v = window.obtenerValoresMes(fMes);
+        const pagaPuentes = v.pagaPuentes || "no";
+        const stats = window.totalStats || { t: 0, n: 0, f: 0, extra: 0 };
+        const nombreCompleto = `${(document.getElementById('vigiNombre') || {}).value || ''} ${(document.getElementById('vigiApellido') || {}).value || ''}`.trim() || "-";
+
+        // Turnos del mes que se está mirando, en orden cronológico (en pantalla van de más nuevo a más viejo)
+        const turnosMes = (window.turnos || []).filter(t => {
+            const fObj = new Date(t.f + "T00:00:00");
+            return fObj.getMonth() === mesIdx && fObj.getFullYear() === anio;
+        }).sort((a, b) => (a.f || '').localeCompare(b.f || '') || (a.e || '').localeCompare(b.e || ''));
+
+        const diasTrabajados = new Set(); // mismo criterio que el dashboard: vacaciones/licencia/falta/suspensión no cuentan
+        const filas = turnosMes.map(t => {
+            const fObj = new Date(t.f + "T00:00:00");
+            const fecha = `${DIAS_ABREV[fObj.getDay()]} ${String(fObj.getDate()).padStart(2, '0')}/${String(fObj.getMonth() + 1).padStart(2, '0')}`;
+            const puesto = t.l || 'Puesto';
+            if (t.lic)   return [fecha, puesto, '-', '-', '-', '-', '-', 'Licencia'];
+            if (t.falta) return [fecha, puesto, '-', '-', '-', '-', '-', 'Falta s/aviso'];
+            if (t.susp)  return [fecha, puesto, '-', '-', '-', '-', '-', 'Suspensión'];
+            const h = parseFloat(t.t) || 0;
+            const n = parseFloat(t.n) || 0;
+            const f = calcularHorasFeriadoTurnoPDF(t, pagaPuentes);
+            if (!t.vac) diasTrabajados.add(t.f);
+            const obs = t.vac ? 'Vacaciones' : (f > 0 ? 'Feriado' : '');
+            return [fecha, puesto, t.e || '-', t.s || '-', fmtH(h), fmtH(n), f > 0 ? fmtH(f) : '-', obs];
+        });
+
+        // ---- Encabezado ----
+        docPDF.setFontSize(16);
+        docPDF.setTextColor(0);
+        docPDF.text('Control Vigía - Reporte de Horas', 14, 18);
+        docPDF.setFontSize(12);
+        docPDF.setTextColor(100);
+        docPDF.text(`${mesNombre} ${anio}`, 14, 25);
+
+        // ---- Resumen ----
+        const resumen = [
+            ['Personal', nombreCompleto],
+            ['Antigüedad', `${v.antiguedadAños} ${v.antiguedadAños === 1 ? 'año' : 'años'}` + (v.antiguedadAutomatica ? ` (ingreso ${v.fechaIngreso.split('-').reverse().join('/')})` : '')],
+            ['Días trabajados', String(diasTrabajados.size)],
+            ['Total de horas', `${stats.t} hs`]
+        ];
+        if (stats.extra > 0) resumen.push(['Horas extra', `${fmtH(stats.extra)} hs`]);
+        resumen.push(['Horas nocturnas', `${stats.n} hs`]);
+        resumen.push(['Horas feriado', `${stats.f} hs`]);
+
+        docPDF.autoTable({
+            startY: 30,
+            body: resumen,
+            theme: 'grid',
+            styles: { fontSize: 10, cellPadding: 2.5 },
+            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, fillColor: [241, 245, 249] } }
+        });
+
+        // ---- Detalle turno por turno ----
+        const yDetalle = ((docPDF.lastAutoTable && docPDF.lastAutoTable.finalY) || 90) + 10;
+        docPDF.setFontSize(12);
+        docPDF.setTextColor(0);
+        docPDF.text('Detalle de turnos', 14, yDetalle);
+
+        docPDF.autoTable({
+            startY: yDetalle + 3,
+            head: [['Fecha', 'Puesto', 'Desde', 'Hasta', 'Hs', 'Noct.', 'Feriado', 'Obs.']],
+            body: filas.length ? filas : [[{ content: 'No hay turnos cargados en este mes', colSpan: 8, styles: { halign: 'center' } }]],
+            foot: [['TOTAL', '', '', '', String(stats.t), String(stats.n), String(stats.f), '']],
+            showFoot: 'lastPage',
+            theme: 'striped',
+            headStyles: { fillColor: [56, 189, 248] },
+            footStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: {
+                0: { cellWidth: 22 },
+                2: { cellWidth: 16, halign: 'center' }, 3: { cellWidth: 16, halign: 'center' },
+                4: { cellWidth: 12, halign: 'center' }, 5: { cellWidth: 14, halign: 'center' }, 6: { cellWidth: 16, halign: 'center' },
+                7: { cellWidth: 27 }
+            },
+            // Encabezado y total centrados sobre las columnas numéricas, para que queden alineados con los datos
+            didParseCell: function (data) {
+                if (data.section !== 'body' && data.column.index >= 2 && data.column.index <= 6) {
+                    data.cell.styles.halign = 'center';
+                }
+            }
+        });
+
+        // ---- Pie de página con número de hoja ----
+        const totalPags = (docPDF.internal.getNumberOfPages ? docPDF.internal.getNumberOfPages() : 1);
+        for (let i = 1; i <= totalPags; i++) {
+            docPDF.setPage(i);
+            docPDF.setFontSize(8);
+            docPDF.setTextColor(140);
+            docPDF.text(`Generado por Control Vigía - Hoja ${i} de ${totalPags}`, 105, 290, { align: 'center' });
+        }
+
+        const bytes = docPDF.output('arraybuffer');
+        return {
+            doc: docPDF,
+            filename: `ControlVigia_Reporte_${mesNombre}_${anio}.pdf`,
+            titulo: `${mesNombre} ${anio}`,
+            bytes: bytes,
+            blob: new Blob([bytes], { type: 'application/pdf' })
+        };
+    }
+
+    // ---- Visor de PDF: vista previa + Compartir + Descargar ----
+    // La vista previa se dibuja con pdf.js (se carga solo cuando se usa). En celulares no se puede
+    // incrustar un PDF con <iframe>, por eso cada hoja se convierte a imagen (canvas).
+    const PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    function cargarPdfJs() {
+        return new Promise((resolve, reject) => {
+            if (window.pdfjsLib) return resolve(window.pdfjsLib);
+            const sc = document.createElement('script');
+            sc.src = PDFJS_BASE + 'pdf.min.js';
+            sc.onload = async () => {
+                const lib = window.pdfjsLib;
+                if (!lib) return reject(new Error("pdf.js no cargó bien (window.pdfjsLib no existe)."));
+                // El worker se baja como Blob: los navegadores no dejan crear un Worker desde otro dominio.
+                try {
+                    const r = await fetch(PDFJS_BASE + 'pdf.worker.min.js');
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    const codigo = await r.text();
+                    lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([codigo], { type: 'text/javascript' }));
+                } catch (e) {
+                    lib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + 'pdf.worker.min.js';
+                }
+                resolve(lib);
+            };
+            sc.onerror = () => reject(new Error("No se pudo cargar el visor de PDF"));
+            document.head.appendChild(sc);
+        });
+    }
+
+    // ---- Zoom por pellizco (dos dedos) ----
+    // El visor tiene scroll nativo para moverse; con dos dedos se agranda/achica el ancho de las hojas
+    // manteniendo bajo los dedos el mismo punto del documento.
+    const VISOR_ESCALA_MAX = 3;
+    window._visorEscala = 1;
+    let _pinchVisor = null;
+    function _distDedos(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+    function _aplicarEscalaVisor(escala) {
+        const sc = document.getElementById('pdf-visor-scroll');
+        const paginas = document.getElementById('pdf-visor-paginas');
+        window._visorEscala = escala;
+        paginas.style.width = (sc.clientWidth * escala) + 'px';
+    }
+    window.reiniciarZoomVisor = function() {
+        window._visorEscala = 1;
+        _pinchVisor = null;
+        document.getElementById('pdf-visor-paginas').style.width = '100%';
+    }
+    function iniciarPinchVisor() {
+        if (window._pinchVisorListo) return;
+        window._pinchVisorListo = true;
+        const sc = document.getElementById('pdf-visor-scroll');
+        const puntoMedio = (t) => {
+            const rect = sc.getBoundingClientRect();
+            return { x: (t[0].clientX + t[1].clientX) / 2 - rect.left, y: (t[0].clientY + t[1].clientY) / 2 - rect.top };
+        };
+        sc.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 2) return;
+            const m = puntoMedio(e.touches);
+            _pinchVisor = {
+                dist: _distDedos(e.touches),
+                escala: window._visorEscala,
+                // punto del documento (medido sin zoom) que está bajo los dedos al empezar
+                cx: (sc.scrollLeft + m.x) / window._visorEscala,
+                cy: (sc.scrollTop + m.y) / window._visorEscala
+            };
+        }, { passive: true });
+        sc.addEventListener('touchmove', (e) => {
+            if (!_pinchVisor || e.touches.length !== 2) return;
+            e.preventDefault();
+            const m = puntoMedio(e.touches);
+            let nueva = _pinchVisor.escala * (_distDedos(e.touches) / _pinchVisor.dist);
+            nueva = Math.max(1, Math.min(VISOR_ESCALA_MAX, nueva));
+            if (nueva < 1.03) nueva = 1; // "imán" a tamaño normal
+            _aplicarEscalaVisor(nueva);
+            sc.scrollLeft = _pinchVisor.cx * nueva - m.x;
+            sc.scrollTop = _pinchVisor.cy * nueva - m.y;
+        }, { passive: false });
+        const finPinch = (e) => { if (e.touches.length < 2) _pinchVisor = null; };
+        sc.addEventListener('touchend', finPinch, { passive: true });
+        sc.addEventListener('touchcancel', finPinch, { passive: true });
+    }
+
+    function _mensajeVisor(html) {
+        document.getElementById('pdf-visor-paginas').innerHTML = `<p style="color:#fff; text-align:center; margin:40px 20px 0; font-size:0.9rem; line-height:1.4;">${html}</p>`;
+    }
+    function _estadoBotonesVisor(habilitados) {
+        ['btn-pdf-compartir', 'btn-pdf-descargar'].forEach(id => {
+            const b = document.getElementById(id);
+            b.disabled = !habilitados;
+            b.style.opacity = habilitados ? '1' : '0.4';
+        });
+    }
+
+    window.abrirReporte = async function() {
         const nom = document.getElementById('vigiNombre').value, ape = document.getElementById('vigiApellido').value;
         if (!nom || !ape) return window.showToast("⚠️ Configurá tu Nombre y Apellido primero", "danger");
-        
-        const mesText = window.meses[window.fechaFiltro.getMonth()].toUpperCase();
-        const anioText = window.fechaFiltro.getFullYear();
-        const v = window.obtenerValoresMes(window.fechaFiltro);
-        
-        let extrasTexto = window.totalStats.extra > 0 ? `⚠️ *Horas Extra:* ${window.totalStats.extra.toFixed(1)} hs\n` : "";
-        let antiguedadTexto = v.antiguedadAños > 0 
-            ? `🏅 *Antigüedad:* ${v.antiguedadAños} Años\n` 
-            : "";
-        
-        // Generamos el mensaje
-        window.mensajeReporteTemporal = `📋 *REPORTE DE HORAS - ${mesText} ${anioText}*\n\n👤 *Personal:* ${nom} ${ape}\n${antiguedadTexto}--------------------------\n✅ *Horas Totales:* ${window.totalStats.t} hs\n${extrasTexto}🌙 *Horas Nocturnas:* ${window.totalStats.n} hs\n🚩 *Horas Feriados:* ${window.totalStats.f} hs\n\n_Generado por Control Vigía_`;
-        
-        // Inyectamos el texto en el modal (limpiando los asteriscos de negrita para que se vea bien en el preview)
-        document.getElementById('cuerpo-reporte-preview').innerText = window.mensajeReporteTemporal.replace(/\*/g, "");
-        
-        // Mostramos el modal
-        document.getElementById('modal-reporte-preview').style.display = 'flex';
+
+        const visor = document.getElementById('modal-pdf-visor');
+        if (visor.style.display === 'flex') return; // ya está abierto
+
+        const token = {};
+        window._visorToken = token; // si lo cierran mientras carga, se descarta el resultado
+        window._reportePDF = null;
+        iniciarPinchVisor();
+        window.reiniciarZoomVisor();
+        document.getElementById('pdf-visor-titulo').innerText = `📄 ${window.meses[window.fechaFiltro.getMonth()]} ${window.fechaFiltro.getFullYear()}`;
+        document.getElementById('pdf-visor-scroll').scrollTop = 0;
+        document.getElementById('pdf-visor-scroll').scrollLeft = 0;
+        document.getElementById('btn-pdf-compartir').style.display = '';
+        _estadoBotonesVisor(false);
+        _mensajeVisor('⏳ Generando reporte...');
+        visor.style.display = 'flex';
+
+        let r;
+        try {
+            r = await generarReportePDF();
+        } catch (e) {
+            console.error("Error generando reporte PDF:", e);
+            if (window._visorToken !== token) return;
+            _mensajeVisor(`No se pudo generar el PDF. Revisá tu conexión e intentá de nuevo.<br><span style="opacity:0.7;">Detalle: ${(e && e.message) ? escapeHTML(e.message) : 'error desconocido'}</span>`);
+            return;
+        }
+        if (window._visorToken !== token) return;
+        window._reportePDF = r;
+
+        // Compartir solo se ofrece si el celular/navegador permite compartir archivos
+        let puedeCompartir = false;
+        try {
+            r.file = new File([r.blob], r.filename, { type: 'application/pdf' });
+            puedeCompartir = !!(navigator.canShare && navigator.canShare({ files: [r.file] }));
+        } catch (e) { puedeCompartir = false; }
+        document.getElementById('btn-pdf-compartir').style.display = puedeCompartir ? '' : 'none';
+        _estadoBotonesVisor(true);
+
+        _mensajeVisor('⏳ Cargando vista previa...');
+        await renderizarPDFEnVisor(r, token);
     }
-    window.confirmarEnvioWhatsapp = function() {
-        if (!window.mensajeReporteTemporal) return;
-        window.open(`https://wa.me/?text=${encodeURIComponent(window.mensajeReporteTemporal)}`, '_blank');
-        window.cerrarModalReporte();
+
+    async function renderizarPDFEnVisor(r, token) {
+        const paginas = document.getElementById('pdf-visor-paginas');
+        try {
+            const lib = await cargarPdfJs();
+            const pdf = await lib.getDocument({ data: new Uint8Array(r.bytes.slice(0)) }).promise;
+            if (window._visorToken !== token) return; // lo cerraron mientras cargaba
+            paginas.innerHTML = '';
+            const ANCHO_RENDER = 1600; // px reales por hoja: se ve nítido al hacer zoom
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const base = page.getViewport({ scale: 1 });
+                const vp = page.getViewport({ scale: ANCHO_RENDER / base.width });
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.floor(vp.width);
+                canvas.height = Math.floor(vp.height);
+                // margen en % del ancho: el espacio entre hojas crece parejo con el zoom
+                canvas.style.cssText = 'display:block; width:100%; height:auto; margin:1.5% 0; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.4);';
+                if (window._visorToken !== token) return;
+                paginas.appendChild(canvas);
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+            }
+        } catch (e) {
+            console.error("Error mostrando vista previa del PDF:", e);
+            if (window._visorToken !== token) return;
+            _mensajeVisor(`No se pudo mostrar la vista previa.<br>Igual podés compartir o descargar el PDF.<br><span style="opacity:0.7;">Detalle: ${(e && e.message) ? escapeHTML(e.message) : 'error desconocido'}</span>`);
+        }
     }
-    window.cerrarModalReporte = function() {
-        document.getElementById('modal-reporte-preview').style.display = 'none';
-        window.mensajeReporteTemporal = "";
+
+    window.cerrarVisorPDF = function() {
+        window._visorToken = null;
+        window._reportePDF = null;
+        document.getElementById('modal-pdf-visor').style.display = 'none';
+        document.getElementById('pdf-visor-paginas').innerHTML = '';
+        window.reiniciarZoomVisor();
+    }
+
+    window.compartirReportePDF = async function() {
+        const r = window._reportePDF;
+        if (!r || !r.file) return;
+        try {
+            await navigator.share({ files: [r.file], title: `Reporte de horas - ${r.titulo}` });
+        } catch (e) {
+            if (e && e.name === 'AbortError') return; // el usuario cerró el menú de compartir: no es un error
+            console.error("Error al compartir:", e);
+            window.showToast("⚠️ No se pudo compartir. Probá con Descargar.", "danger");
+        }
+    }
+
+    window.descargarReportePDFGuardado = function() {
+        const r = window._reportePDF;
+        if (!r) return;
+        try {
+            r.doc.save(r.filename);
+            window.showToast("✅ PDF descargado");
+        } catch (e) {
+            console.error("Error al descargar:", e);
+            window.showToast("⚠️ No se pudo descargar el PDF", "danger");
+        }
     }
 
     // ==========================================
@@ -4815,20 +5193,20 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     };
 </script>
 
-<div id="modal-reporte-preview" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 9600; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;">
-    <div class="modal-content" style="max-width: 380px; text-align: left;">
-        <h3 style="color: var(--accent); margin-top:0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center;">📄 Vista Previa del Reporte</h3>
-        
-        <div id="cuerpo-reporte-preview" style="background: var(--input-bg); padding: 15px; border-radius: 12px; margin: 15px 0; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; color: var(--text-main); white-space: pre-wrap; border: 1px solid var(--border); line-height: 1.4;">
-            </div>
-        <div class="modal-btns" style="flex-direction: column; gap: 10px;">
-            <button class="btn-send" style="width: 100%; padding: 14px; background: var(--whatsapp); display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="confirmarEnvioWhatsapp()">
-                <span>📲 ENVIAR A WHATSAPP</span>
-            </button>
-            <button class="btn-cancel" style="width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border); color: var(--text-dim);" onclick="cerrarModalReporte()">
-                CANCELAR
-            </button>
+<div id="modal-pdf-visor" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9700; flex-direction: column; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px;">
+        <div style="min-width: 0; display: flex; flex-direction: column;">
+            <span id="pdf-visor-titulo" style="color: #fff; font-weight: 700; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📄 Reporte</span>
+            <span style="color: rgba(255,255,255,0.55); font-size: 0.7rem;">Pellizcá con dos dedos para hacer zoom</span>
         </div>
+        <button onclick="cerrarVisorPDF()" style="flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.08); color: #fff; font-size: 1.1rem; font-weight: 700; cursor: pointer;">✕</button>
+    </div>
+    <div id="pdf-visor-scroll" style="flex: 1; min-height: 0; overflow: auto; background: #525659; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; overscroll-behavior: contain; -webkit-user-select: none; user-select: none;">
+        <div id="pdf-visor-paginas" style="width: 100%; display: flow-root;"></div>
+    </div>
+    <div style="display: flex; gap: 10px; padding: 12px 14px;">
+        <button id="btn-pdf-compartir" onclick="compartirReportePDF()" style="flex: 1; padding: 14px; border: none; border-radius: 12px; background: var(--whatsapp); color: #fff; font-weight: 800; font-size: 0.9rem; cursor: pointer;">📤 COMPARTIR</button>
+        <button id="btn-pdf-descargar" onclick="descargarReportePDFGuardado()" style="flex: 1; padding: 14px; border: none; border-radius: 12px; background: #8b5cf6; color: #fff; font-weight: 800; font-size: 0.9rem; cursor: pointer;">⬇️ DESCARGAR</button>
     </div>
 </div>
 <script>
