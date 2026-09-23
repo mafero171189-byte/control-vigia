@@ -1491,7 +1491,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     // 🔴 IMPORTANTE: Se agregó 'getFirestore' a la importación
     import { getFirestore, initializeFirestore, persistentLocalCache, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot, where, limit, startAfter, writeBatch, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCjSqOhEtmzTFS82f4VLbQQn8ZTiB5Ct_Q",
@@ -2080,7 +2080,11 @@
 
         const formatearAUI = (val) => val ? parseFloat(val).toLocaleString('es-AR') : "";
         const auto = window.obtenerValoresMes(window.fechaFiltro, categoriaActual);
-        const fmtAuto = (num) => "Auto: $" + num.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+        // 🔴 Antes mostraba "Auto: $monto" en el placeholder. El monto real que usa la app
+        // sale de la escala cargada en obtenerValoresMes (siempre correcta para el mes que
+        // se está mirando); mostrarlo acá solo generaba confusión, así que ahora el
+        // placeholder dice solo "Auto" sin numerito.
+        const fmtAuto = (num) => "Auto";
         
         if(document.getElementById('valBasico')) {
             document.getElementById('valBasico').placeholder = fmtAuto(auto.basico);
@@ -2135,12 +2139,12 @@
             if (btnVerMas) btnVerMas.innerText = 'Ver más';
         }
         if(document.getElementById('valDescuentos')) {
-            document.getElementById('valDescuentos').placeholder = "Auto: 17%";
+            document.getElementById('valDescuentos').placeholder = "Auto";
             document.getElementById('valDescuentos').value = p.descuentos !== undefined ? p.descuentos : "";
         }
         
         if(document.getElementById('valHorasBase')) {
-            document.getElementById('valHorasBase').placeholder = "Auto: 200 hs";
+            document.getElementById('valHorasBase').placeholder = "Auto";
             document.getElementById('valHorasBase').value = p.horasBase !== undefined ? p.horasBase : "";
         }
         
@@ -2287,8 +2291,10 @@
                 document.getElementById('modal-bienvenida').style.display = 'flex';
                 
             } else {
+                window._mostrarBienvenidaLogin = true; // Para que onAuthStateChanged salude solo tras un login manual
                 await signInWithEmailAndPassword(auth, email, pass);
-                window.showToast("¡Bienvenido a Control Vigía!");
+                // El mensaje de bienvenida ahora lo muestra onAuthStateChanged,
+                // que primero valida que el usuario no esté bloqueado.
             }
         } catch (error) {
             // Antes cualquier fallo mostraba "Revisa tus datos", incluso cuando el problema
@@ -2332,10 +2338,33 @@
         if (window.isRegistering) return; 
 
         if (user) {
+            // 🔴 FIX CRÍTICO: Verificar si el usuario está bloqueado ANTES de dejar entrar
+            const userRef = doc(db, "directorio_usuarios", user.uid);
+            try {
+                const userSnap = await getDoc(userRef);
+                
+                // Si no existe en directorio_usuarios o está marcado como bloqueado, sacarlo
+                if (!userSnap.exists() || userSnap.data().estado === "bloqueado") {
+                    console.log("Usuario bloqueado o no existe en directorio");
+                    window._mostrarBienvenidaLogin = false;
+                    window.showToast("🚫 Esta cuenta ha sido bloqueada o eliminada. Contactá al administrador.", "danger");
+                    loading.style.opacity = '0';
+                    setTimeout(() => loading.style.display = 'none', 500);
+                    await signOut(auth);
+                    return;
+                }
+            } catch (e) {
+                console.error("Error verificando estado del usuario:", e);
+                window.showToast("⚠️ Error al verificar cuenta. Intentá de nuevo.", "danger");
+                loading.style.opacity = '0';
+                setTimeout(() => loading.style.display = 'none', 500);
+                await signOut(auth);
+                return;
+            }
+            
             window.currentUser = user;
 
             // --- LÓGICA DE OPTIMIZACIÓN DE INGRESO (1 Hora) ---
-            const userRef = doc(db, "directorio_usuarios", user.uid);
             try {
                 const userSnap = await getDoc(userRef);
                 const ahora = new Date();
@@ -2356,6 +2385,11 @@
 
             document.getElementById('landing-page').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
+            
+            if (window._mostrarBienvenidaLogin) {
+                window.showToast("¡Bienvenido a Control Vigía!");
+                window._mostrarBienvenidaLogin = false;
+            }
             
             const hoy = new Date();
             hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
@@ -2692,10 +2726,20 @@
             }
             
             batch.delete(doc(db, "usuarios", uid, "config", "datos"));
-            batch.delete(doc(db, "directorio_usuarios", uid));
+            
+            // 🔴 FIX BUG: Marcar usuario como bloqueado en lugar de eliminar completamente
+            // Esto es más seguro porque:
+            // 1) Puedes recuperar datos si fue un error
+            // 2) Bloquea el login aunque la cuenta de Auth siga existiendo
+            // 3) Es compatible con client-side (no necesita Cloud Function)
+            batch.update(doc(db, "directorio_usuarios", uid), {
+                estado: "bloqueado",
+                bloqueado_en: new Date().toISOString()
+            });
+            
             await batch.commit();
             
-            window.showToast("🗑️ Usuario y todos sus turnos eliminados", "success");
+            window.showToast("🚫 Usuario y todos sus turnos eliminados (bloqueado)", "success");
             window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null, diaGuardado: null }; // Invalida caché
             window.cerrarModalEliminarUsuario();
             window.abrirAdmin(); 
