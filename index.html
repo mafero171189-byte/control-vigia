@@ -704,6 +704,17 @@
 
         <div style="text-align: left; margin-bottom: 15px;">
             <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" id="valPreventivoCrisis" style="width: 18px; height: 18px; margin: 1px 0 0 0; flex-shrink: 0;">
+                <div style="min-width: 0;">
+                    <label for="valPreventivoCrisis" style="display: inline; margin: 0; font-size: 0.85rem; line-height: 1.3; font-weight: 400; color: var(--text-main);">Mi empresa tiene <b>Preventivo de Crisis</b> (APC Ley 24.013).</label>
+                    <button type="button" onclick="toggleDetalleAPC(this)" style="background: none; border: none; padding: 0 0 0 4px; color: var(--accent); font-size: 0.8rem; text-decoration: underline; cursor: pointer;">Ver más</button>
+                    <div id="apc-detalle" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-dim); line-height: 1.4;">Si tu recibo trae los renglones <b>APC L24013</b>, tildalo. La app pasa el <b>75%</b> del remunerativo a no remunerativo y calcula así los descuentos: jubilación + Ley 19032 (14%) solo sobre el 25% que queda remunerativo, obra social 3% sobre el remunerativo completo + la suma no rem., y un descuento APC del 14% sobre la porción trasladada. Aplica a todos los meses que mires. Destildado = cálculo normal.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: left; margin-bottom: 15px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
                 <input type="checkbox" id="valAporteSolidario" style="width: 18px; height: 18px; margin: 1px 0 0 0; flex-shrink: 0;">
                 <div style="min-width: 0;">
                     <label for="valAporteSolidario" style="display: inline; margin: 0; font-size: 0.85rem; line-height: 1.3; font-weight: 400; color: var(--text-main);">Aplicar <b>Aporte Solidario 2%</b> sobre el básico. Tildalo <b>solo si NO estás afiliado a UPSRA</b>.</label>
@@ -823,7 +834,8 @@
                 <div class="admin-section-content">
                     <b>Datos obligatorios:</b><br>
                     • <b>Antigüedad:</b> Podés cargar tu <b>fecha de ingreso</b> (opcional) y se calcula sola: el año nuevo cuenta desde el mes en que lo cumplís (ej: ingreso 10/03/2015 → 12 años desde marzo 2027). Si no sabés la fecha, ingresá solo los años (ej: 12) y actualizalos vos cuando cambien. Si cargás la fecha, los años manuales no se usan. Sistema calcula +1% por año sobre el básico.<br>
-                    • <b>Horas base mensuales:</b> Por defecto 200hs. Cambialo solo si tu cronograma es diferente (ej: jornada reducida).<br><br>
+                    • <b>Horas base mensuales:</b> Por defecto 200hs. Cambialo solo si tu cronograma es diferente (ej: jornada reducida).<br>
+                    • <b>Preventivo de Crisis:</b> si en tu recibo figuran los renglones "APC L24013", tildá esa opción en Configuración (ver tema 4c). Si no la tildás, el neto te va a dar distinto al del recibo.<br><br>
                     <b>Opcional — Sobrescribir valores UPSRA:</b><br>
                     Si tu empresa paga diferente al acta 2026, podés pisar en <b>Configuración</b>: básico, viático, presentismo, nocturnidad, etc. Dejando vacío = vuelve al automático UPSRA.
                 </div>
@@ -891,6 +903,25 @@
                     • Tildado = descuenta (eres NO afiliado).<br>
                     • Destildado = no descuenta (eres afiliado).<br><br>
                     <b>Vigencia:</b> Solo julio-diciembre 2026 (homologación 17/07/2026). Fuera de esa ventana, la app no descuenta nada.
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4C: PREVENTIVO DE CRISIS -->
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--warning);">📉 4c. Preventivo de Crisis (APC Ley 24.013)</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>¿Cómo sé si mi empresa lo aplica?</b> En tu recibo aparecen los renglones <b>"APC L24013"</b> (negativo), <b>"APC NR L24013"</b> (positivo) y <b>"DESCUENTO APC L24013"</b>.<br><br>
+                    <b>Cómo se liquida:</b><br>
+                    • El <b>75%</b> de tu remunerativo pasa a no remunerativo.<br>
+                    • Jubilación (11%) y Ley 19032 (3%) se descuentan solo sobre el <b>25%</b> que queda remunerativo.<br>
+                    • Obra social (3%) va sobre el remunerativo completo más la suma no remunerativa del acta.<br>
+                    • A la parte trasladada se le descuenta un <b>14%</b> aparte (renglón "DESCUENTO APC").<br><br>
+                    <b>En la app:</b> en <b>Configuración</b> tildá <b>"Mi empresa tiene Preventivo de Crisis"</b>. Con eso el neto se calcula igual que en tu recibo. Destildado = cálculo normal. Se aplica a todos los meses que mires, y cuando está activo aparece un aviso en la tarjeta del sueldo.<br><br>
+                    <b>En "Comparar con Recibo":</b> el "Sueldo bruto" del recibo ya viene con el descuento APC restado. La app lo tiene en cuenta si tenés la opción tildada.<br><br>
+                    <b>Ojo:</b> la app replica cómo te lo liquida la empresa. Si tenés dudas de si corresponde así, consultá el acuerdo homologado con UPSRA o tu delegado.
                 </div>
             </div>
 
@@ -1156,7 +1187,7 @@
       </div>
       <div class="feature-card">
         <span class="feat-icon">💰</span>
-        <div class="feat-text"><h4>Sueldo calculado al instante</h4><p>Bruto, neto, extras, feriados y antigüedad en un solo lugar.</p></div>
+        <div class="feat-text"><h4>Sueldo calculado al instante</h4><p>Bruto, neto, extras, feriados y antigüedad en un solo lugar. Compatible con Preventivo de Crisis (APC).</p></div>
       </div>
       <div class="feature-card">
         <span class="feat-icon">📋</span>
@@ -1249,6 +1280,9 @@
             <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
             <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>
         </p>
+        <div id="aviso-apc" style="display:none; margin:8px 0 0 0; padding:6px 10px; background:rgba(56,189,248,0.08); border:1px solid var(--accent); border-radius:8px; font-size:0.65rem; color:var(--accent); line-height:1.4; text-align:left;">
+            📉 Neto calculado con <b>Preventivo de Crisis (APC)</b>. Se cambia en Configuración.
+        </div>
     </div>
 
     <div class="stats-panel">
@@ -1934,6 +1968,7 @@
             plusVac: parseFloat(p.plusVacManual),
             descuentos: parseFloat(p.descuentos),
             aporteSolidario: p.aporteSolidario !== false,
+            preventivoCrisis: p.preventivoCrisis === true,
             feriadoPct: parseFloat(p.feriadoPct) || 100,
             horasBase: parseFloat(p.horasBase) || 200,
             tipoFeriado: p.tipoFeriado || "100",
@@ -2057,6 +2092,14 @@
         info.style.color = 'var(--success)';
         info.innerHTML = `✅ Se calcula sola: <b>${añosHoy} ${añosHoy === 1 ? 'año' : 'años'}</b> hoy. Próximo aumento: <b>${window.meses[ing.mes].toLowerCase()} ${ing.año + añosHoy + 1}</b>. Los años manuales quedan guardados, pero no se usan.`;
     }
+    window.toggleDetalleAPC = function(btn) {
+        const det = document.getElementById('apc-detalle');
+        if (!det) return;
+        const abierto = det.style.display !== 'none';
+        det.style.display = abierto ? 'none' : 'block';
+        btn.innerText = abierto ? 'Ver más' : 'Ver menos';
+    }
+
     window.toggleDetalleAporteSolidario = function(btn) {
         const det = document.getElementById('aporte-solidario-detalle');
         if (!det) return;
@@ -2131,6 +2174,15 @@
         
         if(document.getElementById('valAporteSolidario')) {
             document.getElementById('valAporteSolidario').checked = p.aporteSolidario !== false;
+        }
+        if(document.getElementById('valPreventivoCrisis')) {
+            document.getElementById('valPreventivoCrisis').checked = p.preventivoCrisis === true;
+        }
+        const detApc = document.getElementById('apc-detalle');
+        if (detApc) {
+            detApc.style.display = 'none';
+            const btnApc = detApc.parentElement.querySelector('button');
+            if (btnApc) btnApc.innerText = 'Ver más';
         }
         const detAporte = document.getElementById('aporte-solidario-detalle');
         if (detAporte) {
@@ -3556,11 +3608,17 @@ async function cargarDatosNube() {
             });
             html += '</div>';
 
-            const totalApp = v.basico + antigMonto + v.presentismo + nocturnidadApp + v.viatico + v.noRem;
+            // Con Preventivo de Crisis el "Sueldo bruto" del recibo ya tiene restado el descuento APC
+            // (14% sobre el 75% del remunerativo trasladado a no rem.). Se descuenta acá para comparar parejo.
+            const pctPrevComp = Math.max(0, (isNaN(v.descuentos) ? 17 : v.descuentos) - 3) / 100;
+            const descuentoAPCComp = v.preventivoCrisis
+                ? (v.basico + antigMonto + v.presentismo + nocturnidadApp) * 0.75 * pctPrevComp
+                : 0;
+            const totalApp = v.basico + antigMonto + v.presentismo + nocturnidadApp + v.viatico + v.noRem - descuentoAPCComp;
             if (rBruto > 0) {
                 const diffBruto = Math.round(rBruto - totalApp);
                 html += `<div style="margin-top:10px; padding:10px; background:rgba(56,189,248,0.1); border-radius:8px; text-align:center;">
-                    <div style="font-size:0.7rem; color:var(--text-dim);">Bruto: App vs Recibo</div>
+                    <div style="font-size:0.7rem; color:var(--text-dim);">Bruto: App vs Recibo${v.preventivoCrisis ? ' (con descuento APC)' : ''}</div>
                     <div style="font-weight:900;">$${Math.round(totalApp).toLocaleString('es-AR')} &nbsp;vs&nbsp; $${Math.round(rBruto).toLocaleString('es-AR')}</div>
                     ${Math.abs(diffBruto) >= 500 ? `<div style="font-size:0.8rem; margin-top:4px; color:${diffBruto>0?'var(--success)':'var(--danger)'};">Diferencia: ${diffBruto>0?'+':''}$${diffBruto.toLocaleString('es-AR')}</div>` : ''}
                 </div>`;
@@ -4059,6 +4117,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             plusVacManual: getVal('valPlusVacManual'), 
             descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", 
             aporteSolidario: document.getElementById('valAporteSolidario') ? document.getElementById('valAporteSolidario').checked : false,
+            preventivoCrisis: document.getElementById('valPreventivoCrisis') ? document.getElementById('valPreventivoCrisis').checked : false,
             horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "",
             tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "100",
             pagaPuentes: document.getElementById('valPagaPuentes') ? document.getElementById('valPagaPuentes').value : "no"
@@ -4650,7 +4709,27 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const sumaRemunerativa = valMes.basico + presentismoReal + montoAntiguedad + pagoHorasTotales + pagoFeriados + plusVacacionalTotal + (sn * valorNocturnoFinal) - descuentoFaltaYSuspension;
         
         const porcentajeDesc = (valMes.descuentos !== undefined && valMes.descuentos !== "") ? valMes.descuentos : 17;
-        const descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
+        // Preventivo de Crisis (APC Ley 24.013): la empresa pasa el 75% del remunerativo a no remunerativo
+        // (renglón 140 negativo / 431 positivo) y descuenta el 14% (jubilación + Ley 19032) sobre esa porción
+        // (renglón 439). Jubilación + 19032 se calculan solo sobre el 25% que queda remunerativo;
+        // la obra social (3%) va sobre el remunerativo completo + la suma no rem. del acta.
+        // Verificado contra recibo agosto 2026: neto $1.798.920,00.
+        const APC_PORC_NR = 0.75;
+        let descuentosLey;
+        let descuentoAPC = 0;
+        if (valMes.preventivoCrisis) {
+            const pctOS = 3;
+            const pctPrev = Math.max(0, porcentajeDesc - pctOS); // 14% con el 17% por defecto
+            const remQueda = sumaRemunerativa * (1 - APC_PORC_NR);
+            const porcionNR = sumaRemunerativa * APC_PORC_NR;
+            descuentoAPC = porcionNR * (pctPrev / 100);
+            const noRemBaseOS = (diasReducenViatico === 0)
+                ? valMes.noRem
+                : Math.max(0, valMes.noRem - ((valMes.noRem / DIVISOR_VIATICO) * diasReducenViatico));
+            descuentosLey = (remQueda * (pctPrev / 100)) + ((sumaRemunerativa + noRemBaseOS) * (pctOS / 100)) + descuentoAPC;
+        } else {
+            descuentosLey = sumaRemunerativa * (porcentajeDesc / 100);
+        }
         // Suma NR: proporcional si hay faltas injustificadas o suspensiones (Cláusula Tercera, Acta 2026)
         const noRemFinal = diasReducenViatico === 0
             ? valMes.noRem
@@ -4674,6 +4753,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         const avisoDesact = document.getElementById('aviso-valores-desactualizados');
         if (avisoDesact) avisoDesact.style.display = valMes.valoresDesactualizados ? 'block' : 'none';
+        const avisoApc = document.getElementById('aviso-apc');
+        if (avisoApc) avisoApc.style.display = valMes.preventivoCrisis ? 'block' : 'none';
 
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
