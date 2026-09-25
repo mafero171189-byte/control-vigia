@@ -2473,7 +2473,23 @@
                 }
             } catch (e) {
                 console.error("Error verificando estado del usuario:", e);
-                window.showToast("⚠️ Error al verificar cuenta. Intentá de nuevo.", "danger");
+                // 🔴 FIX: un permission-denied acá casi siempre significa que las reglas de
+                // Firestore le niegan la lectura porque el doc no existe o está "bloqueado"
+                // (dereferenciar resource.data en un doc inexistente/bloqueado tira ese error
+                // en vez de simplemente no encontrarlo). Antes esto cargaba el mensaje genérico
+                // de "intentá de nuevo", como si fuera un error de red, cuando en realidad la
+                // cuenta está bloqueada/eliminada y reintentar nunca va a funcionar.
+                if (e.code === 'permission-denied') {
+                    window._mostrarBienvenidaLogin = false;
+                    window.showToast("🚫 Esta cuenta ha sido bloqueada o eliminada. Contactá al administrador.", "danger");
+                    loading.style.opacity = '0';
+                    setTimeout(() => loading.style.display = 'none', 500);
+                    await signOut(auth);
+                    return;
+                }
+                // 🔍 DEBUG TEMPORAL: mostramos el código real del error (ej: unavailable,
+                // network-request-failed) para poder diagnosticar sin acceso a DevTools.
+                window.showToast("⚠️ Error al verificar cuenta (" + (e.code || e.message || 'desconocido') + ")", "danger");
                 loading.style.opacity = '0';
                 setTimeout(() => loading.style.display = 'none', 500);
                 await signOut(auth);
