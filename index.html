@@ -658,7 +658,6 @@
             <p style="font-size: 0.78rem; color: var(--text-dim); margin: 0 0 14px 0;">Si NO estás afiliado, corresponde el Aporte Solidario 2% sobre el básico.</p>
             <button type="button" class="btn-submit" style="margin-bottom:10px;" onclick="window.onbResponder('aporteSolidario',false)">Sí, estoy afiliado</button>
             <button type="button" class="btn-submit" style="background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);" onclick="window.onbResponder('aporteSolidario',true)">No, no estoy afiliado</button>
-            <button type="button" class="btn-submit" style="margin-top:6px; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);" onclick="window.onbOmitirPaso(4)">Omitir, no sé / prefiero cargarlo después</button>
         </div>
 
         <!-- Paso 5: Preventivo de Crisis -->
@@ -667,7 +666,6 @@
             <p style="font-size: 0.78rem; color: var(--text-dim); margin: 0 0 14px 0;">Se ve en tu recibo con los renglones "APC L24013". Si no sabés, elegí "No" — lo podés cambiar después en Configuración.</p>
             <button type="button" class="btn-submit" style="margin-bottom:10px;" onclick="window.onbResponder('preventivoCrisis',true)">Sí, la tiene</button>
             <button type="button" class="btn-submit" style="background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);" onclick="window.onbResponder('preventivoCrisis',false)">No / No sé</button>
-            <button type="button" class="btn-submit" style="margin-top:6px; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);" onclick="window.onbOmitirPaso(5)">Omitir, no sé / prefiero cargarlo después</button>
         </div>
     </div>
 </div>
@@ -750,7 +748,8 @@
             <div style="grid-column: span 2;">
                 <label>Pago Feriado (Recargo)</label>
                 <select id="valTipoFeriado" class="auth-input" style="padding: 10px;">
-                    <option value="100" selected>Doble 100% (Ley LCT)</option>
+                    <option value="">-- Seleccionar --</option>
+                    <option value="100">Doble 100% (Ley LCT)</option>
                     <option value="50">Hora y media (50%)</option>
                 </select>
             </div>
@@ -760,6 +759,7 @@
             <div style="grid-column: span 2;">
                 <label>Feriados Puente (Turísticos)</label>
                 <select id="valPagaPuentes" class="auth-input" style="padding: 10px;">
+                    <option value="">-- Seleccionar --</option>
                     <option value="si">Me los pagan (Según Ley)</option>
                     <option value="no">Mi empresa NO los paga</option>
                 </select>
@@ -2271,11 +2271,14 @@
         }
         
         if(document.getElementById('valTipoFeriado')) {
-            document.getElementById('valTipoFeriado').value = p.tipoFeriado || "100";
+            // Si el usuario omitió responder en el onboarding, el campo viene vacío ("")
+            // y se muestra sin seleccionar. Solo llenar si la BD tiene un valor.
+            document.getElementById('valTipoFeriado').value = p.tipoFeriado || "";
         }
         
         if(document.getElementById('valPagaPuentes')) {
-            document.getElementById('valPagaPuentes').value = p.pagaPuentes || "no";
+            // Mismo comportamiento: vacío si omitió, sin asumir "no" por defecto
+            document.getElementById('valPagaPuentes').value = p.pagaPuentes || "";
         }
         
         if (document.getElementById('modal-config')) document.getElementById('modal-config').style.display = 'flex';
@@ -2790,7 +2793,7 @@
                             ${estaBloqueado ? `<span style="color: var(--danger); font-size: 0.75rem; display: block; font-weight: bold; margin-top: 4px;">🚫 Ya fue eliminado / bloqueado</span>` : `<span style="color: ${colorExpira}; font-size: 0.75rem; display: block; font-weight: bold; margin-top: 4px;">⏳ ${expiraTexto}</span>`}
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 5px;">
-                            ${estaBloqueado ? '' : `<button data-uid="${safeUid}" data-expira="${safeExpira}" class="btn-admin-mod-dias" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
+                            ${estaBloqueado ? `<button data-uid="${safeUid}" data-nombre="${safeNombre}" data-email="${safeEmail}" class="btn-admin-del-definitivo" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Borrar registro para siempre">🗑️</button>` : `<button data-uid="${safeUid}" data-expira="${safeExpira}" class="btn-admin-mod-dias" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; transition: 0.3s;" title="Modificar Licencia">+ Días</button>
                             <button data-uid="${safeUid}" data-nombre="${safeNombre}" data-email="${safeEmail}" class="btn-admin-del-user" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 40px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.3s;" title="Eliminar usuario">🗑️</button>`}
                         </div>
                     </div>`;
@@ -2800,6 +2803,10 @@
                     });
                     card.querySelector('.btn-admin-del-user').addEventListener('click', function() {
                         abrirModalEliminarUsuario(this.dataset.uid, this.dataset.nombre, this.dataset.email);
+                    });
+                } else {
+                    card.querySelector('.btn-admin-del-definitivo').addEventListener('click', function() {
+                        window.abrirModalBorradoDefinitivo(this.dataset.uid, this.dataset.nombre, this.dataset.email);
                     });
                 }
                 lista.appendChild(card);
@@ -2879,6 +2886,37 @@
         }
         
         btn.innerText = "Sí, eliminar";
+    }
+
+    // 🗑️ Borrado DEFINITIVO del registro (solo para usuarios ya bloqueados). A diferencia de
+    // confirmarEliminarUsuario, esto no marca "bloqueado": borra el doc de directorio_usuarios
+    // de verdad, para sacar del listado/búsqueda cuentas de prueba repetidas o duplicadas.
+    window.abrirModalBorradoDefinitivo = function(uid, nombre, email) {
+        document.getElementById('modal-title').innerText = "🗑️ ¿Borrar registro para siempre?";
+        document.getElementById('modal-text').innerText = `Esto va a borrar definitivamente el registro de ${nombre} (${email}) de la base. Ya no va a aparecer ni en el listado ni en las búsquedas.`;
+        document.getElementById('confirm-btn').innerText = "Sí, borrar para siempre";
+        document.getElementById('custom-modal').style.display = 'flex';
+        confirmCallback = () => {
+            document.getElementById('confirm-btn').innerText = "Sí, borrar"; // vuelve al texto default del modal
+            window.ejecutarBorradoDefinitivo(uid);
+        };
+    }
+
+    window.ejecutarBorradoDefinitivo = async function(uid) {
+        try {
+            await deleteDoc(doc(db, "directorio_usuarios", uid));
+            window.showToast("🗑️ Registro borrado para siempre", "success");
+            window._adminCache = { totalGuardado: null, htmlGuardado: null, ultimoDoc: null, diaGuardado: null };
+            if (document.getElementById('admin-buscar-usuario').value.trim() !== "") {
+                window.buscarUsuarioPorEmail();
+            } else {
+                window.ultimoUsuarioDoc = null;
+                buscarUsuariosEnNube();
+            }
+        } catch (e) {
+            console.error("Error al borrar registro:", e);
+            window.showToast("⚠️ Error de permisos de administrador.", "danger");
+        }
     }
 
     // filtrarUsuariosAdmin reemplazada por buscarUsuarioPorEmail (búsqueda por email exacto en Firestore)
@@ -3534,11 +3572,14 @@ async function cargarDatosNube() {
     window.onbFinalizar = async function() {
         if (!window.currentUser) { document.getElementById('modal-onboarding').style.display = 'none'; return; }
         const r = window._onbRespuestas;
+        // 🔴 FIX: NO guardar valores por defecto si el usuario omitió responder.
+        // Solo guardar lo que el usuario SÍ eligió (campos no vacíos).
+        // Los valores por defecto se aplican luego en actualizarUI(), no en el guardado.
         const p = {
             fechaIngreso: r.fechaIngreso || '',
             antiguedad: r.antiguedad || '',
-            tipoFeriado: r.tipoFeriado || '100',
-            pagaPuentes: r.pagaPuentes || 'no',
+            tipoFeriado: r.tipoFeriado || '',  // vacío si omitió
+            pagaPuentes: r.pagaPuentes || '',   // vacío si omitió
             aporteSolidario: !!r.aporteSolidario,
             preventivoCrisis: !!r.preventivoCrisis
         };
@@ -4295,8 +4336,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             aporteSolidario: document.getElementById('valAporteSolidario') ? document.getElementById('valAporteSolidario').checked : false,
             preventivoCrisis: document.getElementById('valPreventivoCrisis') ? document.getElementById('valPreventivoCrisis').checked : false,
             horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "",
-            tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "100",
-            pagaPuentes: document.getElementById('valPagaPuentes') ? document.getElementById('valPagaPuentes').value : "no"
+            tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "",
+            pagaPuentes: document.getElementById('valPagaPuentes') ? document.getElementById('valPagaPuentes').value : ""
         };
         
         const u = { nombre: document.getElementById('vigiNombre').value, apellido: document.getElementById('vigiApellido').value };
@@ -4396,6 +4437,18 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         const btnSubmit = document.getElementById('btn-submit-turno');
         if (btnSubmit.disabled) return; 
+
+        // 🚫 GATE: si el usuario omitió configurar el tipo de recargo de feriado o si paga
+        // feriados puente (p.ej. tocó "Omitir" en el onboarding), no dejamos agendar guardias
+        // todavía: si arrancáramos a calcular sin esto, la app tendría que "inventar" un valor
+        // (por ejemplo Doble 100%) que puede no ser el real de tu empresa.
+        const pConfig = window.preciosGuardados || {};
+        if (!pConfig.tipoFeriado || !pConfig.pagaPuentes) {
+            window.showToast("⚠️ Antes de agendar guardias, completá cómo te pagan los feriados en Configuración", "danger");
+            if (typeof window.abrirModalConfig === 'function') window.abrirModalConfig();
+            return;
+        }
+
         btnSubmit.disabled = true;
         btnSubmit.innerText = "⏳ GUARDANDO...";
         
