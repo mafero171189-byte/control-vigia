@@ -144,6 +144,9 @@
             font-size:0.88rem; color:var(--text-main); font-weight:600; margin:0 0 12px 10px; line-height:1.5;
         }
         .lp-upsra-pills { display:flex; flex-wrap:wrap; gap:6px; margin-left:10px; }
+        .lp-upsra-disclaimer {
+            font-size:0.68rem; color:var(--text-dim); margin:12px 0 0 10px; line-height:1.4;
+        }
         .lp-pill {
             background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.18);
             border-radius:50px; padding:4px 11px; font-size:0.72rem; font-weight:700;
@@ -160,17 +163,20 @@
         .lp-stat-lbl { font-size:0.65rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; display:block; line-height:1.3; }
 
         /* ── FEATURES ── */
-        .features-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+        .features-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-bottom:24px; }
         .feature-card {
             background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.07);
-            padding:14px 16px; border-radius:14px;
-            display:flex; align-items:center; gap:14px; text-align:left;
+            padding:12px; border-radius:14px;
+            display:flex; flex-direction:column; align-items:flex-start; gap:8px; text-align:left;
             backdrop-filter:blur(8px); transition:.2s;
             border-left:3px solid rgba(56,189,248,0.3);
         }
-        .feat-icon { font-size:1.4rem; flex-shrink:0; width:38px; text-align:center; }
-        .feat-text h4 { margin:0 0 2px; color:var(--text-main); font-size:0.88rem; font-weight:800; }
-        .feat-text p { margin:0; font-size:0.76rem; color:var(--text-dim); line-height:1.4; }
+        .feat-icon { font-size:1.3rem; flex-shrink:0; width:30px; text-align:center; }
+        .feat-text h4 { margin:0 0 3px; color:var(--text-main); font-size:0.78rem; font-weight:800; line-height:1.25; }
+        .feat-text p { margin:0; font-size:0.68rem; color:var(--text-dim); line-height:1.4; }
+        @media (min-width:460px) {
+            .features-grid { grid-template-columns:repeat(3, 1fr); }
+        }
 
         /* ── SEPARADOR ── */
         .lp-divider {
@@ -1224,6 +1230,7 @@
         <span class="lp-pill">🎁 Presentismo</span>
         <span class="lp-pill">🚗 Viático</span>
       </div>
+      <p class="lp-upsra-disclaimer">⚠️ Control Vigía es una herramienta independiente. No es una aplicación oficial de UPSRA.</p>
     </div>
 
     <!-- STATS -->
@@ -1254,12 +1261,32 @@
         <div class="feat-text"><h4>Sueldo calculado al instante</h4><p>Bruto, neto, extras, feriados y antigüedad en un solo lugar. Compatible con Preventivo de Crisis (APC).</p></div>
       </div>
       <div class="feature-card">
+        <span class="feat-icon">📉</span>
+        <div class="feat-text"><h4>Preventivo de Crisis (APC)</h4><p>Si tu empresa aplica el esquema APC Ley 24.013, activalo en Configuración y el neto te va a dar igual que en el recibo.</p></div>
+      </div>
+      <div class="feature-card">
+        <span class="feat-icon">🤝</span>
+        <div class="feat-text"><h4>Aporte Solidario 2%</h4><p>Se descuenta solo si no estás afiliado a UPSRA. Si sos afiliado, no corresponde y la app no lo aplica.</p></div>
+      </div>
+      <div class="feature-card">
+        <span class="feat-icon">🗓️</span>
+        <div class="feat-text"><h4>Cada día, como corresponde</h4><p>Día normal, vacaciones, licencia, falta sin aviso o suspensión: cada uno se calcula distinto, sin que hagas nada extra.</p></div>
+      </div>
+      <div class="feature-card">
+        <span class="feat-icon">📅</span>
+        <div class="feat-text"><h4>Feriados siempre actualizados</h4><p>El calendario de feriados se carga y se mantiene al día para todos los usuarios, automáticamente.</p></div>
+      </div>
+      <div class="feature-card">
         <span class="feat-icon">📋</span>
         <div class="feat-text"><h4>Historial mensual completo</h4><p>Todos tus turnos organizados mes a mes, siempre disponibles.</p></div>
       </div>
       <div class="feature-card">
-        <span class="feat-icon">📤</span>
-        <div class="feat-text"><h4>Exportá por WhatsApp</h4><p>Generá un reporte y mandáselo al delegado o guardalo para vos.</p></div>
+        <span class="feat-icon">📄</span>
+        <div class="feat-text"><h4>Reporte en PDF</h4><p>Del mes o del año completo, con cada turno, horario, horas nocturnas y feriados detallados.</p></div>
+      </div>
+      <div class="feature-card">
+        <span class="feat-icon">🧰</span>
+        <div class="feat-text"><h4>Más herramientas</h4><p>Comparación con tu recibo real y calculadora de aguinaldo (SAC), incluidas.</p></div>
       </div>
     </div>
 
