@@ -427,6 +427,26 @@
         #modal-bienvenida { z-index: 9000; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center; margin: auto; }
         #modal-config .modal-content { max-width: 380px; padding: 25px 20px; }
+        #modal-config .cfg-modal { max-width: 400px; padding: 0; text-align: left; display: flex; flex-direction: column; max-height: calc(100vh - 40px); overflow: hidden; }
+        .cfg-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 10px; }
+        .cfg-head h3 { margin: 0; color: var(--accent); font-size: 1.05rem; }
+        .cfg-x { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 10px; width: 32px; height: 32px; cursor: pointer; font-size: .9rem; }
+        .cfg-body { padding: 0 16px 8px; overflow-y: auto; flex: 1; }
+        .cfg-body label { font-size: .72rem; margin-bottom: 4px; }
+        .cfg-card { border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.02); }
+        .cfg-t { font-size: .68rem; font-weight: 800; letter-spacing: .6px; color: var(--accent); margin-bottom: 10px; }
+        .cfg-valores > summary, .cfg-ayuda > summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 2px; position: relative; padding-right: 22px; }
+        .cfg-valores > summary::-webkit-details-marker, .cfg-ayuda > summary::-webkit-details-marker { display: none; }
+        .cfg-valores > summary::after, .cfg-ayuda > summary::after { content: '▾'; position: absolute; right: 2px; top: 2px; color: var(--text-dim); transition: .2s; }
+        .cfg-valores[open] > summary::after, .cfg-ayuda[open] > summary::after { transform: rotate(180deg); }
+        .cfg-valores > summary small { font-size: .7rem; color: var(--text-dim); }
+        .cfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 12px; }
+        .cfg-grid input { margin-bottom: 0; padding: 9px 10px; }
+        .cfg-ayuda { background: rgba(56,189,248,0.07); border: 1px solid rgba(56,189,248,0.4); border-radius: 12px; padding: 9px 12px; margin-bottom: 10px; font-size: .78rem; color: var(--accent); font-weight: 700; }
+        .cfg-ayuda > div { margin-top: 8px; font-weight: 400; color: var(--text-main); line-height: 1.45; font-size: .75rem; }
+        .cfg-vermas { background: none; border: none; padding: 4px 0 0 0; color: var(--accent); font-size: .78rem; text-decoration: underline; cursor: pointer; }
+        .cfg-check { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+        .cfg-foot { margin: 0 !important; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--card-bg); }
         
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
         .modal-btns button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
@@ -563,6 +583,30 @@
             border-top: 1px solid var(--border); width: 100%;
         }
         .btn-soporte-main:hover { opacity: 1; color: var(--accent); }
+        .cal-body { padding:0 16px 18px; }
+        .cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+        .cal-dow { text-align:center; font-size:.68rem; font-weight:800; color:var(--text-muted, #94a3b8); padding:4px 0; }
+        .cal-day { position:relative; aspect-ratio:1/1.05; border-radius:10px; border:1px solid var(--border); background:rgba(148,163,184,.08); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; cursor:pointer; padding:0; color:var(--text-main); font-family:inherit; min-width:0; }
+        .cal-day small { font-size:.58rem; font-weight:600; opacity:.9; line-height:1.1; }
+        .cal-day.vacio { visibility:hidden; pointer-events:none; }
+        .cal-day.trabajo { background:rgba(56,189,248,.22); border-color:rgba(56,189,248,.7); }
+        .cal-day.vac { background:rgba(34,197,94,.22); border-color:rgba(34,197,94,.7); }
+        .cal-day.lic { background:rgba(168,85,247,.22); border-color:rgba(168,85,247,.7); }
+        .cal-day.falta { background:rgba(239,68,68,.25); border-color:rgba(239,68,68,.8); }
+        .cal-day.susp { background:rgba(100,116,139,.35); border-color:#94a3b8; }
+        .cal-day.franco { opacity:.75; }
+        .cal-day.fer::after { content:''; position:absolute; top:3px; right:3px; width:7px; height:7px; border-radius:50%; background:var(--warning); box-shadow:0 0 5px var(--warning); }
+        .cal-day.hoy { outline:2px solid var(--accent); outline-offset:1px; }
+        .cal-leyenda { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 4px; font-size:.7rem; color:var(--text-muted, #94a3b8); }
+        .cal-leyenda i { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:4px; vertical-align:-1px; border:1px solid; }
+        .vac-box { margin-top:14px; padding:14px; border-radius:14px; border:1px solid rgba(34,197,94,.45); background:rgba(34,197,94,.08); }
+        .vac-box h4 { margin:0 0 10px; font-size:.8rem; color:var(--success); letter-spacing:.5px; }
+        .vac-nums { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; text-align:center; }
+        .vac-nums div b { display:block; font-size:1.35rem; color:var(--text-main); }
+        .vac-nums div span { font-size:.65rem; color:var(--text-muted, #94a3b8); line-height:1.2; display:block; }
+        .vac-bar { height:8px; border-radius:6px; background:rgba(148,163,184,.25); margin:12px 0 8px; overflow:hidden; }
+        .vac-bar > div { height:100%; background:var(--success); width:0; transition:.4s; }
+        .vac-nota { font-size:.7rem; line-height:1.4; color:var(--text-muted, #94a3b8); margin:6px 0 0; }
     </style>
 </head>
 <body>
@@ -662,6 +706,7 @@
         <div id="onb-paso-4" class="onb-paso" style="display:none;">
             <h3 style="color: var(--accent); margin: 0 0 6px 0; font-size: 1.05rem;">🏛️ ¿Estás afiliado al sindicato (UPSRA)?</h3>
             <p style="font-size: 0.78rem; color: var(--text-dim); margin: 0 0 14px 0;">Si NO estás afiliado, corresponde el Aporte Solidario 2% sobre el básico.</p>
+            <div style="background: rgba(56,189,248,0.08); border-left: 3px solid var(--accent); padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; line-height: 1.4; color: var(--text-dim); margin: 0 0 14px 0; text-align: left;"><b>💡 ¿Para qué sirve?</b> Si <b>no</b> estás afiliado, el sindicato cobra el <b>Aporte Solidario del 2%</b> (Cláusula 15ª) y se descuenta de tu neto. Si estás afiliado, no se descuenta. Sin esta respuesta la app no puede darte el neto correcto.</div>
             <button type="button" class="btn-submit" style="margin-bottom:10px;" onclick="window.onbResponder('aporteSolidario',false)">Sí, estoy afiliado</button>
             <button type="button" class="btn-submit" style="background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);" onclick="window.onbResponder('aporteSolidario',true)">No, no estoy afiliado</button>
         </div>
@@ -700,101 +745,94 @@
 </div>
 
 <div id="modal-config">
-    <div class="modal-content">
-        <h3 style="color: var(--accent); margin-top:0; margin-bottom: 15px;">Valores de Cobro</h3>
-        
-        <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8rem; color: var(--text-main); text-align: left; line-height: 1.4;">
-            <b>💡 ¡Personalizá tu sueldo!</b> Elegí tu categoría y poné tu fecha de ingreso (o tus años de antigüedad). El sistema cargará los valores de UPSRA automáticamente.
+    <div class="modal-content cfg-modal">
+        <div class="cfg-head">
+            <h3>⚙️ Valores de Cobro</h3>
+            <button type="button" class="cfg-x" onclick="cerrarModalConfig()" title="Cerrar">✕</button>
         </div>
-        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.75rem; color: var(--text-main); text-align: left; line-height: 1.4;">
-    <b style="color: var(--warning);">⚙️ Ajustes Universales:</b><br>
-    • <b>Feriados Puente:</b> Si tu empresa "se hace la boluda" y no te los paga, cambialo a "No los paga". El sistema los tratará como días normales solo para vos.<br>
-    • <b>Viáticos:</b> Se paga el mes completo salvo que tengas faltas sin aviso o suspensiones. No llegar a las horas base <b>no</b> te reduce el viático.<br>
-    • <b>Cálculo Feriado:</b> Elegí 100% (Ley) o 50% según te liquide tu empresa.
-</div>
+        <div class="cfg-body">
 
-        
-        <div style="margin-bottom: 10px; text-align: left;">
-            <label style="color: var(--accent);">Categoría de Vigilador</label>
-            <select id="valCategoria" class="auth-input" style="margin-bottom: 5px; padding: 10px; font-weight: bold; color: var(--accent);" onchange="cambiarCategoriaConfig()">
-                <option value="general">Vigilador General</option>
-            </select>
-        </div>
+            <details class="cfg-ayuda">
+                <summary>💡 ¿Cómo funciona?</summary>
+                <div>
+                    Elegí tu categoría y poné tu fecha de ingreso (o tus años de antigüedad): el sistema carga los valores de UPSRA automáticamente.<br><br>
+                    <b>Feriados puente:</b> si tu empresa no te los paga, elegí "No los paga" y se tratan como días normales solo para vos.<br>
+                    <b>Viáticos:</b> se pagan el mes completo salvo faltas sin aviso o suspensiones. No llegar a las horas base <b>no</b> reduce el viático.<br>
+                    <b>Feriado:</b> elegí 100% (Ley) o 50% según te liquide tu empresa.
+                </div>
+            </details>
 
-        <div style="text-align: left; margin-bottom: 10px;">
-            <label style="color: var(--accent);">Fecha de ingreso (opcional)</label>
-            <input type="date" id="valFechaIngreso" oninput="actualizarAntiguedadConfigUI()" onchange="actualizarAntiguedadConfigUI()">
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-top: 4px;">
-                <div id="antiguedad-auto-info" style="font-size: 0.72rem; color: var(--text-dim); line-height: 1.35;"></div>
-                <button type="button" id="btn-quitar-fecha-ingreso" onclick="quitarFechaIngreso()" style="display: none; flex-shrink: 0; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">✕ Quitar</button>
-            </div>
-        </div>
-        <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Sueldo Básico ($)</label><input type="text" inputmode="decimal" id="valBasico" oninput="formatearMiles(this)"></div>
-            <div><label style="color: var(--accent);">Antigüedad (Años)</label><input type="number" id="valAntiguedad"></div>
-        </div>
-        <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Valor Hora Extra ($)</label><input type="text" inputmode="decimal" id="valHora" oninput="formatearMiles(this)"></div>
-            <div><label>Plus Nocturno ($)</label><input type="text" inputmode="decimal" id="valNoct" oninput="formatearMiles(this)"></div>
-        </div>
-        <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Viático Mensual ($)</label><input type="text" inputmode="decimal" id="valViatico" oninput="formatearMiles(this)"></div>
-            <div><label>Presentismo ($)</label><input type="text" inputmode="decimal" id="valPresentismo" oninput="formatearMiles(this)"></div>
-        </div>
-        <div class="form-row" style="text-align: left; margin-bottom: 10px;">
-            <div><label>Adi. No Rem. ($)</label><input type="text" inputmode="decimal" id="valNoRem" oninput="formatearMiles(this)"></div>
-            <div><label>Desc. por Ley (%)</label><input type="number" id="valDescuentos"></div>
-        </div>
-        <div class="form-row" style="text-align: left; margin-bottom: 15px;">
-            <div><label>Horas Base Mes</label><input type="number" id="valHorasBase"></div>
-            <div><label>Plus Vacacional ($)</label><input type="text" inputmode="decimal" id="valPlusVacManual" oninput="formatearMiles(this)"></div>
-        </div>
-
-        <div class="form-row" style="text-align: left; margin-bottom: 15px;">
-            <div style="grid-column: span 2;">
-                <label>Pago Feriado (Recargo)</label>
-                <select id="valTipoFeriado" class="auth-input" style="padding: 10px;">
-                    <option value="">-- Seleccionar --</option>
-                    <option value="100">Doble 100% (Ley LCT)</option>
-                    <option value="50">Hora y media (50%)</option>
+            <div class="cfg-card">
+                <div class="cfg-t">👤 TU PERFIL</div>
+                <label>Categoría de Vigilador</label>
+                <select id="valCategoria" class="auth-input" style="margin-bottom: 10px; padding: 10px; font-weight: bold; color: var(--accent);" onchange="cambiarCategoriaConfig()">
+                    <option value="general">Vigilador General</option>
                 </select>
-            </div>
-        </div>
-
-        <div class="form-row" style="text-align: left; margin-bottom: 15px;">
-            <div style="grid-column: span 2;">
-                <label>Feriados Puente (Turísticos)</label>
-                <select id="valPagaPuentes" class="auth-input" style="padding: 10px;">
-                    <option value="">-- Seleccionar --</option>
-                    <option value="si">Me los pagan (Según Ley)</option>
-                    <option value="no">Mi empresa NO los paga</option>
-                </select>
-            </div>
-        </div>
-
-        <div style="text-align: left; margin-bottom: 15px;">
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" id="valPreventivoCrisis" style="width: 18px; height: 18px; margin: 1px 0 0 0; flex-shrink: 0;">
-                <div style="min-width: 0;">
-                    <label for="valPreventivoCrisis" style="display: inline; margin: 0; font-size: 0.85rem; line-height: 1.3; font-weight: 400; color: var(--text-main);">Mi empresa tiene <b>Preventivo de Crisis</b> (APC Ley 24.013).</label>
-                    <button type="button" onclick="toggleDetalleAPC(this)" style="background: none; border: none; padding: 0 0 0 4px; color: var(--accent); font-size: 0.8rem; text-decoration: underline; cursor: pointer;">Ver más</button>
-                    <div id="apc-detalle" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-dim); line-height: 1.4;">Si tu recibo trae los renglones <b>APC L24013</b>, tildalo. La app pasa el <b>75%</b> del remunerativo a no remunerativo y calcula así los descuentos: jubilación + Ley 19032 (14%) solo sobre el 25% que queda remunerativo, obra social 3% sobre el remunerativo completo + la suma no rem., y un descuento APC del 14% sobre la porción trasladada. Aplica a todos los meses que mires. Destildado = cálculo normal.</div>
+                <div class="form-row" style="margin-bottom: 4px;">
+                    <div><label>Fecha de ingreso</label><input type="date" id="valFechaIngreso" oninput="actualizarAntiguedadConfigUI()" onchange="actualizarAntiguedadConfigUI()" style="margin-bottom:0;"></div>
+                    <div><label>Antigüedad (años)</label><input type="number" id="valAntiguedad" style="margin-bottom:0;"></div>
+                </div>
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+                    <div id="antiguedad-auto-info" style="font-size: 0.72rem; color: var(--text-dim); line-height: 1.35;"></div>
+                    <button type="button" id="btn-quitar-fecha-ingreso" onclick="quitarFechaIngreso()" style="display: none; flex-shrink: 0; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">✕ Quitar</button>
                 </div>
             </div>
-        </div>
 
-        <div style="text-align: left; margin-bottom: 15px;">
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" id="valAporteSolidario" style="width: 18px; height: 18px; margin: 1px 0 0 0; flex-shrink: 0;">
-                <div style="min-width: 0;">
-                    <label for="valAporteSolidario" style="display: inline; margin: 0; font-size: 0.85rem; line-height: 1.3; font-weight: 400; color: var(--text-main);">Aplicar <b>Aporte Solidario 2%</b> sobre el básico. Tildalo <b>solo si NO estás afiliado a UPSRA</b>.</label>
-                    <button type="button" onclick="toggleDetalleAporteSolidario(this)" style="background: none; border: none; padding: 0 0 0 4px; color: var(--accent); font-size: 0.8rem; text-decoration: underline; cursor: pointer;">Ver más</button>
-                    <div id="aporte-solidario-detalle" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-dim); line-height: 1.4;">Cláusula 15ª, Acta UPSRA Jul-Dic 2026. Si ya estás afiliado, tu cuota sindical mensual ya cubre este concepto y no corresponde descontarlo aparte. Rige de <b>julio a diciembre 2026</b>, según la homologación DI-2026-897 del 17/07/2026.</div>
+            <details class="cfg-card cfg-valores">
+                <summary><span class="cfg-t" style="margin:0;">💲 VALORES DEL RECIBO</span><small>Cargados de UPSRA · tocá para editar</small></summary>
+                <div class="cfg-grid">
+                    <div><label>Sueldo Básico</label><input type="text" inputmode="decimal" id="valBasico" oninput="formatearMiles(this)"></div>
+                    <div><label>Presentismo</label><input type="text" inputmode="decimal" id="valPresentismo" oninput="formatearMiles(this)"></div>
+                    <div><label>Hora Extra</label><input type="text" inputmode="decimal" id="valHora" oninput="formatearMiles(this)"></div>
+                    <div><label>Plus Nocturno</label><input type="text" inputmode="decimal" id="valNoct" oninput="formatearMiles(this)"></div>
+                    <div><label>Viático Mensual</label><input type="text" inputmode="decimal" id="valViatico" oninput="formatearMiles(this)"></div>
+                    <div><label>Adi. No Rem.</label><input type="text" inputmode="decimal" id="valNoRem" oninput="formatearMiles(this)"></div>
+                    <div><label>Plus Vacacional</label><input type="text" inputmode="decimal" id="valPlusVacManual" oninput="formatearMiles(this)"></div>
+                    <div><label>Horas Base Mes</label><input type="number" id="valHorasBase"></div>
+                    <div><label>Desc. por Ley (%)</label><input type="number" id="valDescuentos"></div>
+                </div>
+            </details>
+
+            <div class="cfg-card">
+                <div class="cfg-t">🧾 CÓMO TE PAGAN</div>
+                <div class="form-row" style="margin-bottom: 10px;">
+                    <div>
+                        <label>Pago de feriado</label>
+                        <select id="valTipoFeriado" class="auth-input" style="padding: 10px; margin-bottom:0;">
+                            <option value="">-- Elegir --</option>
+                            <option value="100">Doble 100% (Ley)</option>
+                            <option value="50">Hora y media 50%</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Feriados puente</label>
+                        <select id="valPagaPuentes" class="auth-input" style="padding: 10px; margin-bottom:0;">
+                            <option value="">-- Elegir --</option>
+                            <option value="si">Me los pagan</option>
+                            <option value="no">No los paga</option>
+                        </select>
+                    </div>
+                </div>
+                <label>¿Estás afiliado a UPSRA?</label>
+                <select id="valAporteSolidario" class="auth-input" style="padding: 10px; margin-bottom: 0;">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="afiliado">Sí, estoy afiliado (no se descuenta el 2%)</option>
+                    <option value="no_afiliado">No estoy afiliado (se descuenta Aporte Solidario 2%)</option>
+                </select>
+                <button type="button" onclick="toggleDetalleAporteSolidario(this)" class="cfg-vermas">Ver más</button>
+                <div id="aporte-solidario-detalle" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-dim); line-height: 1.4;">Cláusula 15ª, Acta UPSRA Jul-Dic 2026. Si NO estás afiliado, la empresa te retiene el 2% del básico. Si estás afiliado, tu cuota sindical mensual ya cubre este concepto y no se descuenta aparte. Rige de <b>julio a diciembre 2026</b>, según la homologación DI-2026-897 del 17/07/2026. Mientras no elijas una opción, la app no descuenta nada y no te deja agendar guardias.</div>
+                <div class="cfg-check">
+                    <input type="checkbox" id="valPreventivoCrisis" style="width: 18px; height: 18px; margin: 1px 0 0 0; flex-shrink: 0;">
+                    <div style="min-width: 0;">
+                        <label for="valPreventivoCrisis" style="display: inline; margin: 0; font-size: 0.82rem; line-height: 1.3; font-weight: 400; color: var(--text-main);">Mi empresa tiene <b>Preventivo de Crisis</b> (APC Ley 24.013).</label>
+                        <button type="button" onclick="toggleDetalleAPC(this)" class="cfg-vermas" style="padding-left:4px;">Ver más</button>
+                        <div id="apc-detalle" style="display: none; margin-top: 6px; font-size: 0.75rem; color: var(--text-dim); line-height: 1.4;">Si tu recibo trae los renglones <b>APC L24013</b>, tildalo. La app pasa el <b>75%</b> del remunerativo a no remunerativo y calcula así los descuentos: jubilación + Ley 19032 (14%) solo sobre el 25% que queda remunerativo, obra social 3% sobre el remunerativo completo + la suma no rem., y un descuento APC del 14% sobre la porción trasladada. Aplica a todos los meses que mires. Destildado = cálculo normal.</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="modal-btns">
+        </div>
+        <div class="modal-btns cfg-foot">
             <button class="btn-cancel" onclick="cerrarModalConfig()">Cancelar</button>
             <button class="btn-send" onclick="guardarConfig()">Guardar</button>
         </div>
@@ -968,10 +1006,12 @@
                 </div>
                 <div class="admin-section-content">
                     <b>Retención sobre el básico puro:</b> 2% del sueldo básico de convenio (sin antigüedad, presentismo ni otros adicionales).<br><br>
-                    <b>¿Quién lo paga?</b> SOLO trabajadores <b>NO afiliados a UPSRA</b>. Si estás afiliado, tu cuota sindical mensual ya contempla este concepto — no se descuenta aparte.<br><br>
-                    <b>En la app:</b> En <b>Configuración</b> hay un checkbox "Aplicar Aporte Solidario 2%":<br>
-                    • Tildado = descuenta (eres NO afiliado).<br>
-                    • Destildado = no descuenta (eres afiliado).<br><br>
+                    <b>¿Quién lo paga?</b> El texto del acta (Cláusula 15ª) dice que se retiene a cada trabajador comprendido en el convenio "en concepto de beneficiario de convenio", sin distinguir afiliados. UPSRA aclaró públicamente que alcanza <b>solo a los NO afiliados</b>, y que los afiliados pagan su cuota sindical aparte. La app sigue esa aclaración.<br>
+                    <b>Ojo:</b> lo que manda es tu recibo. Si ahí figura el aporte solidario aunque estés afiliado, elegí "No estoy afiliado" para que el neto coincida.<br><br>
+                    <b>En la app:</b> En <b>Configuración</b> elegís si estás afiliado o no:<br>
+                    • <b>No estoy afiliado</b> = se descuenta el 2%.<br>
+                    • <b>Sí, estoy afiliado</b> = no se descuenta.<br>
+                    • Sin elegir = la app no descuenta nada y no te deja agendar guardias hasta que respondas.<br><br>
                     <b>Vigencia:</b> Solo julio-diciembre 2026 (homologación 17/07/2026). Fuera de esa ventana, la app no descuenta nada.
                 </div>
             </div>
@@ -1006,7 +1046,7 @@
                     • No descuenta del sueldo básico ni viático. Solo reduce tu meta mensual de horas proporcionalmente. Ej: 1 licencia en mes de 20 días útiles → meta baja de 200hs a 190hs.<br><br>
                     <b>Vacaciones (Art. 155 LCT + Cláusula 13ª Acta):</b><br>
                     • <b>Plus Vacacional:</b> se paga por cada día de vacaciones gozadas, hasta máximo 21 días por año. Monto: tu base habitual (Básico+Antigüedad+Presentismo) ÷ 25.<br>
-                    • <b>Tope de 21 días:</b> a partir del día 22, ya no suma plus vacacional. El conteo se arrastra entre meses (ej: 15 días en diciembre + 10 en enero = cuenta hacia el tope).<br>
+                    • <b>Tope de 21 días:</b> a partir del día 22, ya no suma plus vacacional. El conteo se arrastra entre meses (ej: 15 días en febrero + 10 en marzo = cuenta hacia el tope; en enero el conteo arranca de cero, es por año calendario).<br>
                     • <b>Viático durante vacaciones:</b> se paga solo por los días trabajados (no es día trabajado = no cobra viático). Ej: 14 vac + 8 días trabajados = viático por 8 días.<br><br>
                     <b>Falta Sin Aviso:</b><br>
                     • Penalización completa: pierde 100% del presentismo del mes y se descuenta el valor de ese día del básico. Una sola falta en el mes aplica esto.
@@ -1089,6 +1129,43 @@
                     <b>Badges (marcas especiales):</b><br>
                     🌴 Vacaciones · 🏥 Licencia · ⚠️ Falta s/ aviso · ✎ Editar · ✕ Borrar<br><br>
                     Los totales del mes se ven en los 3 contadores arriba del historial (Horas totales, Nocturnas, Feriados).
+                </div>
+            </div>
+
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: var(--success);">📅 10. Calendario y Contador de Vacaciones</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    Tocá el botón <b>📅</b> que está al lado del selector de mes (arriba del formulario) y se abre el calendario del mes que estás viendo.<br><br>
+                    <b>Colores de cada día:</b><br>
+                    • 🟦 <b>Azul:</b> día trabajado (muestra las horas).<br>
+                    • ⬜ <b>Gris:</b> franco (día sin guardia cargada).<br>
+                    • 🟢 <b>Verde:</b> vacaciones · 🟣 <b>Violeta:</b> licencia · 🔴 <b>Rojo:</b> falta · ⚫ <b>Gris oscuro:</b> suspensión.<br>
+                    • 🟠 <b>Punto naranja:</b> feriado. El día de hoy tiene un contorno celeste.<br><br>
+                    <b>Tocar un día:</b> si ya tiene una guardia, se abre para editarla; si está vacío, te precarga esa fecha en el formulario para agendar.<br><br>
+                    <b>🏖️ Contador de vacaciones del año:</b><br>
+                    • <b>Días gozados:</b> los cargados como vacaciones hasta hoy. Los de fechas futuras figuran como <i>agendados</i> y ya se descuentan de los que te quedan.<br>
+                    • <b>Días que te quedan:</b> según tu antigüedad al 31/12 (LCT art. 150, días corridos): 14 hasta 5 años · 21 hasta 10 · 28 hasta 20 · 35 más de 20.<br>
+                    • <b>Aún generan plus:</b> cuántos días más cobran adicional vacacional hasta el tope de 21 (Cláusula 13ª).<br>
+                    <i>Para que el conteo sea exacto, cargá cada día de vacaciones (también francos y feriados dentro del período). Es una referencia: puede variar por tu fecha de ingreso y los días trabajados en el año.</i>
+                </div>
+            </div>
+
+            <div class="guia-box collapsed">
+                <div class="admin-section-header" onclick="toggleAdminSection(this)">
+                    <h3 style="margin:0 !important; font-size:0.88rem; color: #8b5cf6;">🛠️ 11. Más Herramientas, Reportes y Perfil</h3>
+                    <span class="admin-section-arrow">▾</span>
+                </div>
+                <div class="admin-section-content">
+                    <b>📄 Reporte del mes:</b> el botón verde de arriba genera el PDF/resumen del mes que estás viendo, para compartir o guardar.<br><br>
+                    <b>🛠️ Más Herramientas</b> (dentro del formulario):<br>
+                    • <b>🎁 Aguinaldo (SAC):</b> calcula el 50% de tu mejor remuneración del semestre (no incluye viático ni no remunerativo).<br>
+                    • <b>📋 Comparar con Recibo:</b> cargás los valores de tu recibo real y la app los contrasta con lo que calculó para ese mes. Te marca diferencias; guarda un historial de comparaciones.<br>
+                    • <b>📄 Reporte Anual:</b> PDF con el resumen mensual y el detalle de todos tus turnos del año, como respaldo.<br><br>
+                    <b>👁 Historial:</b> el botón "Ocultar historial de turnos" achica la pantalla cuando no lo necesitás.<br><br>
+                    <b>🛠️ Soporte:</b> el botón de WhatsApp al final de la pantalla.
                 </div>
             </div>
 
@@ -1358,6 +1435,7 @@
         <button class="btn-nav" onclick="cambiarMes(-1)">❮</button>
         <span id="mesVisual">...</span>
         <button class="btn-nav" onclick="cambiarMes(1)">❯</button>
+        <button class="btn-nav" onclick="abrirCalendario()" title="Calendario y vacaciones" style="margin-left:8px;">📅</button>
     </div>
 
     <div class="salary-card">
@@ -1371,6 +1449,7 @@
             <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
             <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>
         </p>
+        <div id="aviso-aporte-pendiente" style="display:none; margin:8px 0 0 0; padding:6px 10px; background:rgba(245,158,11,0.12); border:1px solid var(--warning); border-radius:8px; font-size:0.72rem; color:var(--warning); line-height:1.4; text-align:left; cursor:pointer;" onclick="abrirModalConfig()">⚠️ Falta indicar si estás afiliado a UPSRA: mientras tanto el neto NO descuenta el Aporte Solidario 2%. Tocá acá para completarlo.</div>
         <div id="aviso-apc" style="display:none; margin:8px 0 0 0; padding:6px 10px; background:rgba(56,189,248,0.08); border:1px solid var(--accent); border-radius:8px; font-size:0.65rem; color:var(--accent); line-height:1.4; text-align:left;">
             ✓ Preventivo de crisis (APC) <b> ACTIVADO</b>.
         </div>
@@ -1487,6 +1566,29 @@
             <button id="btn-submit-turno" class="btn-submit" onclick="guardar()">AGENDAR GUARDIA</button>
             <button id="btn-cancel-edit" class="btn-submit" style="display: none; background: var(--danger); flex: 0.5;" onclick="cancelarEdicion()">✕</button>
         </div>
+    </div>
+
+    <div id="modal-calendario" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); align-items:flex-start; justify-content:center; z-index:9400; backdrop-filter:blur(5px); padding:16px; box-sizing:border-box; overflow-y:auto;" onclick="if(event.target===this)cerrarCalendario()">
+      <div class="glass-form cal-card" style="max-width:420px; width:100%; margin:auto; padding:0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 16px 4px;">
+            <b style="color:var(--accent); font-size:.85rem; letter-spacing:.5px;">📅 <span id="cal-titulo">CALENDARIO</span></b>
+            <button type="button" class="btn-nav" onclick="cerrarCalendario()" title="Cerrar">✕</button>
+        </div>
+        <div class="cal-body">
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="cal-leyenda">
+                <span><i style="background:rgba(56,189,248,.3);border-color:#38bdf8"></i>Trabajo</span>
+                <span><i style="background:rgba(148,163,184,.15);border-color:#64748b"></i>Franco</span>
+                <span><i style="background:var(--warning);border-color:var(--warning);border-radius:50%"></i>Feriado</span>
+                <span><i style="background:rgba(34,197,94,.3);border-color:#22c55e"></i>Vacaciones</span>
+                <span><i style="background:rgba(168,85,247,.3);border-color:#a855f7"></i>Licencia</span>
+                <span><i style="background:rgba(239,68,68,.3);border-color:#ef4444"></i>Falta</span>
+                <span><i style="background:rgba(100,116,139,.4);border-color:#94a3b8"></i>Suspensión</span>
+            </div>
+            <div class="cal-leyenda" style="margin-top:0">Tocá un día para editarlo o agendar una guardia en esa fecha.</div>
+            <div class="vac-box" id="vac-box"></div>
+        </div>
+      </div>
     </div>
 
     <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL DE TURNOS</span></button>
@@ -2058,7 +2160,8 @@
             noRem: parseFloat(p.noRem),
             plusVac: parseFloat(p.plusVacManual),
             descuentos: parseFloat(p.descuentos),
-            aporteSolidario: p.aporteSolidario !== false,
+            aporteSolidario: p.aporteSolidario === true,
+            aporteSolidarioRespondido: typeof p.aporteSolidario === 'boolean',
             preventivoCrisis: p.preventivoCrisis === true,
             feriadoPct: parseFloat(p.feriadoPct) || 100,
             horasBase: parseFloat(p.horasBase) || 200,
@@ -2264,7 +2367,7 @@
         }
         
         if(document.getElementById('valAporteSolidario')) {
-            document.getElementById('valAporteSolidario').checked = p.aporteSolidario !== false;
+            document.getElementById('valAporteSolidario').value = (p.aporteSolidario === true) ? 'no_afiliado' : (p.aporteSolidario === false ? 'afiliado' : '');
         }
         if(document.getElementById('valPreventivoCrisis')) {
             document.getElementById('valPreventivoCrisis').checked = p.preventivoCrisis === true;
@@ -2473,6 +2576,7 @@
 
     window.cerrarSesion = async function() { 
         if (window.unsubTurnos) window.unsubTurnos(); 
+        window._vacAnioCache = {}; if (window.cerrarCalendario) window.cerrarCalendario();
         await signOut(auth); 
     }
 
@@ -2868,7 +2972,7 @@
 
     window.abrirModalEliminarUsuario = function(uid, nombre, email) {
         window.idUsuarioAEliminar = uid;
-        document.getElementById('txt-eliminar-usuario').innerHTML = `¿Estás seguro que querés eliminar a <b style="color: var(--text-main);">${nombre}</b> (${email})?<br><br><span style="font-size: 0.8rem; color: var(--warning);">Esta acción borrará sus datos del sistema de forma permanente.</span>`;
+        document.getElementById('txt-eliminar-usuario').innerHTML = `¿Estás seguro que querés eliminar a <b style="color: var(--text-main);">${escapeHTML(nombre)}</b> (${escapeHTML(email)})?<br><br><span style="font-size: 0.8rem; color: var(--warning);">Esta acción borrará sus datos del sistema de forma permanente.</span>`;
         document.getElementById('modal-eliminar-usuario').style.display = 'flex';
     }
 
@@ -3319,6 +3423,7 @@ window.formatearEnlaces = function(texto) {
 
             window.turnos = nuevosTurnos;
             window._vacPreviasCache = {}; // los turnos cambiaron: recontar vacaciones previas
+            window._vacAnioCache = {};
             
             const claveMes = `${año}-${mesStr}`;
             window._turnosCache[claveMes] = {
@@ -3623,7 +3728,7 @@ async function cargarDatosNube() {
             antiguedad: r.antiguedad || '',
             tipoFeriado: r.tipoFeriado || '',  // vacío si omitió
             pagaPuentes: r.pagaPuentes || '',   // vacío si omitió
-            aporteSolidario: !!r.aporteSolidario,
+            aporteSolidario: (typeof r.aporteSolidario === 'boolean') ? r.aporteSolidario : '',
             preventivoCrisis: !!r.preventivoCrisis
         };
         try {
@@ -4376,7 +4481,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             noRem: getVal('valNoRem'), 
             plusVacManual: getVal('valPlusVacManual'), 
             descuentos: document.getElementById('valDescuentos') ? document.getElementById('valDescuentos').value : "", 
-            aporteSolidario: document.getElementById('valAporteSolidario') ? document.getElementById('valAporteSolidario').checked : false,
+            aporteSolidario: (function() { const el = document.getElementById('valAporteSolidario'); if (!el || el.value === '') return ''; return el.value === 'no_afiliado'; })(),
             preventivoCrisis: document.getElementById('valPreventivoCrisis') ? document.getElementById('valPreventivoCrisis').checked : false,
             horasBase: document.getElementById('valHorasBase') ? document.getElementById('valHorasBase').value : "",
             tipoFeriado: document.getElementById('valTipoFeriado') ? document.getElementById('valTipoFeriado').value : "",
@@ -4486,8 +4591,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         // todavía: si arrancáramos a calcular sin esto, la app tendría que "inventar" un valor
         // (por ejemplo Doble 100%) que puede no ser el real de tu empresa.
         const pConfig = window.preciosGuardados || {};
-        if (!pConfig.tipoFeriado || !pConfig.pagaPuentes) {
-            window.showToast("⚠️ Antes de agendar guardias, completá cómo te pagan los feriados en Configuración", "danger");
+        if (!pConfig.tipoFeriado || !pConfig.pagaPuentes || typeof pConfig.aporteSolidario !== 'boolean') {
+            window.showToast("⚠️ Antes de agendar guardias, completá en Configuración cómo te pagan los feriados y si estás afiliado a UPSRA", "danger");
             if (typeof window.abrirModalConfig === 'function') window.abrirModalConfig();
             return;
         }
@@ -4543,7 +4648,24 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             return Math.round((dA - dB) / 86400000);
         }
 
-        const esDuplicadoOSuperpuesto = window.turnos.some(t => {
+        // window.turnos solo tiene el mes que se está mirando. Si la fecha del turno cae en otro mes,
+        // o es el 1° / el último día del mes (un turno vecino puede cruzar la medianoche), se traen
+        // también esos meses para no dejar pasar guardias superpuestas.
+        let turnosParaChequear = window.turnos.slice();
+        try {
+            const baseF = new Date(f + "T12:00:00");
+            const mesesVistos = new Set([`${window.fechaFiltro.getFullYear()}-${window.fechaFiltro.getMonth()}`]);
+            for (const d of [-1, 0, 1]) {
+                const x = new Date(baseF); x.setDate(x.getDate() + d);
+                const k = `${x.getFullYear()}-${x.getMonth()}`;
+                if (mesesVistos.has(k)) continue;
+                mesesVistos.add(k);
+                const extra = await obtenerTurnosMesEstatico(x.getFullYear(), x.getMonth());
+                turnosParaChequear = turnosParaChequear.concat(extra);
+            }
+        } catch (errChk) { console.warn("No se pudo ampliar la validación de superposición:", errChk); }
+
+        const esDuplicadoOSuperpuesto = turnosParaChequear.some(t => {
             if (window.turnoEnEdicion && t.id === window.turnoEnEdicion) return false;
 
             // offsetDias: 0 = mismo día que el turno nuevo, -1 = día anterior, +1 = día siguiente.
@@ -4768,6 +4890,153 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('mesBtnLabel').innerText = mesNom.toUpperCase();
         render();
     }
+
+    // ====== CALENDARIO MENSUAL VISUAL + CONTADOR DE VACACIONES DEL AÑO ======
+    window._vacAnioCache = window._vacAnioCache || {};
+
+    // Días de vacaciones cargados en todo el año (una consulta, cacheada por año).
+    async function obtenerFechasVacacionesAnio(anio) {
+        if (window._vacAnioCache[anio] !== undefined) return window._vacAnioCache[anio];
+        if (!window.currentUser) return [];
+        try {
+            const q = query(
+                collection(db, "usuarios", window.currentUser.uid, "turnos"),
+                where("f", ">=", `${anio}-01-01`),
+                where("f", "<=", `${anio}-12-31`),
+                orderBy("f", "asc")
+            );
+            const snap = await getDocs(q);
+            const set = new Set();
+            snap.forEach((d) => { const x = d.data(); if (x.vac && x.f) set.add(x.f); });
+            const fechas = [...set];
+            window._vacAnioCache[anio] = fechas;
+            return fechas;
+        } catch (e) {
+            console.warn("No se pudieron leer las vacaciones del año:", e);
+            return [];
+        }
+    }
+
+    // Días de vacaciones que corresponden por antigüedad (LCT art. 150), días corridos.
+    function diasVacacionesPorAntiguedad(anios) {
+        if (anios > 20) return 35;
+        if (anios > 10) return 28;
+        if (anios > 5) return 21;
+        if (anios >= 5) return 14; // exactamente 5 años cumplidos: 14 (hasta 5 años inclusive)
+        return 14;
+    }
+
+    window.renderVacacionesAnio = async function() {
+        const box = document.getElementById('vac-box');
+        if (!box || !window.currentUser) return;
+        const anio = window.fechaFiltro.getFullYear();
+        const fechas = await obtenerFechasVacacionesAnio(anio);
+        const hoy = new Date();
+        const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+        // El mes visible se toma de lo que hay en pantalla (puede estar más fresco que la consulta).
+        const mesPref = `${anio}-${String(window.fechaFiltro.getMonth()+1).padStart(2,'0')}-`;
+        const set = new Set(fechas.filter(f => !f.startsWith(mesPref)));
+        (window.turnos || []).forEach(t => { if (t.vac && t.f && t.f.startsWith(mesPref)) set.add(t.f); });
+        const todas = [...set];
+        const gozados = todas.filter(f => f <= hoyStr).length;
+        const programados = todas.length - gozados;
+        const total = gozados + programados;
+
+        const vAnio = window.obtenerValoresMes(new Date(anio, 11, 31));
+        const antig = Number(vAnio.antiguedadAños) || 0;
+        const TOPE_PLUS = 21;
+        let correspondeTxt, restanTxt, restanNum = null;
+        if (antig < 1) {
+            correspondeTxt = 'Prop.'; restanTxt = 'Con menos de 1 año: 1 día cada 20 trabajados (LCT art. 150)';
+        } else {
+            const corresponde = diasVacacionesPorAntiguedad(antig);
+            correspondeTxt = String(corresponde);
+            restanNum = Math.max(0, corresponde - total);
+        }
+        const plusRest = Math.max(0, TOPE_PLUS - total);
+        const base = restanNum !== null ? Number(correspondeTxt) : TOPE_PLUS;
+        const pct = Math.min(100, base > 0 ? (total / base) * 100 : 0);
+
+        box.innerHTML = `
+            <h4>🏖️ VACACIONES ${anio}</h4>
+            <div class="vac-nums">
+                <div><b>${gozados}</b><span>días gozados</span></div>
+                <div><b>${restanNum !== null ? restanNum : '—'}</b><span>días que te quedan${restanNum === null ? '' : ' (de ' + correspondeTxt + ')'}</span></div>
+                <div><b>${plusRest}</b><span>aún generan plus (tope ${TOPE_PLUS})</span></div>
+            </div>
+            <div class="vac-bar"><div style="width:${pct}%"></div></div>
+            <p class="vac-nota">${programados > 0 ? `📌 Tenés <b>${programados}</b> día${programados===1?'':'s'} de vacaciones agendado${programados===1?'':'s'} a futuro (ya descontado${programados===1?'':'s'} de los que quedan).<br>` : ''}Antigüedad al 31/12/${anio}: <b>${antig} año${antig===1?'':'s'}</b>${restanNum !== null ? ` → te corresponden <b>${correspondeTxt}</b> días corridos (LCT art. 150: 14 hasta 5 años, 21 hasta 10, 28 hasta 20, 35 más de 20).` : '. ' + restanTxt + '.'}<br>El plus vacacional se paga por cada día gozado hasta ${TOPE_PLUS} días (Cláusula 13ª). Cargá cada día de vacaciones, incluidos francos y feriados dentro del período, para que el conteo sea exacto. Es una referencia: puede variar según tu fecha de ingreso y días trabajados en el año.</p>`;
+    };
+
+    window.abrirCalendario = function() {
+        const m = document.getElementById('modal-calendario');
+        if (m) m.style.display = 'flex';
+        window.renderCalendarioMes();
+    };
+    window.cerrarCalendario = function() {
+        const m = document.getElementById('modal-calendario');
+        if (m) m.style.display = 'none';
+    };
+
+    window.renderCalendarioMes = function() {
+        const tit = document.getElementById('cal-titulo');
+        if (tit) tit.textContent = `${window.meses[window.fechaFiltro.getMonth()]} ${window.fechaFiltro.getFullYear()}`.toUpperCase();
+        const grid = document.getElementById('cal-grid');
+        if (!grid) return;
+        const y = window.fechaFiltro.getFullYear();
+        const m = window.fechaFiltro.getMonth();
+        const diasMes = new Date(y, m + 1, 0).getDate();
+        const offset = (new Date(y, m, 1).getDay() + 6) % 7; // semana arranca el lunes
+        const hoy = new Date();
+        const esMesActual = hoy.getFullYear() === y && hoy.getMonth() === m;
+        const porDia = {};
+        (window.turnos || []).forEach(t => {
+            if (!t.f) return;
+            (porDia[t.f] = porDia[t.f] || []).push(t);
+        });
+        const fers = new Set(window.feriadosGlobales || []);
+        let h = ['L','M','M','J','V','S','D'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+        for (let i = 0; i < offset; i++) h += '<div class="cal-day vacio"></div>';
+        for (let d = 1; d <= diasMes; d++) {
+            const f = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const ts = porDia[f] || [];
+            let cls = 'franco', sub = '', titulo = 'Franco';
+            if (ts.some(t => t.falta)) { cls = 'falta'; titulo = 'Falta'; sub = 'Falta'; }
+            else if (ts.some(t => t.susp)) { cls = 'susp'; titulo = 'Suspensión'; sub = 'Susp.'; }
+            else if (ts.some(t => t.lic)) { cls = 'lic'; titulo = 'Licencia'; sub = 'Lic.'; }
+            else if (ts.some(t => t.vac)) { cls = 'vac'; titulo = 'Vacaciones'; sub = 'Vac.'; }
+            else if (ts.length) {
+                cls = 'trabajo';
+                const hs = ts.reduce((a, t) => a + (Number(t.t) || 0), 0);
+                sub = hs > 0 ? fmtH(hs) + 'h' : '';
+                titulo = 'Trabajo';
+            }
+            const esFer = fers.has(f) || ts.some(t => t.ferE || t.ferS || t.fer);
+            const clases = ['cal-day', cls];
+            if (esFer) clases.push('fer');
+            if (esMesActual && hoy.getDate() === d) clases.push('hoy');
+            h += `<button type="button" class="${clases.join(' ')}" data-cal-fecha="${f}" title="${titulo}${esFer ? ' · Feriado' : ''}">${d}${sub ? `<small>${sub}</small>` : ''}</button>`;
+        }
+        grid.innerHTML = h;
+        window.renderVacacionesAnio();
+    };
+
+    document.addEventListener('click', (ev) => {
+        const b = ev.target.closest && ev.target.closest('[data-cal-fecha]');
+        if (!b) return;
+        const f = b.dataset.calFecha;
+        const t = (window.turnos || []).find(x => x.f === f);
+        if (t) {
+            window.editarTurno(t.id);
+        } else {
+            window.cancelarEdicion();
+            const inp = document.getElementById('fecha');
+            if (inp) { inp.value = f; if (window.detectarFeriadoAutomatico) window.detectarFeriadoAutomatico(); }
+        }
+        window.cerrarCalendario();
+        const form = document.getElementById('main-form');
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
     function render() {
         const lista = document.getElementById('lista'); 
@@ -5025,6 +5294,8 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         const avisoDesact = document.getElementById('aviso-valores-desactualizados');
         if (avisoDesact) avisoDesact.style.display = valMes.valoresDesactualizados ? 'block' : 'none';
+        const avisoAporte = document.getElementById('aviso-aporte-pendiente');
+        if (avisoAporte) avisoAporte.style.display = (!valMes.aporteSolidarioRespondido && aporteSolidarioVigente) ? 'block' : 'none';
         const avisoApc = document.getElementById('aviso-apc');
         if (avisoApc) avisoApc.style.display = valMes.preventivoCrisis ? 'block' : 'none';
 
@@ -5033,6 +5304,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         
         window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
         window.actualizarSugerenciasPuestos();
+        { const mc = document.getElementById('modal-calendario'); if (mc && mc.style.display !== 'none' && window.renderCalendarioMes) window.renderCalendarioMes(); }
 
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
