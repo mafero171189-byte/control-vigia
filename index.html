@@ -3854,10 +3854,8 @@ async function cargarDatosNube() {
                 if (!isNaN(v.hora)) {
                     pagoHorasExtra = hsExtra * Number(v.hora);
                 } else {
-                    const ratioNoct = st > 0 ? Math.min(totalNoct / st, 1) : 0;
-                    const hsExtraNoc = hsExtra * ratioNoct;
-                    const hsExtraDia = hsExtra - hsExtraNoc;
-                    pagoHorasExtra = (hsExtraDia * valorHoraNormal * 1.5) + (hsExtraNoc * valorHoraNormal * 2.0);
+                    // Horas extra al 50%: así las liquida la empresa (recibo sep-2026). La nocturnidad ya se paga aparte.
+                    pagoHorasExtra = hsExtra * valorHoraNormal * 1.5;
                 }
             }
 
@@ -5211,12 +5209,10 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 // Valor manual configurado por el usuario → usar directo
                 pagoHorasTotales = hsExtra * horaExtraVal;
             } else {
-                // LCT Art. 201: 50% extra diurno (×1.5), 100% extra nocturno/domingo (×2)
-                // Proporción basada en horas nocturnas reales del mes
-                const ratioNoct = (st > 0) ? Math.min(sn / st, 1) : 0;
-                const hsExtraNoc = hsExtra * ratioNoct;
-                const hsExtraDia = hsExtra - hsExtraNoc;
-                pagoHorasTotales = (hsExtraDia * valorHoraNormal * 1.5) + (hsExtraNoc * valorHoraNormal * 2.0);
+                // Horas extra al 50% (×1.5): así las liquida la empresa (verificado con recibo sep-2026:
+                // 16 hs × $10.065,84). La nocturnidad ya se paga aparte, no duplica la hora extra.
+                // Si tu empresa paga otro recargo, cargá el valor en "Hora Extra" de Valores de Cobro.
+                pagoHorasTotales = hsExtra * valorHoraNormal * 1.5;
             }
         }
 
