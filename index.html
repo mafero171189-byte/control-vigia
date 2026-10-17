@@ -2678,6 +2678,7 @@
             if (window.unsubConfig) { window.unsubConfig(); window.unsubConfig = null; }
             if (window.unsubAviso) { window.unsubAviso(); window.unsubAviso = null; }
             window._configCargado = false;
+            window._configListo = false;
             // Limpiar campos de UI
             const ids = ['vigiNombre','vigiApellido','lista'];
             ids.forEach(id => { const el = document.getElementById(id); if(el) el.value !== undefined ? el.value = '' : el.innerHTML = ''; });
@@ -3470,7 +3471,14 @@ async function cargarDatosNube() {
 
         // 2. Suscripción en tiempo real a datos del usuario (licencia se actualiza sin recargar)
         try {
-            window.unsubConfig = onSnapshot(doc(db, "usuarios", window.currentUser.uid, "config", "datos"), (docSnap) => {
+            const _uidConfig = window.currentUser.uid;
+            const _suscribirConfig = (intento) => {
+            if (window.unsubConfig) { try { window.unsubConfig(); } catch (e) {} }
+            window.unsubConfig = onSnapshot(doc(db, "usuarios", _uidConfig, "config", "datos"), (docSnap) => {
+                // Marca de "config cargada de verdad": si el documento existe, o si el servidor
+                // confirma que no existe. Un "no existe" que viene de la caché vacía (navegador
+                // recién limpiado, conexión todavía arrancando) NO cuenta: no hay que guardar nada encima.
+                if (docSnap.exists() || !docSnap.metadata.fromCache) window._configListo = true;
                 if (docSnap.exists()) {
                     const configData = docSnap.data();
                     const p = configData.precios || {}; 
@@ -3552,7 +3560,19 @@ async function cargarDatosNube() {
             }, (e) => {
                 console.error("Error suscribiendo perfil:", e);
                 window.preciosGuardados = {};
+                // El listener muere al fallar (p. ej. permisos todavía no propagados tras un login nuevo):
+                // reintentamos en vez de dejar la config vacía hasta que el usuario recargue.
+                if (window.currentUser && window.currentUser.uid === _uidConfig && intento < 4) {
+                    if (intento === 0) window.showToast("⏳ Cargando tu configuración…");
+                    setTimeout(() => {
+                        if (window.currentUser && window.currentUser.uid === _uidConfig) _suscribirConfig(intento + 1);
+                    }, [1500, 3000, 6000, 10000][intento]);
+                } else if (intento >= 4) {
+                    window.showToast("⚠️ No se pudo cargar tu configuración. Cerrá y abrí la app.", "danger");
+                }
             });
+            };
+            _suscribirConfig(0);
         } catch (e) {
             console.error("Error cargando perfil:", e);
             window.preciosGuardados = {};
@@ -4461,6 +4481,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
     window.guardarConfig = async function() {
         if (!window.currentUser) return;
+        if (!window._configListo) return window.showToast("⏳ Todavía se está cargando tu configuración. Esperá un momento y probá de nuevo.", "danger");
         const fechaIngresoVal = document.getElementById('valFechaIngreso') ? document.getElementById('valFechaIngreso').value : "";
         if (fechaIngresoVal && !window.parsearFechaIngreso(fechaIngresoVal)) {
             return window.showToast("⚠️ La fecha de ingreso no es válida (no puede ser futura)", "danger");
@@ -4498,6 +4519,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
     window.guardarPerfil = async function() {
         if (!window.currentUser) return;
+        if (!window._configListo) return; // no pisar el perfil guardado con campos vacíos antes de que cargue
         const p = window.preciosGuardados; 
         const nombreNuevo = document.getElementById('vigiNombre').value.trim();
         const apellidoNuevo = document.getElementById('vigiApellido').value.trim();
