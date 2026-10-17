@@ -757,7 +757,7 @@
                 <div>
                     Elegí tu categoría y poné tu fecha de ingreso (o tus años de antigüedad): el sistema carga los valores de UPSRA automáticamente.<br><br>
                     <b>Feriados puente:</b> si tu empresa no te los paga, elegí "No los paga" y se tratan como días normales solo para vos.<br>
-                    <b>Viáticos:</b> se pagan el mes completo salvo faltas sin aviso o suspensiones. No llegar a las horas base <b>no</b> reduce el viático.<br>
+                    <b>Viáticos:</b> se pagan el mes completo salvo faltas sin aviso o suspensiones. En un mes con vacaciones se pagan solo por los días trabajados. No llegar a las horas base <b>no</b> reduce el viático.<br>
                     <b>Feriado:</b> elegí 100% (Ley) o 50% según te liquide tu empresa.
                 </div>
             </details>
@@ -3865,7 +3865,8 @@ async function cargarDatosNube() {
 
             const promedioHorasTurno = conteoTurnosParaPromedio > 0 ? (sumaHorasParaPromedio / conteoTurnosParaPromedio) : 8;
             const diasAusenciaJustificada = diasLic + diasVac;
-            let horasBaseAjustada = Math.max(0, v.horasBase - (promedioHorasTurno * diasAusenciaJustificada));
+            // Cada día de vacaciones baja la meta horasBase/25 (8 hs con 200 hs): así lo liquida la empresa (recibo sep-2026)
+            let horasBaseAjustada = Math.max(0, v.horasBase - ((v.horasBase / 25) * diasVac) - (promedioHorasTurno * diasLic));
             horasBaseAjustada = Math.round(horasBaseAjustada);
 
             let pagoHorasExtra = 0;
@@ -5221,7 +5222,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
 
         // FIX Bug 2: horasBaseAjustada usa el turno real en lugar del divisor fijo /30
         // Para un trabajador de 12hs: 1 licencia reduce la meta en 12h, no en 6.67h
-        let horasBaseAjustada = Math.max(0, valMes.horasBase - (promedioHorasTurno * diasAusenciaJustificada));
+        // Vacaciones: cada día baja la meta horasBase/25 (8 hs con 200 hs), no el largo del turno.
+        // Verificado con recibo real sep-2026: 14 guardias de 12 hs (168 hs) + 7 días de vacaciones
+        // → meta 200 − 7×8 = 144 → 24 hs extra, que es lo que liquidó la empresa.
+        // Licencias: se mantiene el criterio anterior (largo promedio de turno), sin recibo que lo confirme.
+        let horasBaseAjustada = Math.max(0, valMes.horasBase - ((valMes.horasBase / 25) * diasVacaciones) - (promedioHorasTurno * diasLicencia));
         horasBaseAjustada = Math.round(horasBaseAjustada);
 
         let pagoHorasTotales = 0, hsExtra = 0;
@@ -5252,7 +5257,11 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         let viaticoFinal;
         // FIX Bug 1: solo faltas y suspensiones reducen el viático (no vacaciones ni licencias)
         const diasReducenViatico = diasFaltaSinAviso + diasSuspension;
-        if (diasReducenViatico === 0) {
+        if (diasVacaciones > 0) {
+            // Mes con vacaciones: la empresa paga el viático solo por los días efectivamente trabajados
+            // (recibos reales: sep-2026 con 14 guardias → 14 × $20.960). Sin vacaciones sigue el mes completo.
+            viaticoFinal = Math.min(valMes.viatico, viaticoDiario * diasUnicosTrabajados.size);
+        } else if (diasReducenViatico === 0) {
             // Sin faltas ni suspensiones: viático mensual completo garantizado.
             // Si no llegás a las horas base porque la empresa no te asignó servicios,
             // la reducción no es imputable al trabajador → se paga el mes entero.
