@@ -9,9 +9,12 @@
     <title>Control Vigía - Gestión de Guardia</title>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#0B1220">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <style>
@@ -238,10 +241,10 @@
         .salary-card span.neto-title { font-size: 0.85rem; color: var(--accent); font-weight: 800; text-transform: uppercase; display: inline-block; margin-top: 8px; }
         .salary-card h2 { font-size: 1.9rem; margin: 5px 0; color: var(--success); }
 
-        .stats-panel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-card { background: var(--card-bg); padding: 12px 5px; border-radius: 16px; text-align: center; border: 1px solid var(--border); }
+        .stats-panel { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 15px; }
+        .stat-card { background: var(--card-bg); padding: 12px 2px; border-radius: 16px; text-align: center; border: 1px solid var(--border); }
         .stat-card b { display: block; font-size: 1.2rem; }
-        .stat-card span { font-size: 0.6rem; text-transform: uppercase; color: var(--text-dim); font-weight: bold; }
+        .stat-card span { font-size: 0.52rem; letter-spacing: -0.2px; display: block; line-height: 1.2; min-height: 2.4em; text-transform: uppercase; color: var(--text-dim); font-weight: bold; }
 
         .btn-whatsapp { width: 100%; background: var(--whatsapp); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; }
 
@@ -608,10 +611,259 @@
         .vac-bar > div { height:100%; background:var(--success); width:0; transition:.4s; }
         .vac-nota { font-size:.7rem; line-height:1.4; color:var(--text-muted, #94a3b8); margin:6px 0 0; }
     </style>
+    <style id="rediseno-v1">
+/* ================= REDISEÑO v1 — Control Vigía =================
+   Solo presentación. No toca IDs ni lógica. */
+:root {
+    --bg-color:#0B1220; --card-bg:#152238; --input-bg:#0F1A2D;
+    --accent:#43C7F4; --text-main:#EAF0F8; --text-dim:#8EA0B8;
+    --success:#35D39A; --danger:#F0616D; --warning:#F2B24B;
+    --border:rgba(148,170,200,.14); --admin:#8B7BF2; --whatsapp:#25d366;
+    --radius:18px; --nav-h:68px;
+}
+body.light-mode {
+    --bg-color:#EEF2F8; --card-bg:#FFFFFF; --input-bg:#F3F6FB;
+    --accent:#0E8FC0; --text-main:#0B1220; --text-dim:#5B6B82;
+    --success:#12A474; --danger:#D6404E; --warning:#C98A14;
+    --border:rgba(11,18,32,.10);
+}
+html { -webkit-tap-highlight-color: transparent; }
+body { font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; -webkit-font-smoothing:antialiased; }
+button { font-family:inherit; }
+input, select, textarea { font-family:inherit; }
+.ico { flex-shrink:0; display:block; }
+.ico.sm { width:18px; height:18px; }
+
+/* ---- Contenedor y encabezado ---- */
+#app-container { max-width:520px; padding:14px 16px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom,0px)); }
+.app-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.brand { display:flex; align-items:center; gap:12px; min-width:0; }
+.brand-logo { width:42px; height:42px; border-radius:13px; background:var(--card-bg); border:1px solid var(--border); color:var(--accent); display:flex; align-items:center; justify-content:center; }
+.brand-txt h1 { font-size:1rem; font-weight:800; letter-spacing:1.2px; color:var(--text-main); margin:0; text-transform:uppercase; }
+.status-badge { margin-top:2px; font-size:.64rem; font-weight:600; letter-spacing:.4px; }
+.status-badge .dot { width:6px; height:6px; box-shadow:none !important; }
+.mode-toggle { width:40px; height:40px; padding:0; border-radius:12px; background:var(--card-bg); border:1px solid var(--border); font-size:1rem; display:flex; align-items:center; justify-content:center; }
+
+/* ---- Selector de mes ---- */
+.month-selector { box-sizing:border-box; position:sticky; top:0; z-index:40; gap:10px; padding:8px; margin:0 0 16px; border-radius:16px; background:var(--card-bg); border:1px solid var(--border); box-shadow:0 6px 18px rgba(0,0,0,.18); }
+.month-selector span { flex:1; min-width:0; font-size:.95rem; font-weight:700; letter-spacing:.3px; text-transform:capitalize; }
+.btn-nav { width:38px; height:38px; border-radius:12px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); flex-shrink:0; }
+.btn-nav.btn-nav-cal { color:var(--accent); margin-left:0 !important; }
+
+/* ---- Pestañas ---- */
+.tab-panel { display:none; }
+.tab-panel.active { display:block; animation:tabIn .22s ease; }
+@keyframes tabIn { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+.page-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 0 14px; }
+.page-head h2 { margin:0; font-size:1.35rem; font-weight:800; letter-spacing:.2px; }
+.muted { color:var(--text-dim); font-size:.82rem; margin:0; }
+
+/* ---- Tarjetas y botones base ---- */
+.card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:14px; }
+.card-title { font-size:.74rem; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; }
+.card-title small { text-transform:none; letter-spacing:0; font-weight:500; opacity:.8; }
+.btn-primary, .btn-ghost { display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:14px; font-weight:700; font-size:.92rem; cursor:pointer; padding:14px 18px; border:1px solid transparent; }
+.btn-primary { background:var(--accent); color:#06121F; flex:1; }
+.btn-ghost { background:transparent; color:var(--text-main); border-color:var(--border); }
+.btn-ghost.sm { padding:9px 12px; font-size:.78rem; border-radius:12px; color:var(--accent); }
+.btn-primary:active, .btn-ghost:active, .menu-row:active, .btn-submit:active { transform:scale(.98); }
+
+/* ---- Inicio: tarjeta principal ---- */
+.hero-card { border-radius:22px; padding:20px; margin-bottom:14px; background:linear-gradient(155deg, #1B3358 0%, var(--card-bg) 62%); border:1px solid rgba(67,199,244,.22); box-shadow:0 10px 30px rgba(0,0,0,.22); }
+body.light-mode .hero-card { background:linear-gradient(155deg,#DDF0FA 0%, #fff 65%); }
+.hero-label { font-size:.72rem; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--text-dim); }
+.hero-amount { font-size:2.2rem; font-weight:800; letter-spacing:-.5px; margin:6px 0 2px; color:var(--success); font-variant-numeric:tabular-nums; }
+.hero-sub { font-size:.82rem; color:var(--text-dim); }
+.hero-sub b { color:var(--text-main); font-weight:600; }
+.hero-actions { display:flex; gap:10px; margin-top:18px; }
+.hero-actions .btn-ghost { flex:0 0 auto; padding:14px 16px; }
+
+.stats-panel { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat-card { position:relative; text-align:left; padding:14px 14px 12px; border-radius:16px; border:1px solid var(--border); background:var(--card-bg); }
+.stat-card::before { content:''; position:absolute; top:15px; right:14px; width:8px; height:8px; border-radius:50%; background:var(--c, var(--accent)); }
+.stat-card span { display:block; min-height:0; font-size:.68rem; letter-spacing:.6px; font-weight:700; text-transform:uppercase; color:var(--text-dim); line-height:1.2; }
+.stat-card b { margin-top:6px; font-size:1.7rem; font-weight:800; letter-spacing:-.3px; font-variant-numeric:tabular-nums; }
+#progress-container { border-radius:var(--radius) !important; padding:16px !important; margin-bottom:14px !important; }
+#progress-container > div:nth-child(2) { height:8px !important; background:var(--input-bg) !important; border:none !important; }
+#progress-bar { background:var(--accent) !important; }
+#progress-container span { font-size:.72rem !important; letter-spacing:.8px; }
+#progress-status { font-style:normal !important; }
+
+/* ---- Avisos ---- */
+#banner-licencia { border-radius:16px !important; margin-bottom:14px !important; background:rgba(242,178,75,.10) !important; text-align:left !important; padding:12px 14px !important; }
+#banner-licencia h4 { letter-spacing:.6px; font-size:.78rem !important; }
+.global-alert { animation:none; border-radius:16px; background:rgba(67,199,244,.08); border:1px solid rgba(67,199,244,.28); border-left-width:3px; }
+.btn-cerrar-aviso { border-radius:8px; }
+
+/* ---- Mi sueldo ---- */
+.salary-card { display:flex; flex-direction:column; align-items:stretch; text-align:left; padding:20px; border-radius:22px; margin-bottom:14px; background:linear-gradient(155deg,#1B3358 0%, var(--card-bg) 62%); border:1px solid rgba(67,199,244,.22); box-shadow:0 10px 30px rgba(0,0,0,.22); }
+body.light-mode .salary-card { background:linear-gradient(155deg,#DDF0FA 0%, #fff 65%); }
+.salary-card > * { order:5; }
+.salary-card span.neto-title { order:1; margin:0; font-size:.72rem; letter-spacing:.9px; color:var(--text-dim); }
+.salary-card h2 { order:2; font-size:2rem; letter-spacing:-.4px; margin:6px 0 4px !important; font-variant-numeric:tabular-nums; }
+.salary-card .bruto-text { order:3; font-size:.85rem; margin-bottom:10px; }
+.salary-card .bruto-text b { color:var(--text-main); }
+.desglose { display:flex; flex-direction:column; }
+.dg-sec { font-size:.68rem; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--accent); margin:14px 0 4px; }
+.dg-sec:first-child { margin-top:0; }
+.dg-row { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:.86rem; color:var(--text-dim); }
+.dg-row b { color:var(--text-main); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.dg-row.neg b { color:var(--danger); }
+.dg-row.sub { border-bottom:none; padding-top:6px; }
+.dg-row.sub span, .dg-row.sub b { color:var(--text-main); font-weight:700; }
+.dg-row.total { border-bottom:none; border-top:1px solid var(--border); margin-top:10px; padding-top:12px; font-size:.95rem; }
+.dg-row.total span { color:var(--text-main); font-weight:700; }
+.dg-row.total.net b { color:var(--success); font-size:1.2rem; font-weight:800; }
+
+/* ---- Listas de opciones (Reportes / Más) ---- */
+.menu-list { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.menu-row { box-sizing:border-box; display:block; width:100%; text-align:left; text-decoration:none; color:var(--text-main); background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:0; cursor:pointer; transition:transform .1s, border-color .15s; }
+.menu-row:hover { border-color:rgba(67,199,244,.4); }
+.menu-row-in { display:flex; align-items:center; gap:14px; padding:14px 16px; }
+.mr-ico { width:40px; height:40px; border-radius:12px; background:var(--input-bg); color:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.mr-txt { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.mr-txt b { font-size:.95rem; font-weight:600; }
+.mr-txt small { font-size:.76rem; color:var(--text-dim); line-height:1.3; }
+.mr-chev { color:var(--text-dim); display:flex; }
+.menu-row.danger .mr-ico { color:var(--danger); }
+.menu-row.danger .mr-txt b { color:var(--danger); }
+#btn-admin-access { background:var(--card-bg); color:var(--text-main); border:1px solid var(--border); padding:0; border-radius:16px; font-size:inherit; font-weight:inherit; }
+#btn-admin-access .mr-ico { color:var(--admin); }
+
+/* ---- Formulario de guardia ---- */
+.glass-form { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:14px; }
+.glass-form.edit-mode { border-color:var(--warning); box-shadow:0 0 0 3px rgba(242,178,75,.12); }
+.form-title { font-size:.74rem !important; font-weight:700 !important; letter-spacing:.8px; text-transform:uppercase; color:var(--text-dim) !important; margin-bottom:12px !important; }
+label { font-size:.72rem; font-weight:600; letter-spacing:.3px; color:var(--text-dim); margin-bottom:6px; }
+input, select, .time-picker-trigger { background:var(--input-bg); border:1px solid var(--border); border-radius:12px; padding:12px; color:var(--text-main); font-size:.95rem; }
+input:focus, select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(67,199,244,.15); }
+.time-picker-trigger { padding:12px; font-weight:600; letter-spacing:.5px; }
+.form-row { gap:12px; margin-bottom:14px; }
+#box-feriado { background:rgba(242,178,75,.07) !important; border-color:rgba(242,178,75,.22) !important; border-radius:14px !important; }
+.novedad-trigger { border-radius:14px; padding:14px 16px; font-size:.9rem; background:var(--input-bg); border-color:var(--border); }
+.novedad-options { border-radius:16px; background:var(--card-bg); border-color:var(--border); }
+.btn-submit { background:var(--accent); color:#06121F; border-radius:14px; padding:15px; font-size:.95rem; font-weight:800; letter-spacing:.4px; }
+#btn-cancel-edit { background:transparent !important; color:var(--danger); border:1px solid var(--danger); }
+.btn-config-main { background:var(--input-bg); color:var(--accent); border:1px solid var(--border); border-radius:14px; letter-spacing:.5px; }
+.btn-config-main:hover { background:var(--input-bg); border-color:var(--accent); }
+
+/* ---- Historial ---- */
+.btn-toggle-lista { border-radius:14px; border-color:var(--border); font-size:.72rem; letter-spacing:.8px; padding:11px; margin-bottom:12px; }
+.shift-card { position:relative; padding:14px 16px 14px 18px; border-radius:16px; border:1px solid var(--border); background:var(--card-bg) !important; overflow:hidden; gap:10px; }
+.shift-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent); }
+.shift-card.feriado { border-color:var(--border); } .shift-card.feriado::before { background:var(--warning); }
+.shift-card.vacaciones { border-color:var(--border); } .shift-card.vacaciones::before { background:var(--success); }
+.shift-card.licencia { border-color:var(--border); } .shift-card.licencia::before { background:#A78BFA; }
+.shift-card.falta { border-color:var(--border); } .shift-card.falta::before { background:var(--danger); }
+.shift-card.suspension { border-color:var(--border); } .shift-card.suspension::before { background:#8EA0B8; }
+.shift-card > div:first-child { max-width:58% !important; }
+.shift-date { font-size:.95rem; font-weight:700; }
+.shift-location { font-size:.8rem; }
+.total-h { font-size:1.05rem; font-weight:800; font-variant-numeric:tabular-nums; }
+.noct-h { font-weight:600; }
+.feriado-badge, .vacaciones-badge, .licencia-badge, .falta-badge, .suspension-badge { border-radius:999px; padding:3px 9px; font-size:.62rem; letter-spacing:.4px; }
+.btn-del { width:32px; height:32px; border-radius:10px; font-size:.95rem; background:var(--input-bg) !important; color:var(--text-dim) !important; border:1px solid var(--border); }
+.btn-del:hover { color:var(--danger) !important; }
+
+/* ---- Calendario ---- */
+.cal-day { border-radius:12px; background:var(--input-bg); }
+.cal-day.trabajo { background:rgba(67,199,244,.20); border-color:rgba(67,199,244,.6); }
+.cal-day.hoy { outline-color:var(--accent); }
+.vac-box { border-radius:16px; border-color:rgba(53,211,154,.35); background:rgba(53,211,154,.07); }
+.cal-card { border-radius:22px !important; }
+
+/* ---- Modales ---- */
+.modal-content { background:var(--card-bg); border:1px solid var(--border); border-radius:22px; box-shadow:0 24px 60px rgba(0,0,0,.45); }
+.modal-btns button { border-radius:12px; font-weight:700; }
+.btn-send, .auth-btn { background:var(--accent); color:#06121F; }
+.btn-cancel { background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); }
+.auth-btn { border-radius:14px; letter-spacing:.6px; }
+.cfg-card { border-radius:16px; background:var(--input-bg); }
+.cfg-t { letter-spacing:.9px; }
+.guia-box { background:var(--input-bg); }
+#toast { border-radius:14px; border-color:var(--border); box-shadow:0 14px 40px rgba(0,0,0,.5); }
+
+/* ---- Barra de navegación (celular) ---- */
+.bottom-nav { position:fixed; left:0; right:0; bottom:0; z-index:1500; display:flex; align-items:stretch; justify-content:space-around; gap:2px; height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px)); padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px)); background:rgba(11,18,32,.92); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-top:1px solid var(--border); }
+body.light-mode .bottom-nav { background:rgba(255,255,255,.94); }
+.nav-brand { display:none; }
+.nav-item { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; border-radius:14px; color:var(--text-dim); font-size:.64rem; font-weight:600; letter-spacing:.2px; cursor:pointer; padding:4px 0; transition:color .15s, background .15s; }
+.nav-item .ico { width:22px; height:22px; }
+.nav-item.active { color:var(--accent); background:rgba(67,199,244,.10); }
+.nav-item span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+
+/* ---- Computadora: menú lateral ---- */
+@media (min-width:900px) {
+    #app-container { max-width:none; margin:0; margin-left:240px; padding:28px 40px 48px; }
+    #app-container > .app-header, #app-container > .month-selector, #app-container > .tab-panel { max-width:880px; }
+    .bottom-nav { top:0; right:auto; bottom:0; width:240px; height:auto; flex-direction:column; justify-content:flex-start; gap:6px; padding:22px 14px; border-top:none; border-right:1px solid var(--border); background:var(--card-bg) !important; backdrop-filter:none; }
+    .nav-brand { display:flex; align-items:center; gap:10px; padding:4px 10px 22px; color:var(--text-main); font-weight:800; font-size:.9rem; letter-spacing:1.2px; }
+    .nav-brand .brand-ico { width:26px; height:26px; color:var(--accent); }
+    .nav-item { flex:0 0 auto; flex-direction:row; justify-content:flex-start; gap:14px; padding:13px 14px; font-size:.92rem; }
+    .stats-panel { grid-template-columns:repeat(4,1fr); }
+    .brand-logo, .brand-txt h1 { display:none; }
+    .app-header { justify-content:flex-end; margin-bottom:10px; }
+    .month-selector { margin-top:0; }
+    .hero-amount, .salary-card h2 { font-size:2.5rem; }
+}
+
+/* ---- Pantalla de ingreso ---- */
+#landing-page { background:var(--bg-color) !important; }
+.lp-scan { display:none; }
+.lp-grid { background-image:linear-gradient(rgba(67,199,244,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(67,199,244,.035) 1px, transparent 1px) !important; }
+.lp-glow-top { background:radial-gradient(ellipse at top, rgba(67,199,244,.10) 0%, transparent 70%) !important; }
+.lp-logo-ring, .lp-logo-ring2 { animation:none !important; opacity:.5; }
+.lp-logo { background:var(--card-bg) !important; border:1px solid var(--border) !important; box-shadow:none !important; border-radius:26px; }
+.lp-chip { background:var(--card-bg); border-color:var(--border); letter-spacing:1.6px; }
+.lp-chip-dot { animation:none; box-shadow:none; }
+.lp-title { background:none !important; -webkit-text-fill-color:var(--text-main) !important; color:var(--text-main); font-size:2.8rem; letter-spacing:3px; }
+.lp-upsra-banner { background:var(--card-bg); border-color:var(--border); border-radius:18px; }
+.lp-upsra-banner::before { background:var(--accent); }
+.lp-upsra-banner-title { color:var(--accent); }
+.lp-pill { background:var(--input-bg); border-color:var(--border); }
+.lp-stat { background:var(--card-bg); border-color:var(--border) !important; border-radius:16px; }
+.feature-card { background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:16px; }
+.feat-icon { filter:saturate(.6); opacity:.9; }
+.auth-box { background:var(--card-bg); border:1px solid var(--border); border-radius:22px; box-shadow:0 20px 50px rgba(0,0,0,.4); }
+.auth-input { border-radius:14px; background:var(--input-bg); }
+.btn-soporte-lp { border-radius:14px; border-color:var(--border); background:var(--card-bg); }
+.lo-icon { animation:none; }
+
+/* ---- Panel de administración ---- */
+#admin-container { max-width:560px; padding-bottom:40px; }
+.admin-header { background:var(--card-bg); border:1px solid var(--border); box-shadow:none; color:var(--text-main); }
+.admin-msg-box { background:var(--card-bg); border-radius:var(--radius); border-color:var(--border) !important; }
+.user-list-card { border-radius:16px; }
+.btn-msg { border-radius:12px; letter-spacing:.4px; }
+
+    </style>
+<style id="admin-v1">@media (max-width:899px){#app-container,#admin-container,#bottom-nav,.modal-content{zoom:.93}}body.sin-mes .month-selector{display:none !important}
+.hero-note{font-size:.72rem;line-height:1.5;color:var(--text-dim);margin:10px 0 2px}
+.hero-note b{color:var(--text-main)}
+.hero-note .hero-more{color:var(--accent);font-weight:700;text-decoration:none}
+.hist-resumen{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.hist-resumen small{display:block;font-size:.7rem;color:var(--text-dim);margin-top:2px}
+.hist-resumen #hist-mes{font-weight:800;font-size:.95rem;text-transform:uppercase;letter-spacing:.02em}
+.hist-resumen .hr-r{text-align:right}
+.hist-resumen #hist-neto{color:var(--success);font-size:1.15rem}
+.modal-content{box-sizing:border-box !important;overflow-x:hidden !important}
+.modal-content .form-row{flex-wrap:wrap}
+.modal-content select,.modal-content input{min-width:0;max-width:100%;box-sizing:border-box}
+#aguinaldoSemestre{flex:1 1 100% !important}
+#aguinaldoAnio{flex:1 1 100% !important}
+#aguinaldo-resultado,#comparar-resultado{overflow-wrap:anywhere;max-width:100%}
+
+#admin-container .admin-section-header h3,#admin-container h1{color:#43C7F4 !important;font-weight:700 !important;letter-spacing:.01em}
+#admin-container h1{font-size:1.15rem !important}
+#admin-container .admin-msg-box{background:#152238 !important;border:1px solid rgba(255,255,255,.08) !important;border-radius:16px !important;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#admin-container .admin-section-arrow{color:#8FA3BF !important}
+body.light-mode #admin-container .admin-msg-box{background:#fff !important;border-color:#DDE5EF !important}
+body.light-mode #admin-container .admin-section-header h3,body.light-mode #admin-container h1{color:#0B7FA8 !important}
+</style>
 </head>
 <body>
 
-<div id="loading-overlay"><div class="lo-ring"><div class="lo-icon">🛡️</div></div><div class="lo-text">Verificando sesión<span class="lo-dots"><span>.</span><span>.</span><span>.</span></span></div><div class="lo-bar-wrap"><div class="lo-bar"></div></div></div>
+<div id="loading-overlay"><div class="lo-ring"><div class="lo-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#43C7F4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div></div><div class="lo-text">Verificando sesión<span class="lo-dots"><span>.</span><span>.</span><span>.</span></span></div><div class="lo-bar-wrap"><div class="lo-bar"></div></div></div>
 <div id="toast"></div>
 
 <div id="modal-rueda-hora">
@@ -1278,7 +1530,7 @@
     <div class="lp-logo-wrap">
       <div class="lp-logo-ring2"></div>
       <div class="lp-logo-ring"></div>
-      <div class="lp-logo">🛡️</div>
+      <div class="lp-logo"><svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="#43C7F4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
     </div>
 
     <!-- CHIP -->
@@ -1401,21 +1653,28 @@
 </div>
 
 <div id="app-container">
-    <header>
-        <div style="display: flex; flex-direction: column;">
-            <h1>CONTROL VIGÍA</h1>
-            <div id="status-badge" class="status-badge online"><span class="dot"></span> <span id="status-text">Conectado</span></div>
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-logo"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <div class="brand-txt">
+                <h1>CONTROL VIGÍA</h1>
+                <div id="status-badge" class="status-badge online"><span class="dot"></span> <span id="status-text">Conectado</span></div>
+            </div>
         </div>
         <div class="header-actions">
-            <button id="btn-admin-access" onclick="abrirAdmin()">⭐ Admin</button>
-            <button class="mode-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
-            <button class="btn-logout" style="border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.1);" onclick="abrirModalPerfil()" title="Mi Perfil">👤</button>
-            <button class="btn-logout" style="border-color: var(--warning); color: var(--warning); background: rgba(245, 158, 11, 0.1);" onclick="abrirModalAyuda()" title="Ayuda">❓</button>
-
-            <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+            <button class="mode-toggle" onclick="toggleTheme()" title="Cambiar tema"><span id="theme-icon">🌙</span></button>
         </div>
     </header>
 
+    <div class="month-selector">
+        <button class="btn-nav" onclick="cambiarMes(-1)" aria-label="Mes anterior"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <span id="mesVisual">...</span>
+        <button class="btn-nav" onclick="cambiarMes(1)" aria-label="Mes siguiente"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="btn-nav btn-nav-cal" onclick="abrirCalendario()" title="Calendario y vacaciones" aria-label="Calendario"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
+    </div>
+
+    <!-- ===== INICIO ===== -->
+    <section class="tab-panel active" id="tab-inicio" data-tab="inicio">
     <div id="banner-licencia" style="position: relative; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1)); border: 1px solid var(--warning); padding: 12px; border-radius: 12px; margin-bottom: 20px; display: none; text-align: center; cursor: pointer; transition: 0.3s;" onclick="mostrarPagoLicencia(false)">
         <button onclick="cerrarBannerLicencia(event)" style="position: absolute; top: 5px; right: 8px; background: transparent; border: none; color: var(--warning); font-size: 1rem; cursor: pointer; padding: 5px;">✕</button>
         <h4 style="margin: 0 0 5px; color: var(--warning); font-size: 0.9rem; text-transform: uppercase;">⚠️ Licencia de Prueba</h4>
@@ -1425,41 +1684,29 @@
     <div id="aviso-global" class="global-alert">
 
         <div class="global-alert-header">
-            <h4>📢 Aviso</h4>
+            <h4>Aviso</h4>
             <button class="btn-cerrar-aviso" onclick="cerrarAviso()" title="Cerrar aviso">✕</button>
         </div>
         <p id="texto-aviso-global"></p>
     </div>
 
-    <div class="month-selector">
-        <button class="btn-nav" onclick="cambiarMes(-1)">❮</button>
-        <span id="mesVisual">...</span>
-        <button class="btn-nav" onclick="cambiarMes(1)">❯</button>
-        <button class="btn-nav" onclick="abrirCalendario()" title="Calendario y vacaciones" style="margin-left:8px;">📅</button>
-    </div>
-
-    <div class="salary-card">
-        <div class="bruto-text">Bruto Estimado: <b id="totalBruto">$ 0,00</b></div>
-        <div id="aviso-valores-desactualizados" style="display:none; margin:8px 0; padding:8px 10px; background:rgba(245,158,11,0.12); border:1px solid var(--warning); border-radius:8px; font-size:0.68rem; color:var(--warning); line-height:1.4; text-align:left;">
-            ⚠️ Todavía no hay paritaria cargada para este mes. El cálculo usa los últimos valores conocidos (diciembre 2026), así que es solo una referencia. Podés cargar los valores reales en Configuración.
+        <div class="hero-card">
+            <div class="hero-label" id="home-neto-label">Sueldo neto estimado</div>
+            <div class="hero-amount" id="home-neto">$ 0,00</div>
+            <div class="hero-sub">Bruto estimado <b id="home-bruto">$ 0,00</b></div>
+            <p class="hero-note" id="home-nota">*Monto garantizado al completar tu cronograma mensual. <span id="home-nota-resto" style="display:none;">Si trabajás <b>turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b>turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. </span><a href="#" class="hero-more" onclick="var r=document.getElementById('home-nota-resto');var a=r.style.display==='none';r.style.display=a?'inline':'none';this.textContent=a?'ver menos':'ver más';return false;">ver más</a></p>
+            <div class="hero-actions">
+                <button type="button" class="btn-primary" onclick="irATab('guardias')"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Registrar guardia</button>
+                <button type="button" class="btn-ghost" onclick="irATab('sueldo')">Ver detalle</button>
+            </div>
         </div>
-        <span id="neto-title-label" class="neto-title">SUELDO GARANTIZADO (MES COMPLETO)</span>
-        <h2 id="totalNeto" style="margin-bottom: 5px;">$ 0,00</h2>
-        <p id="txt-nota-sueldo" style="font-size: 0.65rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
-            <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
-            <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>
-        </p>
-        <div id="aviso-aporte-pendiente" style="display:none; margin:8px 0 0 0; padding:6px 10px; background:rgba(245,158,11,0.12); border:1px solid var(--warning); border-radius:8px; font-size:0.72rem; color:var(--warning); line-height:1.4; text-align:left; cursor:pointer;" onclick="abrirModalConfig()">⚠️ Falta indicar si estás afiliado a UPSRA: mientras tanto el neto NO descuenta el Aporte Solidario 2%. Tocá acá para completarlo.</div>
-        <div id="aviso-apc" style="display:none; margin:8px 0 0 0; padding:6px 10px; background:rgba(56,189,248,0.08); border:1px solid var(--accent); border-radius:8px; font-size:0.65rem; color:var(--accent); line-height:1.4; text-align:left;">
-            ✓ Preventivo de crisis (APC) <b> ACTIVADO</b>.
-        </div>
-    </div>
 
-    <div class="stats-panel">
-        <div class="stat-card" style="border-bottom: 3px solid var(--accent)"><span>Total Horas</span><b id="totH">0.0</b></div>
-        <div class="stat-card" style="border-bottom: 3px solid var(--text-dim)"><span>Nocturnas</span><b id="totN">0</b></div>
-        <div class="stat-card" style="border-bottom: 3px solid var(--warning)"><span>Feriados</span><b id="totF">0.0</b></div>
-    </div>
+        <div class="stats-panel">
+            <div class="stat-card" style="--c:var(--success)"><span>Días de servicio</span><b id="totD">0</b></div>
+            <div class="stat-card" style="--c:var(--accent)"><span>Horas totales</span><b id="totH">0.0</b></div>
+            <div class="stat-card" style="--c:#8EA0B8"><span>Nocturnas</span><b id="totN">0</b></div>
+            <div class="stat-card" style="--c:var(--warning)"><span>Feriados</span><b id="totF">0.0</b></div>
+        </div>
 
     <div id="progress-container" style="background: var(--card-bg); padding: 15px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 15px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1471,21 +1718,21 @@
         </div>
         <p id="progress-status" style="font-size: 0.65rem; color: var(--text-dim); margin: 8px 0 0 0; text-align: center; font-style: italic;">Cargá turnos para ver tu avance</p>
     </div>
-    <button class="btn-whatsapp" onclick="abrirReporte()"><span>📄 REPORTE DE <span id="mesBtnLabel">...</span></span></button>
+    </section>
 
-    <div class="glass-form" id="main-form">
-        <button class="btn-config-main" onclick="abrirModalConfig()">⚙️ Configurar Valores de Cobro</button>
-        <button class="btn-config-main" style="background: rgba(56, 189, 248, 0.08); color: var(--accent); border-color: var(--accent);" onclick="abrirModalHerramientas()">🛠️ Más Herramientas</button>
-
-        <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-            <label>👤 MIS DATOS (Para el reporte)</label>
-            <div class="form-row">
+    <!-- ===== GUARDIAS ===== -->
+    <section class="tab-panel" id="tab-guardias" data-tab="guardias">
+        <div class="page-head"><h2>Guardias</h2></div>
+            <div class="card" style="margin-bottom:14px">
+            <div class="card-title">Mis datos <small>(se usan en el reporte)</small></div>
+            <div class="form-row" style="margin-bottom:0">
                 <input type="text" id="vigiNombre" placeholder="Nombre" onchange="guardarPerfil()">
                 <input type="text" id="vigiApellido" placeholder="Apellido" onchange="guardarPerfil()">
             </div>
         </div>
-        
-        <label id="form-titulo-modo">➕ REGISTRAR GUARDIA</label>
+
+    <div class="glass-form" id="main-form">
+        <label id="form-titulo-modo" class="form-title">Datos de la guardia</label>
         <div class="form-row">
             <div><label>Fecha</label><input type="date" id="fecha" onchange="detectarFeriadoAutomatico()"></div>
             <div style="position: relative;"><label>Objetivo</label><input type="text" id="lugar" placeholder="Puesto" autocomplete="off"><div id="sugerencias-puesto" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:50; background:var(--card-bg, #1e293b); border:1px solid var(--accent); border-top:none; border-radius:0 0 12px 12px; max-height:180px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,0.5);"></div></div>
@@ -1503,9 +1750,9 @@
             </div>
             
             <div id="box-feriado" style="grid-column: span 2; margin-top: 5px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 10px; padding: 12px; box-sizing: border-box;">
-                <label style="color: var(--warning); font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block;">🚩 Estado del Feriado</label>
+                <label style="color: var(--warning); font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block;">Estado del feriado</label>
                 <select id="estadoFeriado" class="auth-input" style="margin-bottom: 0; padding: 10px; border-color: rgba(245, 158, 11, 0.4); font-weight: bold; color: var(--text-main);">
-                    <option value="auto" selected>🤖 Automático</option>
+                    <option value="auto" selected>Automático</option>
                     <option value="normal">Ninguno (No es Feriado)</option>
                     <option value="entrada">Feriado el día que ENTRÉ</option>
                     <option value="salida">Feriado el día que SALÍ</option>
@@ -1568,6 +1815,13 @@
         </div>
     </div>
 
+        <div class="menu-list" style="margin-top:12px"><button type="button" class="menu-row" onclick="abrirReporte()"><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg></span><span class="mr-txt"><b>Reporte de <span id="mesBtnLabel">...</span></b><small>PDF con el detalle turno por turno del mes</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button></div>
+        <div class="page-head" style="margin-bottom:14px"><h2>Historial</h2></div>
+        <div class="hist-resumen" id="hist-resumen"><div><span id="hist-mes">Mes</span><small id="hist-label">Sueldo del mes</small></div><div class="hr-r"><b id="hist-neto">$ 0,00</b><small>Bruto <span id="hist-bruto">$ 0,00</span></small></div></div>
+        <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista"><span id="toggle-lista-label">OCULTAR HISTORIAL DE TURNOS</span></button>
+        <div id="lista"></div>
+        </section>
+
     <div id="modal-calendario" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); align-items:flex-start; justify-content:center; z-index:9400; backdrop-filter:blur(5px); padding:16px; box-sizing:border-box; overflow-y:auto;" onclick="if(event.target===this)cerrarCalendario()">
       <div class="glass-form cal-card" style="max-width:420px; width:100%; margin:auto; padding:0;">
         <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 16px 4px;">
@@ -1591,11 +1845,64 @@
       </div>
     </div>
 
-    <button class="btn-toggle-lista" onclick="toggleHistorial()" id="btn-toggle-lista">👁 <span id="toggle-lista-label">OCULTAR HISTORIAL DE TURNOS</span></button>
-    <div id="lista"></div>
-    <a href="https://wa.me/5491135654094?text=Hola!%20Tengo%20una%20consulta%20sobre%20mi%20cuenta%20de%20Control%20Vigía" target="_blank" class="btn-soporte-main">
-        🛠️ Soporte Técnico WhatsApp
-    </a>
+    <!-- ===== MI SUELDO ===== -->
+    <section class="tab-panel" id="tab-sueldo" data-tab="sueldo">
+        <div class="page-head"><h2>Mi sueldo</h2></div>
+    <div class="salary-card">
+        <div class="bruto-text">Bruto Estimado: <b id="totalBruto">$ 0,00</b></div>
+        <div id="aviso-valores-desactualizados" style="display:none; margin:8px 0; padding:8px 10px; background:rgba(245,158,11,0.12); border:1px solid var(--warning); border-radius:8px; font-size:0.68rem; color:var(--warning); line-height:1.4; text-align:left;">
+            ⚠️ Todavía no hay paritaria cargada para este mes. El cálculo usa los últimos valores conocidos (diciembre 2026), así que es solo una referencia. Podés cargar los valores reales en Configuración.
+        </div>
+        <span id="neto-title-label" class="neto-title">SUELDO GARANTIZADO (MES COMPLETO)</span>
+        <h2 id="totalNeto" style="margin-bottom: 5px;">$ 0,00</h2>
+        <p id="txt-nota-sueldo" style="font-size: 0.65rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+            <span id="txt-nota-corta">*Monto garantizado al completar tu cronograma mensual. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-corta').style.display='none';document.getElementById('txt-nota-larga').style.display='inline';})()">ver más</span></span>
+            <span id="txt-nota-larga" style="display:none;">*Monto garantizado al completar tu cronograma mensual. Si trabajás <b style="color: var(--text-dim);">turno día</b>, este valor se mantiene fijo salvo que registres feriados u horas extras. Si trabajás <b style="color: var(--text-dim);">turno noche</b>, el total será mayor por el adicional nocturno que se suma a cada hora trabajada. <span style="color: var(--accent); cursor: pointer; font-weight: 800;" onclick="(function(){document.getElementById('txt-nota-larga').style.display='none';document.getElementById('txt-nota-corta').style.display='inline';})()">ver menos</span></span>
+        </p>
+        <div id="aviso-aporte-pendiente" style="display:none; margin:8px 0 0 0; padding:6px 10px; background:rgba(245,158,11,0.12); border:1px solid var(--warning); border-radius:8px; font-size:0.72rem; color:var(--warning); line-height:1.4; text-align:left; cursor:pointer;" onclick="abrirModalConfig()">⚠️ Falta indicar si estás afiliado a UPSRA: mientras tanto el neto NO descuenta el Aporte Solidario 2%. Tocá acá para completarlo.</div>
+        <div id="aviso-apc" style="display:none; margin:8px 0 0 0; padding:6px 10px; background:rgba(56,189,248,0.08); border:1px solid var(--accent); border-radius:8px; font-size:0.65rem; color:var(--accent); line-height:1.4; text-align:left;">
+            ✓ Preventivo de crisis (APC) <b> ACTIVADO</b>.
+        </div>
+    </div>
+        <div class="card" id="sueldo-desglose-card">
+            <div class="card-title">Desglose del mes</div>
+            <div id="sueldo-desglose" class="desglose"><p class="muted">Cargá guardias para ver el desglose.</p></div>
+        </div>
+        <div class="menu-list">
+<button type="button" class="menu-row" onclick="abrirModalConfig()" ><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><span class="mr-txt"><b>Valores de cobro</b><small>Categoría, antigüedad, feriados y descuentos</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+        </div>
+    </section>
+
+    <!-- ===== REPORTES ===== -->
+    <section class="tab-panel" id="tab-reportes" data-tab="reportes">
+        <div class="page-head"><h2>Reportes</h2></div>
+        <div class="menu-list">
+            <button type="button" class="menu-row" onclick="abrirModalExportar()" ><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 11L12 15.5 16.5 11M5 20h14"/></svg></span><span class="mr-txt"><b>Reporte anual</b><small>Resumen mensual y detalle de todo el año</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button type="button" class="menu-row" onclick="abrirModalAguinaldo()" ><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M12 9v11M3.5 9h17M12 9c-1-3-5-4-5-1.5S10 9 12 9zm0 0c1-3 5-4 5-1.5S14 9 12 9z"/></svg></span><span class="mr-txt"><b>Aguinaldo (SAC)</b><small>Estimación del 50% de la mejor remuneración</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button type="button" class="menu-row" onclick="abrirModalComparar()" ><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="7" height="14" rx="2"/><rect x="13.5" y="5" width="7" height="14" rx="2"/><path d="M6 10h2M16 10h2M6 14h2M16 14h2"/></svg></span><span class="mr-txt"><b>Comparar con recibo</b><small>Contrastá tu recibo real con el cálculo de la app</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+        </div>
+    </section>
+
+    <!-- ===== MÁS ===== -->
+    <section class="tab-panel" id="tab-mas" data-tab="mas">
+        <div class="page-head"><h2>Más</h2></div>
+        <div class="menu-list">
+<button type="button" class="menu-row" onclick="abrirModalPerfil()" ><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg></span><span class="mr-txt"><b>Mi perfil y licencia</b><small>Estado de la licencia y cambio de contraseña</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<button type="button" class="menu-row" onclick="abrirModalAyuda()" ><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.5 2.5 0 114 2c-.9.6-1.6 1.1-1.6 2.2M12 17h.01"/></svg></span><span class="mr-txt"><b>Guía de uso</b><small>Cómo se calcula cada concepto</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+            <button type="button" id="btn-admin-access" class="menu-row" onclick="abrirAdmin()"><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7L12 3z"/></svg></span><span class="mr-txt"><b>Panel de administración</b><small>Usuarios, licencias, paritarias y feriados</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></button>
+<a class="menu-row" href="https://wa.me/5491135654094?text=Hola!%20Tengo%20una%20consulta%20sobre%20mi%20cuenta%20de%20Control%20Vigía" target="_blank" rel="noopener" ><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H10l-5 4v-4H6a2 2 0 01-2-2V6z"/></svg></span><span class="mr-txt"><b>Soporte técnico</b><small>Escribinos por WhatsApp</small></span><span class="mr-chev"><svg class="ico sm" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></span></a>
+            <button type="button" class="menu-row danger" onclick="cerrarSesion()"><span class="menu-row-in"><span class="mr-ico"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3M15 8l4 4-4 4M19 12H9"/></svg></span><span class="mr-txt"><b>Cerrar sesión</b></span><span class="mr-chev"></span></span></button>
+        </div>
+    </section>
+
+<nav class="bottom-nav" id="bottom-nav" aria-label="Navegación principal">
+<div class="nav-brand"><svg class="ico brand-ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><span>CONTROL VIGÍA</span></div>
+<button type="button" class="nav-item active" data-tab="inicio" onclick="irATab('inicio')"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><span>Inicio</span></button>
+<button type="button" class="nav-item" data-tab="guardias" onclick="irATab('guardias')"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Guardias</span></button>
+<button type="button" class="nav-item" data-tab="sueldo" onclick="irATab('sueldo')"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 016.5 5H18v3"/><rect x="3.5" y="7" width="17" height="13" rx="3"/><circle cx="16.5" cy="13.5" r="1.2"/></svg><span>Mi sueldo</span></button>
+<button type="button" class="nav-item" data-tab="reportes" onclick="irATab('reportes')"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V12M12 20V5M19 20v-9"/></svg><span>Reportes</span></button>
+<button type="button" class="nav-item" data-tab="mas" onclick="irATab('mas')"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Más</span></button>
+</nav>
 </div>
 
 <div id="admin-container">
@@ -1608,7 +1915,7 @@
     
     <div class="admin-msg-box collapsed">
         <div class="admin-section-header" onclick="toggleAdminSection(this)">
-            <h3 style="font-size: 1.1rem; color: var(--admin);">📢 Publicar Aviso Global</h3>
+            <h3 style="font-size: 1.1rem; color: var(--admin);">Publicar Aviso Global</h3>
             <span class="admin-section-arrow">▼</span>
         </div>
         <div class="admin-section-content">
@@ -1620,7 +1927,7 @@
 
     <div class="admin-msg-box collapsed" style="border-color: var(--warning);">
         <div class="admin-section-header" onclick="toggleAdminSection(this)">
-            <h3 style="font-size: 1.1rem; color: var(--warning);">💳 Configuración de Licencias</h3>
+            <h3 style="font-size: 1.1rem; color: var(--warning);">Configuración de Licencias</h3>
             <span class="admin-section-arrow">▼</span>
         </div>
         <div class="admin-section-content">
@@ -1648,7 +1955,7 @@
 
     <div class="admin-msg-box collapsed">
         <div class="admin-section-header" onclick="toggleAdminSection(this)">
-            <h3 style="font-size: 1.1rem; color: var(--admin);">📊 Valores Oficiales UPSRA</h3>
+            <h3 style="font-size: 1.1rem; color: var(--admin);">Valores Oficiales UPSRA</h3>
             <span class="admin-section-arrow">▼</span>
         </div>
         <div class="admin-section-content">
@@ -1679,7 +1986,7 @@
 
     <div class="admin-msg-box collapsed" style="border-color: var(--accent);">
         <div class="admin-section-header" onclick="toggleAdminSection(this)">
-            <h3 style="font-size: 1.1rem; color: var(--accent);">📅 Gestión de Calendario</h3>
+            <h3 style="font-size: 1.1rem; color: var(--accent);">Gestión de Calendario</h3>
             <span class="admin-section-arrow">▼</span>
         </div>
         <div class="admin-section-content">
@@ -1699,7 +2006,7 @@
     <div class="admin-msg-box collapsed" style="border-color: var(--admin);">
         <div class="admin-section-header" onclick="toggleAdminSection(this)">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 style="font-size: 1.1rem; color: var(--admin);">👥 Personal Registrado</h3>
+                <h3 style="font-size: 1.1rem; color: var(--admin);">Personal Registrado</h3>
                 <span id="admin-txt-contador" style="font-size: 0.8rem; color: var(--accent); background: rgba(56,189,248,0.1); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--accent);">Cargando...</span>
             </div>
             <span class="admin-section-arrow">▼</span>
@@ -2079,7 +2386,7 @@
         const mesVisual = document.getElementById('mesVisual');
         if (mesVisual) mesVisual.innerText = `${mesNombre} ${anio}`;
     };
-    window.totalStats = { t: 0, n: 0, f: 0, extra: 0, bruto: 0, neto: 0 };
+    window.totalStats = { d: 0, t: 0, n: 0, f: 0, extra: 0, bruto: 0, neto: 0 };
 
     window.showToast = function(msg, type = 'success') {
         const t = document.getElementById('toast');
@@ -2674,6 +2981,7 @@
             window.turnoEnEdicion = null;
             // FIX Bug 5: limpiar banner_licencia_cerrado para que el próximo usuario lo vea
             localStorage.removeItem('banner_licencia_cerrado');
+            if (window.irATab) window.irATab('inicio');
             if (window.unsubTurnos) { window.unsubTurnos(); window.unsubTurnos = null; }
             if (window.unsubConfig) { window.unsubConfig(); window.unsubConfig = null; }
             if (window.unsubAviso) { window.unsubAviso(); window.unsubAviso = null; }
@@ -2682,7 +2990,7 @@
             // Limpiar campos de UI
             const ids = ['vigiNombre','vigiApellido','lista'];
             ids.forEach(id => { const el = document.getElementById(id); if(el) el.value !== undefined ? el.value = '' : el.innerHTML = ''; });
-            const totales = ['totH','totN','totF','totalBruto','totalNeto'];
+            const totales = ['totD','totH','totN','totF','totalBruto','totalNeto'];
             totales.forEach(id => { const el = document.getElementById(id); if(el) el.innerText = id.startsWith('total') ? '$ 0,00' : '0'; });
             // Ocultar banner de licencia
             const banner = document.getElementById('banner-licencia');
@@ -4217,12 +4525,13 @@ async function cargarDatosNube() {
 
             const resumenFilas = [];
             const detallePorMes = []; // un array de filas por cada mes, para poder separarlos en hojas distintas
-            let totH = 0, totN = 0, totF = 0, totTurnos = 0;
+            let totH = 0, totN = 0, totF = 0, totTurnos = 0, totDias = 0;
 
             for (let mes = 0; mes < 12; mes++) {
                 const turnos = await obtenerTurnosMesEstatico(año, mes);
                 turnos.sort((a, b) => (a.f || '').localeCompare(b.f || ''));
                 let mH = 0, mN = 0, mF = 0;
+                const diasMesSet = new Set(); // días de servicio: no cuentan vacaciones/licencia/falta/suspensión
                 const filasMes = [];
                 turnos.forEach(t => {
                     const fechaFmt = (t.f || '').split('-').reverse().join('/');
@@ -4233,13 +4542,14 @@ async function cargarDatosNube() {
                     const n = parseFloat(t.n) || 0;
                     const f = calcularHorasFeriadoTurnoPDF(t, pagaPuentes);
                     mH += h; mN += n; mF += f;
+                    if (!t.vac) diasMesSet.add(t.f);
                     const horario = (t.e && t.s) ? `${t.e}-${t.s}` : '';
                     const marca = t.vac ? 'Vacaciones' : (f > 0 ? 'Feriado' : '');
                     filasMes.push([fechaFmt, t.l || 'Puesto', horario, fmtH(h), fmtH(n), marca]);
                 });
-                totH += mH; totN += mN; totF += mF; totTurnos += turnos.length;
-                resumenFilas.push([nombresMes[mes], turnos.length, fmtH(mH), fmtH(mN), fmtH(mF)]);
-                detallePorMes.push({ mes, filas: filasMes, mH, mN, mF });
+                totH += mH; totN += mN; totF += mF; totTurnos += turnos.length; totDias += diasMesSet.size;
+                resumenFilas.push([nombresMes[mes], turnos.length, diasMesSet.size, fmtH(mH), fmtH(mN), fmtH(mF)]);
+                detallePorMes.push({ mes, filas: filasMes, mH, mN, mF, dias: diasMesSet.size });
             }
 
             docPDF.setFontSize(16);
@@ -4250,9 +4560,9 @@ async function cargarDatosNube() {
 
             docPDF.autoTable({
                 startY: 32,
-                head: [['Mes', 'Turnos', 'Hs Totales', 'Hs Nocturnas', 'Hs Feriado']],
+                head: [['Mes', 'Turnos', 'Días serv.', 'Hs Totales', 'Hs Nocturnas', 'Hs Feriado']],
                 body: resumenFilas,
-                foot: [['TOTAL', totTurnos, fmtH(totH), fmtH(totN), fmtH(totF)]],
+                foot: [['TOTAL', totTurnos, totDias, fmtH(totH), fmtH(totN), fmtH(totF)]],
                 theme: 'striped',
                 headStyles: { fillColor: [56, 189, 248] },
                 footStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
@@ -4268,7 +4578,7 @@ async function cargarDatosNube() {
                 docPDF.text(`${nombresMes[dm.mes]} ${año}`, 14, 18);
                 docPDF.setFontSize(9);
                 docPDF.setTextColor(100);
-                docPDF.text(`${fmtH(dm.mH)} hs totales · ${fmtH(dm.mN)} hs nocturnas · ${fmtH(dm.mF)} hs feriado`, 14, 24);
+                docPDF.text(`${dm.dias} días de servicio · ${fmtH(dm.mH)} hs totales · ${fmtH(dm.mN)} hs nocturnas · ${fmtH(dm.mF)} hs feriado`, 14, 24);
                 docPDF.autoTable({
                     startY: 29,
                     head: [['Fecha', 'Puesto', 'Horario', 'Hs', 'Noct.', 'Marca']],
@@ -4536,6 +4846,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
     }
 
     window.editarTurno = function(id) {
+        if (window.irATab) window.irATab('guardias');
         const turno = window.turnos.find(t => t.id === id);
         if (!turno) return;
         
@@ -5055,6 +5366,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             if (inp) { inp.value = f; if (window.detectarFeriadoAutomatico) window.detectarFeriadoAutomatico(); }
         }
         window.cerrarCalendario();
+        if (window.irATab) window.irATab('guardias');
         const form = document.getElementById('main-form');
         if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -5180,6 +5492,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('totH').innerText = fmtH(st); 
         document.getElementById('totN').innerText = fmtH(sn); 
         document.getElementById('totF').innerText = fmtH(sf);
+        document.getElementById('totD').innerText = diasUnicosTrabajados.size;
         
         let valorNocturnoFinal = valMes.noct;
         if (isNaN(valorNocturnoFinal)) { valorNocturnoFinal = (valMes.basico + valMes.presentismo + montoAntiguedad) / 1000; }
@@ -5329,7 +5642,44 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         document.getElementById('totalBruto').innerText = `$ ${totalBruto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; 
         document.getElementById('totalNeto').innerText = `$ ${totalNeto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
-        window.totalStats = { t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
+        window.totalStats = { d: diasUnicosTrabajados.size, t: fmtH(st), n: fmtH(sn), f: fmtH(sf), extra: hsExtra, bruto: totalBruto, neto: totalNeto, antiguedad: valMes.antiguedadAños };
+        // --- Rediseño: espejo del sueldo en Inicio + desglose en "Mi sueldo" (solo presentación) ---
+        {
+            const fm = (n) => '$ ' + Number(n).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const elHN = document.getElementById('home-neto'), elHB = document.getElementById('home-bruto'), elHL = document.getElementById('home-neto-label');
+            if (elHN) elHN.innerText = fm(totalNeto);
+            if (elHB) elHB.innerText = fm(totalBruto);
+            if (elHL) elHL.innerText = (st > 0 && st >= horasBaseAjustada) ? 'Neto en mano (estimado)' : 'Sueldo garantizado (mes completo)';
+            { const _l = (st > 0 && st >= horasBaseAjustada) ? 'Neto en mano (estimado)' : 'Sueldo garantizado (mes completo)';
+              const _m = document.getElementById('mesVisual'), hm = document.getElementById('hist-mes'), hn = document.getElementById('hist-neto'), hb = document.getElementById('hist-bruto'), hl = document.getElementById('hist-label');
+              if (hm && _m) hm.innerText = _m.innerText; if (hn) hn.innerText = fm(totalNeto); if (hb) hb.innerText = fm(totalBruto); if (hl) hl.innerText = _l; }
+            const elDG = document.getElementById('sueldo-desglose');
+            if (elDG) {
+                const fila = (t, v, cls) => `<div class="dg-row ${cls || ''}"><span>${t}</span><b>${v}</b></div>`;
+                const nocturnidadMonto = sn * valorNocturnoFinal;
+                const aniosTxt = valMes.antiguedadAños + (valMes.antiguedadAños === 1 ? ' año' : ' años');
+                let h = '<div class="dg-sec">Remunerativo</div>';
+                h += fila('Sueldo básico', fm(valMes.basico));
+                if (montoAntiguedad > 0) h += fila('Antigüedad (' + aniosTxt + ')', fm(montoAntiguedad));
+                h += fila('Presentismo', fm(presentismoReal));
+                if (nocturnidadMonto > 0) h += fila('Nocturnidad', fm(nocturnidadMonto));
+                if (pagoHorasTotales > 0) h += fila('Horas extra (' + fmtH(hsExtra) + ' hs)', fm(pagoHorasTotales));
+                if (pagoFeriados > 0) h += fila('Feriados trabajados', fm(pagoFeriados));
+                if (plusVacacionalTotal > 0) h += fila('Adicional vacacional', fm(plusVacacionalTotal));
+                if (descuentoFaltaYSuspension > 0) h += fila('Descuento por faltas / suspensión', '- ' + fm(descuentoFaltaYSuspension), 'neg');
+                h += fila('Total remunerativo', fm(sumaRemunerativa), 'sub');
+                h += '<div class="dg-sec">No remunerativo</div>';
+                h += fila('Viático', fm(viaticoFinal));
+                if (noRemFinal > 0) h += fila('Adicional no remunerativo', fm(noRemFinal));
+                h += fila('Total no remunerativo', fm(sumaNoRemunerativa), 'sub');
+                h += fila('Total bruto', fm(totalBruto), 'total');
+                h += '<div class="dg-sec">Descuentos</div>';
+                h += fila(valMes.preventivoCrisis ? 'Aportes de ley (con Preventivo de crisis)' : 'Aportes de ley (' + porcentajeDesc + '%)', '- ' + fm(descuentosLey), 'neg');
+                if (aporteSolidario > 0) h += fila('Aporte solidario (2% del básico)', '- ' + fm(aporteSolidario), 'neg');
+                h += fila('Neto estimado', fm(totalNeto), 'total net');
+                elDG.innerHTML = h;
+            }
+        }
         window.actualizarSugerenciasPuestos();
         { const mc = document.getElementById('modal-calendario'); if (mc && mc.style.display !== 'none' && window.renderCalendarioMes) window.renderCalendarioMes(); }
 
@@ -5354,7 +5704,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
                 progressBar.style.boxShadow = "none";
                 progressBar.style.animation = "";
             } else {
-                progressStatus.innerHTML = "¡Objetivo cubierto! 💰";
+                progressStatus.innerHTML = "¡Objetivo cubierto!";
                 progressBar.style.background = "linear-gradient(90deg, var(--success), #4ade80)";
                 progressBar.style.animation = "glow-pulse 1.8s ease-in-out infinite";
             }
@@ -5446,7 +5796,7 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
         const resumen = [
             ['Personal', nombreCompleto],
             ['Antigüedad', `${v.antiguedadAños} ${v.antiguedadAños === 1 ? 'año' : 'años'}` + (v.antiguedadAutomatica ? ` (ingreso ${v.fechaIngreso.split('-').reverse().join('/')})` : '')],
-            ['Días trabajados', String(diasTrabajados.size)],
+            ['Días de servicio', String(diasTrabajados.size)],
             ['Total de horas', `${stats.t} hs`]
         ];
         if (stats.extra > 0) resumen.push(['Horas extra', `${fmtH(stats.extra)} hs`]);
@@ -6196,6 +6546,17 @@ window.actualizarDiasUsuario = async function(uid, nuevaFechaIso) {
             if (e.target.id === 'modal-rueda-hora') cerrarRelojHora();
         });
     });
+</script>
+<script>
+    // ===== Navegación por pestañas (barra inferior en celular / menú lateral en computadora) =====
+    window.irATab = function(nombre) { if (nombre === 'historial') nombre = 'guardias';
+        document.querySelectorAll('#app-container .tab-panel').forEach(function(p) { p.classList.toggle('active', p.dataset.tab === nombre); });
+        document.querySelectorAll('#bottom-nav .nav-item').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === nombre); });
+        document.body.classList.toggle('en-guardias', nombre === 'guardias');
+        document.body.classList.toggle('sin-mes', nombre === 'reportes' || nombre === 'mas');
+        window.scrollTo(0, 0);
+        if (nombre === 'guardias' && typeof ajustarTodosLosPuestos === 'function') ajustarTodosLosPuestos();
+    };
 </script>
 </body>
 </html>
